@@ -1,0 +1,142 @@
+﻿'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { ArrowLeft, Save, Loader2, Trash2, Eye, EyeOff } from 'lucide-react';
+import Link from 'next/link';
+import { toast } from 'react-hot-toast';
+import apiClient from '@/lib/api/client';
+import { PAGE_TEMPLATES } from '@/types/cms';
+
+export default function EditPagePage() {
+  const router = useRouter();
+  const { id } = useParams<{ id: string }>();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [form, setForm] = useState({ title: '', slug: '', content: '', excerpt: '', template: 'default', status: 'DRAFT' as 'PUBLISHED' | 'DRAFT' | 'ARCHIVED', sortOrder: 0 });
+
+  const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await apiClient.get(`/cms/admin/pages/${id}`);
+        const p = res.data.data;
+        setForm({ title: p.title || '', slug: p.slug || '', content: p.content || '', excerpt: p.excerpt || '', template: p.template || 'default', status: p.status || 'DRAFT', sortOrder: p.sortOrder || 0 });
+      } catch { toast.error('Failed to load page'); router.push('/dashboard/cms/pages'); }
+      finally { setLoading(false); }
+    };
+    if (id) load();
+  }, [id]);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim() || !form.slug.trim() || !form.content.trim()) { toast.error('Title, slug and content are required'); return; }
+    setSaving(true);
+    try {
+      await apiClient.put(`/cms/admin/pages/${id}`, form);
+      toast.success('Page saved');
+      router.push('/dashboard/cms/pages');
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Save failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await apiClient.delete(`/cms/admin/pages/${id}`);
+      toast.success('Page deleted');
+      router.push('/dashboard/cms/pages');
+    } catch { toast.error('Delete failed'); setDeleting(false); }
+  };
+
+  const inputClass = "w-full px-3 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 text-sm";
+
+  if (loading) return <div className="flex justify-center items-center py-24"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/cms/pages" className="p-2 rounded-lg bg-white text-gray-500 hover:text-gray-900 transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Edit Page</h2>
+            <p className="text-gray-500 text-sm truncate max-w-sm">{form.title}</p>
+          </div>
+        </div>
+        <button onClick={() => setShowDelete(true)} className="flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-100 border border-red-500/30 rounded-lg transition-colors text-sm">
+          <Trash2 className="w-4 h-4" /> Delete
+        </button>
+      </div>
+
+      <form onSubmit={onSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-5">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">Title *</label>
+              <input value={form.title} onChange={e => set('title', e.target.value)} className={inputClass} placeholder="Page title" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">Slug *</label>
+              <div className="flex items-center gap-2"><span className="text-sm text-gray-600">/page/</span>
+                <input value={form.slug} onChange={e => set('slug', e.target.value)} className={inputClass} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">Excerpt</label>
+              <textarea rows={2} value={form.excerpt} onChange={e => set('excerpt', e.target.value)} className={`${inputClass} resize-none`} placeholder="Short description..." />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">Content (Markdown) *</label>
+              <textarea rows={18} value={form.content} onChange={e => set('content', e.target.value)} className={`${inputClass} resize-y font-mono`} placeholder="# Heading&#10;&#10;Write your content here..." />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Publish</h3>
+            <button type="button" onClick={() => set('status', form.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED')}
+              className={`flex items-center gap-3 w-full p-3 rounded-lg border transition-colors ${form.status === 'PUBLISHED' ? 'border-green-500/50 bg-green-100 text-green-700' : 'border-gray-200 bg-[#f5f6f8] text-gray-500'}`}>
+              {form.status === 'PUBLISHED' ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              <span className="text-sm font-medium">{form.status === 'PUBLISHED' ? 'Published' : 'Draft'}</span>
+            </button>
+            <button type="submit" disabled={saving} className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
+            </button>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Template</h3>
+            {PAGE_TEMPLATES.map(t => (
+              <button key={t.value} type="button" onClick={() => set('template', t.value)}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${form.template === t.value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-2">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Sort Order</h3>
+            <input type="number" min={0} value={form.sortOrder} onChange={e => set('sortOrder', Number(e.target.value))} className={inputClass} />
+          </div>
+        </div>
+      </form>
+
+      {showDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-[#f5f6f8] rounded-2xl border border-gray-200 p-6 max-w-sm w-full shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Page?</h3>
+            <p className="text-gray-500 text-sm mb-6">Deletes <strong className="text-gray-900">"{form.title}"</strong> permanently.</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setShowDelete(false)} className="px-4 py-2 text-gray-500 hover:text-gray-700 hover:bg-white rounded-xl transition-colors">Cancel</button>
+              <button onClick={handleDelete} disabled={deleting} className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50">
+                {deleting && <Loader2 className="w-4 h-4 animate-spin" />} Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

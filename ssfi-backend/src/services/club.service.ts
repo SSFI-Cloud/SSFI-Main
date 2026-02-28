@@ -1,0 +1,201 @@
+import { PrismaClient, Prisma } from '@prisma/client';
+import { AppError } from '../utils/errors';
+
+import prisma from '../config/prisma';
+export const getAllClubs = async (query: any) => {
+    const { page = 1, limit = 10, search, stateId, districtId, status, sortField = 'clubName', sortOrder = 'asc' } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
+
+    const where: Prisma.ClubWhereInput = {
+        isActive: true,
+        ...(stateId && { stateId: Number(stateId) }),
+        ...(districtId && { districtId: Number(districtId) }),
+        ...(search && {
+            OR: [
+                { name: { contains: search as string } },
+                { code: { contains: search as string } },
+            ],
+        }),
+    };
+
+    // Filter by status if provided (e.g. PENDING, APPROVED)
+    if (status) {
+        where.status = status;
+    }
+
+    // Dynamic sorting
+    const orderBy: any = {};
+    if (sortField === 'state_name') {
+        orderBy.state = { name: sortOrder };
+    } else if (sortField === 'district_name') {
+        orderBy.district = { name: sortOrder };
+    } else if (sortField === 'club_name') {
+        orderBy.name = sortOrder;
+    } else if (sortField === 'clubowner_name') {
+        orderBy.clubOwner = { name: sortOrder }; // Assuming clubOwner relation and name field exists/is reachable
+    } else if (sortField === 'skatersCount') {
+        orderBy.students = { _count: sortOrder };
+    } else {
+        // Check for valid fields in Club model
+        if (['name', 'code', 'createdAt'].includes(sortField as string)) {
+            orderBy[sortField] = sortOrder;
+        } else {
+            orderBy.name = sortOrder; // Fallback
+        }
+    }
+
+    // Stats filter (ignore search and status for overall stats, but keep scope)
+    const statsWhere: Prisma.ClubWhereInput = {
+        isActive: true,
+        ...(stateId && { stateId: Number(stateId) }),
+        ...(districtId && { districtId: Number(districtId) }),
+    };
+
+    const [clubs, total, totalCount, verifiedCount, pendingCount, studentsCount] = await Promise.all([
+        prisma.club.findMany({
+            where,
+            skip,
+            take,
+            orderBy,
+            include: {
+                state: { select: { id: true, name: true, code: true } },
+                district: { select: { id: true, name: true, code: true } },
+                clubOwner: { select: { id: true, name: true } },
+                _count: {
+                    select: {
+                        students: {
+                            where: { user: { isApproved: true } }
+                        },
+                    },
+                },
+            },
+        }),
+        prisma.club.count({ where }),
+        prisma.club.count({ where: statsWhere }),
+        prisma.club.count({ where: { ...statsWhere, status: 'APPROVED' } }),
+        prisma.club.count({ where: { ...statsWhere, status: 'PENDING' } }),
+        prisma.student.count({ where: { club: statsWhere, user: { isApproved: true } } })
+    ]);
+
+    // Format data
+    const formattedClubs = clubs.map((club) => ({
+        id: club.id,
+        membership_id: club.code || club.registrationNumber || 'N/A', // Prefer code, fallback to regNo
+        club_name: club.name,
+        contact_person: club.contactPerson || club.clubOwner?.name || 'N/A',
+        mobile_number: club.phone || 'N/A',
+        email_address: club.email || 'N/A',
+        district_name: club.district.name,
+        state_name: club.state?.name || 'N/A',
+        state_code: club.state?.code || 'N/A',
+        established_year: club.establishedYear ? String(club.establishedYear) : 'N/A',
+        skatersCount: club._count.students,
+        verified: club.status === 'APPROVED' ? 1 : 0,
+        status: club.isActive ? 'active' : 'inactive',
+        request_status: club.status, // Add request status
+        created_at: club.createdAt,
+        club_address: club.address,
+        logo_path: club.logo,
+        registration_number: club.registrationNumber
+    }));
+
+    return {
+        clubs: formattedClubs,
+        meta: {
+            total,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages: Math.ceil(total / Number(limit)),
+        },
+        stats: {
+            total: totalCount,
+            verified: verifiedCount,
+            pending: pendingCount,
+            totalSkaters: studentsCount
+        }
+    };
+};
+
+export const getClubById = async (id: number) => {
+    const club = await prisma.club.findFirst({
+        where: { id, isActive: true },
+        include: {
+            state: { select: { id: true, name: true, code: true } },
+            district: { select: { id: true, name: true, code: true } },
+            clubOwner: {
+                select: {
+                    id: true, name: true, gender: true,
+                    profilePhoto: true, userId: true,
+                    user: { select: { uid: true, phone: true, email: true, registrationDate: true, expiryDate: true, accountStatus: true } }
+                }
+            },
+            _count: {
+                select: { students: { where: { user: { isApproved: true } } } }
+            }
+        }
+    });
+
+    if (!club) throw new AppError('Club not found', 404);
+
+    const owner = club.clubOwner;
+    let membershipStatus: 'ACTIVE' | 'EXPIRED' | 'PENDING' = 'PENDING';
+    if (owner) {
+        if (owner.user?.expiryDate && new Date(owner.user.expiryDate) < new Date()) {
+            membershipStatus = 'EXPIRED';
+        } else {
+            membershipStatus = 'ACTIVE';
+        }
+    }
+
+    return {
+        id: club.id,
+        club_name: club.name,
+        code: club.code,
+        uid: club.uid,
+        registration_number: club.registrationNumber,
+        established_year: club.establishedYear ? String(club.establishedYear) : 'N/A',
+        address: club.address || club.addressLine1,
+        website: club.website,
+        logo: club.logo,
+        status: club.status,
+        district_name: club.district.name,
+        district_code: club.district.code,
+        state_name: club.state?.name || 'N/A',
+        state_code: club.state?.code || 'N/A',
+        skatersCount: club._count.students,
+        created_at: club.createdAt,
+        owner: owner ? {
+            uid: owner.user?.uid || null,
+            name: owner.name,
+            gender: owner.gender,
+            phone: owner.user?.phone || 'N/A',
+            email: owner.user?.email || 'N/A',
+            profilePhoto: owner.profilePhoto,
+            registrationDate: owner.user?.registrationDate || null,
+            expiryDate: owner.user?.expiryDate || null,
+            accountStatus: owner.user?.accountStatus || null,
+            membershipStatus,
+        } : null,
+    };
+};
+
+export const createClub = async (data: any) => {
+    // Basic creation logic - usually Clubs are created via Registration flow, but Admin might create them too
+    // For now, simple create
+    return prisma.club.create({
+        data,
+    });
+};
+
+export const updateClubStatus = async (id: number, status: string, remarks?: string) => {
+    // Validate status if needed (APPROVED, REJECTED)
+    const club = await prisma.club.update({
+        where: { id },
+        data: { status: status as any },
+    });
+
+    // Log remarks if needed
+
+    return club;
+};

@@ -1,0 +1,451 @@
+import { PrismaClient, AccountStatus, UserRole } from '@prisma/client';
+import { AppError } from '../utils/errors';
+
+import prisma from '../config/prisma';
+// ==========================================
+// RENEWAL CALCULATION & STATUS
+// ==========================================
+
+/**
+ * Calculate expiry date based on registration or last renewal
+ * @param userId User ID
+ * @param renewalMonths Number of months to add (defaults to user's renewalPeriodMonths)
+ * @returns New expiry date
+ */
+export const calculateExpiryDate = async (
+    userId: number,
+    renewalMonths?: number
+): Promise<Date> => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { lastRenewalDate: true, renewalPeriodMonths: true, registrationDate: true }
+    });
+
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+
+    const months = renewalMonths || user.renewalPeriodMonths || 12;
+    const baseDate = user.lastRenewalDate || user.registrationDate || new Date();
+
+    const expiryDate = new Date(baseDate);
+    expiryDate.setMonth(expiryDate.getMonth() + months);
+
+    return expiryDate;
+};
+
+/**
+ * Check if account is expired and update status
+ * @param userId User ID
+ * @returns Updated user status
+ */
+export const checkAccountExpiry = async (userId: number) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            expiryDate: true,
+            accountStatus: true,
+            role: true
+        }
+    });
+
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+
+    // Global admin doesn't expire
+    if (user.role === UserRole.GLOBAL_ADMIN) {
+        return { isExpired: false, accountStatus: user.accountStatus };
+    }
+
+    const now = new Date();
+    const isExpired = user.expiryDate ? now > user.expiryDate : false;
+
+    // Update status if expired and not already marked
+    if (isExpired && user.accountStatus === AccountStatus.ACTIVE) {
+        await prisma.user.update({
+            where: { id: userId },
+            data: { accountStatus: AccountStatus.EXPIRED }
+        });
+        return { isExpired: true, accountStatus: AccountStatus.EXPIRED };
+    }
+
+    return { isExpired, accountStatus: user.accountStatus };
+};
+
+/**
+ * Get renewal status for a user
+ * @param userId User ID
+ * @returns Renewal status information
+ */
+export const getRenewalStatus = async (userId: number) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            uid: true,
+            role: true,
+            expiryDate: true,
+            lastRenewalDate: true,
+            registrationDate: true,
+            accountStatus: true,
+            renewalNotificationSent: true,
+            renewalPeriodMonths: true
+        }
+    });
+
+    if (!user) {
+        throw new AppError('User not found', 404);
+    }
+
+    // Global admin doesn't have expiry
+    if (user.role === UserRole.GLOBAL_ADMIN) {
+        return {
+            expiryDate: null,
+            daysUntilExpiry: null,
+            needsRenewal: false,
+            isExpired: false,
+            showNotification: false,
+            accountStatus: user.accountStatus
+        };
+    }
+
+    const now = new Date();
+    const expiryDate = user.expiryDate;
+
+    if (!expiryDate) {
+        return {
+            expiryDate: null,
+            daysUntilExpiry: null,
+            needsRenewal: true,
+            isExpired: false,
+            showNotification: false,
+            accountStatus: user.accountStatus,
+            message: 'No expiry date set. Please contact administrator.'
+        };
+    }
+
+    const daysUntilExpiry = Math.ceil(
+        (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    const isExpired = daysUntilExpiry < 0;
+    const needsRenewal = daysUntilExpiry <= 30;
+    const showNotification = needsRenewal && !isExpired;
+
+    return {
+        expiryDate,
+        daysUntilExpiry,
+        needsRenewal,
+        isExpired,
+        showNotification,
+        accountStatus: user.accountStatus,
+        lastRenewalDate: user.lastRenewalDate,
+        registrationDate: user.registrationDate
+    };
+};
+
+/**
+ * Get users nearing expiry (within specified days)
+ * @param days Days threshold (default: 30)
+ * @param role Optional role filter
+ * @returns List of users nearing expiry
+ */
+export const getUsersNearingExpiry = async (
+    days: number = 30,
+    role?: UserRole
+) => {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + days);
+
+    const where: any = {
+        role: role ? role : { not: UserRole.GLOBAL_ADMIN },
+        expiryDate: {
+            lte: targetDate,
+            gte: new Date() // Not yet expired
+        },
+        accountStatus: AccountStatus.ACTIVE
+    };
+
+    const users = await prisma.user.findMany({
+        where,
+        select: {
+            id: true,
+            uid: true,
+            email: true,
+            phone: true,
+            role: true,
+            expiryDate: true,
+            lastRenewalDate: true,
+            renewalNotificationSent: true,
+            statePerson: { select: { name: true, stateId: true } },
+            districtPerson: { select: { name: true, districtId: true } },
+            clubOwner: { select: { name: true, clubId: true } },
+            student: { select: { name: true, clubId: true } }
+        },
+        orderBy: { expiryDate: 'asc' }
+    });
+
+    return users.map(user => {
+        const name =
+            user.statePerson?.name ||
+            user.districtPerson?.name ||
+            user.clubOwner?.name ||
+            user.student?.name ||
+            'Unknown';
+
+        const daysUntilExpiry = user.expiryDate
+            ? Math.ceil((user.expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+            : null;
+
+        return {
+            id: user.id,
+            uid: user.uid,
+            name,
+            email: user.email,
+            phone: user.phone,
+            role: user.role,
+            expiryDate: user.expiryDate,
+            daysUntilExpiry,
+            lastRenewalDate: user.lastRenewalDate,
+            renewalNotificationSent: user.renewalNotificationSent
+        };
+    });
+};
+
+// ==========================================
+// ACCOUNT LOCKING & STATUS MANAGEMENT
+// ==========================================
+
+/**
+ * Lock expired accounts (scheduled job function)
+ * This should be run daily
+ */
+export const lockExpiredAccounts = async () => {
+    const now = new Date();
+
+    const result = await prisma.user.updateMany({
+        where: {
+            role: { not: UserRole.GLOBAL_ADMIN },
+            expiryDate: { lt: now },
+            accountStatus: AccountStatus.ACTIVE
+        },
+        data: {
+            accountStatus: AccountStatus.EXPIRED
+        }
+    });
+
+    console.log(`Locked ${result.count} expired accounts`);
+    return result.count;
+};
+
+/**
+ * Send renewal notifications to users expiring soon
+ * This should be run daily
+ */
+export const sendRenewalNotifications = async () => {
+    const users = await getUsersNearingExpiry(30);
+
+    // Filter users who haven't been notified yet
+    const usersToNotify = users.filter(u => !u.renewalNotificationSent);
+
+    // Mark as notified
+    for (const user of usersToNotify) {
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { renewalNotificationSent: true }
+        });
+    }
+
+    // TODO: Send actual email/SMS notifications
+    console.log(`Sent renewal notifications to ${usersToNotify.length} users`);
+
+    return {
+        notified: usersToNotify.length,
+        users: usersToNotify
+    };
+};
+
+// ==========================================
+// ADMIN FUNCTIONS
+// ==========================================
+
+/**
+ * Set expiry date manually (Admin only)
+ * @param userId User ID
+ * @param expiryDate New expiry date
+ * @param adminId Admin user ID performing the action
+ * @returns Updated user
+ */
+export const setExpiryDate = async (
+    userId: number,
+    expiryDate: Date,
+    adminId: number
+) => {
+    // Verify admin permissions (should be done in middleware, but double-check)
+    const admin = await prisma.user.findUnique({
+        where: { id: adminId },
+        select: { role: true }
+    });
+
+    if (admin?.role !== UserRole.GLOBAL_ADMIN) {
+        throw new AppError('Unauthorized. Admin access required.', 403);
+    }
+
+    const user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            expiryDate,
+            accountStatus: AccountStatus.ACTIVE,
+            renewalNotificationSent: false
+        }
+    });
+
+    return user;
+};
+
+/**
+ * Renew account with payment confirmation
+ * @param userId User ID to renew
+ * @param renewalMonths Number of months to renew (defaults to user's renewalPeriodMonths)
+ * @param paymentConfirmed Whether payment is confirmed
+ * @param adminId Admin user ID performing the action
+ * @returns Updated user
+ */
+export const renewAccount = async (
+    userId: number,
+    renewalMonths: number | undefined,
+    paymentConfirmed: boolean,
+    adminId: number
+) => {
+    if (!paymentConfirmed) {
+        throw new AppError('Payment must be confirmed to renew account', 400);
+    }
+
+    const newExpiryDate = await calculateExpiryDate(userId, renewalMonths);
+
+    const user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            expiryDate: newExpiryDate,
+            lastRenewalDate: new Date(),
+            accountStatus: AccountStatus.ACTIVE,
+            renewalNotificationSent: false
+        }
+    });
+
+    console.log(`Account renewed for user ${user.uid} by admin ${adminId}. New expiry: ${newExpiryDate}`);
+
+    return user;
+};
+
+/**
+ * Unlock/reactivate a locked account
+ * @param userId User ID to unlock
+ * @param reason Reason for unlocking
+ * @param adminId Admin user ID performing the action
+ * @returns Updated user
+ */
+export const unlockAccount = async (
+    userId: number,
+    reason: string,
+    adminId: number
+) => {
+    const admin = await prisma.user.findUnique({
+        where: { id: adminId },
+        select: { role: true }
+    });
+
+    if (admin?.role !== UserRole.GLOBAL_ADMIN) {
+        throw new AppError('Unauthorized. Admin access required.', 403);
+    }
+
+    const user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            accountStatus: AccountStatus.ACTIVE
+        }
+    });
+
+    console.log(`Account unlocked for user ${user.uid} by admin ${adminId}. Reason: ${reason}`);
+
+    return user;
+};
+
+/**
+ * Get expiring accounts with filters
+ * @param role Optional role filter
+ * @param days Days until expiry filter (default: 30)
+ * @returns List of expiring accounts
+ */
+export const getExpiringAccounts = async (
+    role?: UserRole,
+    days?: number
+) => {
+    return getUsersNearingExpiry(days || 30, role);
+};
+
+/**
+ * Get expired and locked accounts
+ * @param role Optional role filter
+ * @returns List of expired/locked accounts
+ */
+export const getExpiredAccounts = async (role?: UserRole) => {
+    const where: any = {
+        role: role ? role : { not: UserRole.GLOBAL_ADMIN },
+        accountStatus: {
+            in: [AccountStatus.EXPIRED, AccountStatus.LOCKED]
+        }
+    };
+
+    const users = await prisma.user.findMany({
+        where,
+        select: {
+            id: true,
+            uid: true,
+            email: true,
+            phone: true,
+            role: true,
+            expiryDate: true,
+            lastRenewalDate: true,
+            accountStatus: true,
+            statePerson: { select: { name: true } },
+            districtPerson: { select: { name: true } },
+            clubOwner: { select: { name: true } },
+            student: { select: { name: true } }
+        },
+        orderBy: { expiryDate: 'desc' }
+    });
+
+    return users.map(user => ({
+        id: user.id,
+        uid: user.uid,
+        name:
+            user.statePerson?.name ||
+            user.districtPerson?.name ||
+            user.clubOwner?.name ||
+            user.student?.name ||
+            'Unknown',
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        expiryDate: user.expiryDate,
+        lastRenewalDate: user.lastRenewalDate,
+        accountStatus: user.accountStatus
+    }));
+};
+
+export default {
+    calculateExpiryDate,
+    checkAccountExpiry,
+    getRenewalStatus,
+    getUsersNearingExpiry,
+    lockExpiredAccounts,
+    sendRenewalNotifications,
+    setExpiryDate,
+    renewAccount,
+    unlockAccount,
+    getExpiringAccounts,
+    getExpiredAccounts
+};
