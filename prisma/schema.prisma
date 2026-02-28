@@ -1,0 +1,1619 @@
+// Prisma Schema for SSFI Platform
+// This extends the existing schema.sql with necessary fields
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  GLOBAL_ADMIN
+  STATE_SECRETARY
+  DISTRICT_SECRETARY
+  CLUB_OWNER
+  STUDENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum EventCategory {
+  NATIONAL
+  STATE
+  DISTRICT
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AccountStatus {
+  ACTIVE
+  EXPIRED
+  LOCKED
+  SUSPENDED
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+enum AcademicBoard {
+  STATE_BOARD
+  CBSE
+  ICSE
+  IB
+  OTHER
+}
+
+// Core User Table
+model User {
+  id                Int              @id @default(autoincrement())
+  uid               String           @unique // SSFI-XX-XX-XX-0001
+  email             String?          @unique
+  phone             String           @unique
+  password          String
+  role              UserRole
+  
+  // Authentication & Security
+  otp               String?
+  otpExpiry         DateTime?
+  otpVerified       Boolean          @default(false)
+  isActive          Boolean          @default(true)
+  isApproved        Boolean          @default(false)
+  approvalStatus    ApprovalStatus   @default(PENDING)
+  
+  // Renewal & Expiry
+  registrationDate        DateTime       @default(now())
+  expiryDate              DateTime?
+  lastRenewalDate         DateTime?
+  accountStatus           AccountStatus  @default(ACTIVE)
+  renewalNotificationSent Boolean        @default(false)
+  renewalPeriodMonths     Int            @default(12)
+  
+  // Refresh Tokens
+  refreshToken      String?          @db.Text
+  
+  // Timestamps
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  lastLogin         DateTime?
+  
+  // Relations
+  statePerson       StatePerson?
+  districtPerson    DistrictPerson?
+  clubOwner         ClubOwner?
+  student           Student?
+  payments          Payment[]
+  createdEvents     Event[]          @relation("EventCreator")
+  
+  @@index([email])
+  @@index([phone])
+  @@index([uid])
+  @@index([role])
+  @@map("users")
+}
+
+// State Association
+model State {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  code        String    @unique // KA, TN, MH
+  logo        String?
+  website     String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  statePerson StatePerson?
+  districts   District[]
+  events      Event[]
+  students    Student[]
+  
+  // Affiliation Relations
+  clubs               Club[] // Added for affiliation
+  stateSecretaries    StateSecretary[]
+  districtSecretaries DistrictSecretary[]
+  eventRegistrations  EventRegistration[]
+  
+  @@map("states")
+}
+
+// State Secretary/Person
+model StatePerson {
+  id                Int       @id @default(autoincrement())
+  userId            Int       @unique
+  stateId           Int       @unique
+  
+  // Personal Details
+  name              String
+  gender            Gender
+  aadhaarNumber     String    @unique // Encrypted
+  
+  // Address
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  pincode           String
+  
+  // Documents
+  identityProof     String    // File path
+  profilePhoto      String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  state             State     @relation(fields: [stateId], references: [id])
+  
+  @@map("state_persons")
+}
+
+// District Association
+model District {
+  id          Int       @id @default(autoincrement())
+  stateId     Int
+  name        String
+  code        String    // MYS, BLR
+  logo        String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  state           State             @relation(fields: [stateId], references: [id])
+  districtPerson  DistrictPerson?
+  clubs           Club[]
+  events          Event[]
+  students        Student[]
+  
+  // Affiliation Relations
+  districtSecretaries DistrictSecretary[]
+  eventRegistrations  EventRegistration[]
+  
+  @@unique([stateId, code])
+  @@map("districts")
+}
+
+// District Secretary/Person
+model DistrictPerson {
+  id                Int       @id @default(autoincrement())
+  userId            Int       @unique
+  districtId        Int       @unique
+  
+  // Personal Details
+  name              String
+  gender            Gender
+  aadhaarNumber     String    @unique
+  
+  // Address
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  pincode           String
+  
+  // Documents
+  identityProof     String
+  profilePhoto      String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  district          District  @relation(fields: [districtId], references: [id])
+  
+  @@map("district_persons")
+}
+
+// Skating Club
+model Club {
+  id                Int       @id @default(autoincrement())
+  uid               String?   @unique
+  districtId        Int
+  stateId           Int?      // Added for affiliation flow
+  name              String
+  code              String
+  registrationNumber String?   @unique @map("registrationNo") // Mapped to existing column
+  
+  // New fields for affiliation
+  establishedYear   Int?
+  contactPerson     String?
+  phone             String?
+  email             String?
+  address           String?   // Generic address field
+  
+  // Existing fields
+  addressLine1      String?   // Made optional as new flow uses 'address'
+  addressLine2      String?
+  city              String?
+  pincode           String?
+  
+  logo              String?
+  website           String?
+  isActive          Boolean   @default(true)
+  
+  // Approval Workflow
+  registrationWindowId String?
+  status            String    @default("PENDING") // PENDING, APPROVED
+  approvedAt        DateTime?
+  approvedBy        String?
+  rejectionRemarks  String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  district          District      @relation(fields: [districtId], references: [id])
+  state             State?        @relation(fields: [stateId], references: [id])
+  clubOwner         ClubOwner?
+  students          Student[]
+  eventRegistrations EventRegistration[]
+  
+  // Legacy fields
+  verified      Int?     @default(0)
+  verifiedBy    Int?     @default(0)
+  membershipId  String?  @db.VarChar(100)
+  tshirtSize    String?  @db.VarChar(50)
+  passport      String?  @db.VarChar(100)
+  proof         String?  @db.VarChar(100)
+  certificate   String?  @db.VarChar(100)
+  aadhaarNumber String?  @db.VarChar(50)
+  club          String?  @db.VarChar(255)
+  clubAddress   String?  @db.Text
+  clubName      String?  @db.VarChar(255)
+  emailAddress  String?  @db.VarChar(255)
+  logoPath      String?  @db.VarChar(255)
+  mobileNumber  String?  @db.VarChar(20)
+  createdBy     String?
+  updatedBy     String?
+  
+  @@unique([districtId, code])
+  @@map("clubs")
+}
+
+// Club Owner
+model ClubOwner {
+  id                Int       @id @default(autoincrement())
+  userId            Int       @unique
+  clubId            Int       @unique
+  
+  // Personal Details
+  name              String
+  gender            Gender
+  aadhaarNumber     String    @unique
+  
+  // Address
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  pincode           String
+  
+  // Documents
+  identityProof     String
+  profilePhoto      String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club              Club      @relation(fields: [clubId], references: [id])
+  
+  @@map("club_owners")
+}
+
+// Student (Skater)
+model Student {
+  id                Int           @id @default(autoincrement())
+  userId            Int           @unique
+  stateId           Int
+  districtId        Int
+  clubId            Int
+  
+  // Personal Details
+  name              String
+  dateOfBirth       DateTime
+  gender            Gender
+  bloodGroup        BloodGroup?
+  aadhaarNumber     String        @unique
+  
+  // Family Details
+  fatherName        String
+  motherName        String?
+  
+  // School Details
+  schoolName        String
+  academicBoard     AcademicBoard
+  
+  // Nominee (Insurance)
+  nomineeName       String
+  nomineeAge        Int
+  nomineeRelation   String        // Father/Mother/Guardian
+  
+  // Coaching Details
+  coachName         String
+  coachPhone        String
+  
+  // Address
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  pincode           String
+  
+  // Documents
+  aadhaarCard       String        // File path (encrypted storage)
+  profilePhoto      String?
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  state             State             @relation(fields: [stateId], references: [id])
+  district          District          @relation(fields: [districtId], references: [id])
+  club              Club              @relation(fields: [clubId], references: [id])
+  eventRegistrations EventRegistration[]
+  certificates      Certificate[]
+  raceResults       RaceResult[]
+  
+  // Legacy fields
+  membershipId      String?   @db.VarChar(100)
+  categoryTypeId    Int?      @db.UnsignedInt
+  verified          Int?      @default(0)
+  verifiedBy        Int?      @default(0)
+  iAm               String?   @db.VarChar(100)
+  coachMobileNumber String?
+  identityProof      String?   @db.VarChar(255)
+  residentialAddress String?   @db.Text
+  
+  // Add relations
+  categoryType    CategoryType?     @relation("StudentCategoryType", fields: [categoryTypeId], references: [id])
+  sessionRenewals SessionRenewal[]  @relation("StudentRenewals")
+  
+  @@map("students")
+}
+
+// Events
+model Event {
+  id                    Int               @id @default(autoincrement())
+  creatorId             Int
+  
+  // Basic Details
+  code                  String            @unique
+  name                  String
+  description           String?           @db.Text
+  shortDescription      String?
+  category              EventCategory
+  eventType             String            @default("COMPETITION") // COMPETITION, WORKSHOP, CAMP
+  eventLevel            String            @default("NATIONAL") // NATIONAL, STATE, DISTRICT
+  disciplines           Json?             // Array of discipline names
+  status                EventStatus       @default(DRAFT)
+  
+  // Targeting
+  stateId               Int?
+  districtId            Int?
+  eligibleStates        Json?             // Array of eligible state IDs
+  eligibleDistricts     Json?             // Array of eligible district IDs
+  
+  // Dates
+  eventDate             DateTime
+  eventEndDate          DateTime?
+  registrationStartDate DateTime
+  registrationEndDate   DateTime
+  
+  // Participants
+  minParticipants       Int?
+  maxParticipants       Int?
+  
+  // Location
+  venue                 String?
+  venueAddress          String?
+  city                  String?
+  
+  // Financials
+  entryFee              Decimal           @db.Decimal(10, 2)
+  lateFee               Decimal?          @db.Decimal(10, 2)
+  lateFeeStartDate      DateTime?
+  
+  // Configuration
+  ageCategories         Json?             // Stored as array of strings
+  allowMultipleCategories Boolean         @default(false)
+  requiresApproval      Boolean           @default(false)
+  publishResults        Boolean           @default(false)
+  isResultsPublished    Boolean           @default(false) // New field for result workflow
+  
+  // Certificate Configuration
+  certificateConfig     Json?
+  certificateTitle      String?
+  associationName       String?
+  associationRegNo      String?
+  certificateFromDate   DateTime?
+  certificateToDate     DateTime?
+  secretarySignature    String?
+  presidentSignature    String?
+  
+  // Images
+  bannerImage           String?
+  gallery               Json?             // Array of image URLs
+  
+  // Metadata
+  createdBy             String?
+  updatedBy             String?
+  completedAt           DateTime?
+  cancelledAt           DateTime?
+  
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  // Relations
+  creator               User              @relation("EventCreator", fields: [creatorId], references: [id])
+  state                 State?            @relation(fields: [stateId], references: [id])
+  district              District?         @relation(fields: [districtId], references: [id])
+  registrations         EventRegistration[]
+  certificates          Certificate[]
+  raceResults           RaceResult[]
+  galleryAlbums         GalleryAlbum[]
+  
+  // Legacy fields
+  eventLevelTypeId Int?      @db.UnsignedInt
+  sessionId        Int?      @default(4)
+  eventFees        Decimal?  @db.Decimal(10, 2)
+  eventImage       String?   @db.VarChar(255)
+  eventRemarks     String?   @db.Text
+  regNo            String?   @db.VarChar(100)
+  titleOfChampionship String? @db.VarChar(255)
+  
+  // Add relation
+  eventLevelType EventLevelType? @relation("EventLevelType", fields: [eventLevelTypeId], references: [id])
+  
+  // Indexes for query optimization
+  @@index([category])
+  @@index([status])
+  @@index([eventDate])
+  @@index([code])
+  @@index([creatorId])
+  @@index([eventLevel, status])
+  @@index([stateId, status])
+  @@index([districtId, status])
+  @@index([eventDate, status])
+  @@map("events")
+}
+
+// Event Registrations
+model EventRegistration {
+  id                Int             @id @default(autoincrement())
+  eventId           Int
+  studentId         Int
+  clubId            Int?            // Optional club reference
+  districtId        Int?
+  stateId           Int?
+  
+  // Registration identifiers
+  confirmationNumber String    @unique
+  
+  // Selections
+  suitSize           String
+  skateCategory      String    // BEGINNER, RECREATIONAL, QUAD, PRO_INLINE
+  ageCategory        String    // U-10, U-14, etc.
+  selectedRaces      Json      // Array of race types
+  
+  // Financials
+  entryFee           Decimal   @db.Decimal(10, 2)
+  lateFee            Decimal   @db.Decimal(10, 2) @default(0)
+  totalFee           Decimal   @db.Decimal(10, 2)
+  amountPaid         Decimal   @db.Decimal(10, 2) @default(0)
+  
+  // Status
+  status             String    @default("PENDING") // PENDING, PAYMENT_PENDING, CONFIRMED, CANCELLED, REFUNDED
+  paymentStatus      String    @default("PENDING") // PENDING, PROCESSING, PAID, FAILED, REFUNDED, BYPASSED
+  
+  // Payment Info
+  paymentId          String?
+  paymentMethod      String?
+  transactionId      String?
+  paymentDetails     Json?
+  
+  // Admin & Metadata
+  remarks            String?
+  adminAddedBy       String?
+  adminAddedAt       DateTime?
+  
+  // Timestamps
+  registrationDate  DateTime        @default(now())
+  confirmedAt       DateTime?
+  paidAt            DateTime?
+  cancelledAt       DateTime?
+  cancelledBy       String?
+  cancellationReason String?
+  registeredBy      String?
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  // Relations
+  event             Event           @relation(fields: [eventId], references: [id])
+  student           Student         @relation(fields: [studentId], references: [id])
+  club              Club?           @relation(fields: [clubId], references: [id])
+  district          District?       @relation(fields: [districtId], references: [id])
+  state             State?          @relation(fields: [stateId], references: [id])
+  payment           Payment?
+  
+  // Legacy fields (Kept for safety, can be removed if unused)
+  eventLevelTypeId     Int?     @db.UnsignedInt
+  eligibleEventLevelId Int?     @db.UnsignedInt
+  sessionId            Int?
+  result               Boolean? @default(false)
+  isPresent            Boolean? @default(false)
+  orderId              String?  @db.VarChar(100)
+  prizeAnnouncementPlace String?   @db.VarChar(100)
+  
+  // Add relations  
+  eventLevelType    EventLevelType?      @relation("RegistrationLevelType", fields: [eventLevelTypeId], references: [id])
+  eligibleEventLevel EligibleEventLevel? @relation("RegistrationEligibleLevel", fields: [eligibleEventLevelId], references: [id])
+  
+  @@unique([eventId, studentId])
+  @@index([clubId])
+  @@index([districtId])
+  @@index([stateId])
+  @@index([status])
+  @@map("event_registrations")
+}
+
+// Payments
+model Payment {
+  id                    Int               @id @default(autoincrement())
+  userId                Int
+  
+  // Payment Details
+  amount                Decimal           @db.Decimal(10, 2)
+  currency              String            @default("INR")
+  paymentType           String            // REGISTRATION, RENEWAL, EVENT
+  status                PaymentStatus     @default(PENDING)
+  
+  // Gateway Details
+  razorpayOrderId       String?           @unique
+  razorpayPaymentId     String?           @unique
+  razorpaySignature     String?
+  
+  // Metadata
+  description           String?
+  eventRegistrationId   Int?              @unique
+  
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  // Relations
+  user                  User              @relation(fields: [userId], references: [id])
+  eventRegistration     EventRegistration? @relation(fields: [eventRegistrationId], references: [id])
+  
+  @@index([status])
+  @@index([paymentType])
+  @@map("payments")
+}
+
+// Certificates
+model Certificate {
+  id                Int       @id @default(autoincrement())
+  eventId           Int
+  studentId         Int
+  
+  // Certificate Details
+  certificateNumber String    @unique
+  position          String?   // Winner, Runner-up, Participant
+  category          String?   // Age category
+  
+  // File
+  pdfPath           String?
+  
+  issuedAt          DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  
+  // Relations
+  event             Event     @relation(fields: [eventId], references: [id])
+  student           Student   @relation(fields: [studentId], references: [id])
+  
+  @@unique([eventId, studentId])
+  @@map("certificates")
+}
+
+// ==========================================
+// CMS MODELS
+// ==========================================
+
+// Banners (formerly Sliders)
+model Banner {
+  id              String    @id @default(cuid())
+  title           String
+  subtitle        String?
+  imageUrl        String
+  mobileImageUrl  String?
+  linkUrl         String?
+  linkText        String?
+  position        String    @default("HOME_HERO") // HOME_HERO, HOME_SECONDARY, SIDEBAR, FOOTER, POPUP
+  startDate       DateTime?
+  endDate         DateTime?
+  status          String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  sortOrder       Int       @default(0)
+  
+  metadata        Json?     // Extra fields: badge, highlight, description, secondaryCtaText, secondaryCtaLink, gradient
+  
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([position])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@map("banners")
+}
+
+// News/Announcements
+// News/Announcements
+model News {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  content         String    @db.Text
+  excerpt         String?   @db.Text
+  featuredImage   String?
+  category        String?
+  tags            Json?     // Storing as JSON array ["tag1", "tag2"]
+  
+  metaTitle       String?
+  metaDescription String?   @db.Text
+  metaKeywords    String?
+  
+  status          String    @default("DRAFT")
+  publishedAt     DateTime?
+  isFeatured      Boolean   @default(false)
+  allowComments   Boolean   @default(false)
+  views           Int       @default(0)
+  
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([slug])
+  @@index([status])
+  @@index([category])
+  @@map("news")
+}
+
+// Gallery
+model GalleryAlbum {
+  id          String        @id @default(cuid())
+  title       String        @map("name") // service uses 'title', existing uses 'name'. Let's normalize to service 'title' but map to 'name' or just change it. Service uses `data: { ...data }` so it expects `title` in schema if it matches types. 
+  // Actually service `createGalleryAlbum` uses `data` from validator which has `title`.
+  // I will use `title` as column name for clarity.
+  slug        String        @unique
+  description String?       @db.Text
+  category    String?
+  coverImage  String?
+  eventId     Int?          // Optional link to Event
+  
+  status      String        @default("DRAFT")
+  sortOrder   Int           @default(0)
+  
+  createdBy   String?
+  updatedBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  event       Event?        @relation(fields: [eventId], references: [id])
+  items       GalleryItem[]
+  
+  @@map("gallery_albums")
+}
+
+model GalleryItem {
+  id            String       @id @default(cuid())
+  albumId       String
+  type          String       @default("IMAGE") // IMAGE, VIDEO
+  url           String
+  thumbnailUrl  String?
+  title         String?
+  description   String?
+  sortOrder     Int          @default(0)
+  
+  createdBy     String?
+  updatedBy     String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt  // Added for consistency
+  
+  album         GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  
+  @@index([albumId])
+  @@index([type])
+  @@map("gallery_items")
+}
+
+// Menus
+model Menu {
+  id          String    @id @default(cuid())
+  name        String
+  location    String    // HEADER, FOOTER, SIDEBAR, MOBILE
+  items       Json      // JSON structure for recursive menu items
+  isActive    Boolean   @default(true)
+  
+  createdBy   String?
+  updatedBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("menus")
+}
+
+// Static Pages
+model Page {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  content         String    @db.Text
+  excerpt         String?   @db.Text
+  
+  featuredImage   String?
+  template        String    @default("default")
+  
+  metaTitle       String?
+  metaDescription String?   @db.Text
+  metaKeywords    String?
+  
+  status          String    @default("DRAFT")
+  publishedAt     DateTime?
+  sortOrder       Int       @default(0)
+  
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@map("pages")
+}
+
+// Site Settings
+model SiteSettings {
+  id                String    @id @default(cuid())
+  siteName          String    @default("SSFI")
+  siteTagline       String?
+  logo              String?
+  favicon           String?
+  
+  contactEmail      String?
+  contactPhone      String?
+  address           String?   @db.Text
+  footerText        String?   @db.Text
+  
+  socialLinks       Json?     // { facebook, twitter, instagram, youtube, linkedin }
+  
+  googleAnalyticsId String?
+  maintenanceMode   Boolean   @default(false)
+  maintenanceMessage String?  @db.Text
+
+  // Extended contact info (departments, office hours, map embed URL)
+  metadata          Json?     // { departments: [{name, email, phone}], officeHours: {weekdays, saturday}, mapEmbedUrl, phone2 }
+
+  createdBy         String?
+  updatedBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@map("site_settings")
+}
+
+// Fee Structure
+model FeeStructure {
+  id                  Int       @id @default(autoincrement())
+  entityType          String    // STATE, DISTRICT, CLUB, STUDENT
+  registrationFee     Decimal   @db.Decimal(10, 2)
+  renewalFee          Decimal   @db.Decimal(10, 2)
+  isActive            Boolean   @default(true)
+  effectiveFrom       DateTime  @default(now())
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@index([entityType])
+  @@index([isActive])
+  @@map("fee_structures")
+}
+
+// Coach Training Programs
+model CoachTraining {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?   @db.Text
+  venue       String
+  startDate   DateTime
+  endDate     DateTime
+  duration    String    // e.g., "3 Days"
+  price       Decimal   @db.Decimal(10, 2)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([startDate, endDate])
+  @@index([isActive])
+  @@map("coach_trainings")
+}
+
+// System Configuration
+model Config {
+  id          Int       @id @default(autoincrement())
+  key         String    @unique
+  value       String    @db.Text
+  description String?
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("configs")
+}
+
+// ==========================================
+// AFFILIATION MODELS
+// ==========================================
+
+model RegistrationWindow {
+  id                  Int       @id @default(autoincrement())
+  type                String    @db.VarChar(20) // student, club, state, district
+  title               String    @db.VarChar(255)
+  description         String?   @db.Text
+  startDate           DateTime  @db.Date
+  endDate             DateTime  @db.Date
+  lateFeeStart        DateTime? @db.Date
+  lateFeeAmount       Int       @default(0)
+  baseFee             Int
+  isPaused            Boolean   @default(false)
+  isActive            Boolean   @default(true)
+  deletedAt           DateTime?
+  deletedBy           String?   // Added to match service usage
+  maxRegistrations    Int?
+  registrationsCount  Int       @default(0)
+  createdBy           String    // Service passes string ID, schema was Int. Let's check service again. Service passes string? `req.user?.id.toString() || 'admin'`. Schema has `createdBy Int`. This is a mismatch too.
+  createdAt           DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt           DateTime  @default(now()) @updatedAt @db.Timestamp(0)
+  
+  @@index([type])
+  @@index([startDate, endDate])
+  @@index([isActive])
+  @@map("registration_windows")
+}
+
+model StateSecretary {
+  id                   String   @id @default(cuid())
+  uid                  String   @unique
+  name                 String
+  gender               String
+  email                String
+  phone                String
+  aadhaarNumber        String
+  stateId              Int
+  state                State    @relation(fields: [stateId], references: [id], onDelete: Restrict)
+  residentialAddress   String
+  identityProof        String
+  profilePhoto         String?
+  registrationWindowId String
+  status               String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedAt           DateTime?
+  approvedBy           String?
+  rejectionRemarks     String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  @@index([uid])
+  @@index([email])
+  @@index([status])
+  @@index([stateId])
+  @@map("state_secretaries")
+}
+
+model DistrictSecretary {
+  id                   String   @id @default(cuid())
+  uid                  String   @unique
+  name                 String
+  gender               String
+  email                String
+  phone                String
+  aadhaarNumber        String
+  stateId              Int
+  state                State    @relation(fields: [stateId], references: [id])
+  districtId           Int
+  district             District @relation(fields: [districtId], references: [id], onDelete: Restrict)
+  residentialAddress   String
+  identityProof        String
+  profilePhoto         String?
+  registrationWindowId String
+  status               String   @default("PENDING")
+  approvedAt           DateTime?
+  approvedBy           String?
+  rejectionRemarks     String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  @@index([uid])
+  @@index([email])
+  @@index([status])
+  @@index([stateId])
+  @@index([districtId])
+  @@map("district_secretaries")
+}
+
+// ==========================================
+// LEGACY DATABASE MODELS (from old SSFI system)
+// ==========================================
+
+model CategoryType {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  cat_name   String    @db.VarChar(255)
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now()) @updatedAt
+  
+  skaters               Student[]           @relation("StudentCategoryType")
+  eligible_event_levels EligibleEventLevel[]
+  
+  @@map("tbl_category_type")
+}
+
+model EventLevelType {
+  id          Int       @id @default(autoincrement()) @db.UnsignedInt
+  event_level String    @db.VarChar(255)
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @default(now()) @updatedAt
+  
+  events                Event[]             @relation("EventLevelType")
+  event_registrations   EventRegistration[] @relation("RegistrationLevelType")
+  eligible_event_levels EligibleEventLevel[]
+  
+  @@map("tbl_event_level_type")
+}
+
+model EligibleEventLevel {
+  id                  Int       @id @default(autoincrement()) @db.UnsignedInt
+  category_type_id    Int       @db.UnsignedInt
+  event_level_type_id Int       @db.UnsignedInt
+  event_level_name    String    @db.VarChar(255)
+  created_at          DateTime? @default(now())
+  updated_at          DateTime? @default(now()) @updatedAt
+  
+  category_type       CategoryType        @relation(fields: [category_type_id], references: [id], onDelete: Cascade)
+  event_level_type    EventLevelType      @relation(fields: [event_level_type_id], references: [id], onDelete: Cascade)
+  event_registrations EventRegistration[] @relation("RegistrationEligibleLevel")
+  
+  @@map("tbl_eligible_event_level")
+}
+
+model Session {
+  id           Int       @id @default(autoincrement()) @db.UnsignedInt
+  session_name String    @db.VarChar(255)
+  start_date   DateTime  @db.Date
+  end_date     DateTime  @db.Date
+  is_active    Boolean   @default(false)
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @default(now()) @updatedAt
+  
+  session_renewals SessionRenewal[]
+  
+  @@map("tbl_session")
+}
+
+model SessionRenewal {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  skater_id  Int
+  session_id Int       @db.UnsignedInt
+  payment_id String?   @db.VarChar(100)
+  order_id   String?   @db.VarChar(100)
+  amount     Decimal   @db.Decimal(10, 2)
+  status     String?   @db.VarChar(50)
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now()) @updatedAt
+  
+  skater  Student @relation("StudentRenewals", fields: [skater_id], references: [id], onDelete: Cascade)
+  session Session @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  
+  @@map("tbl_session_renewal")
+}
+
+model Role {
+  id          Int       @id @default(autoincrement())
+  role_name   String    @db.VarChar(100)
+  description String?   @db.Text
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @default(now()) @updatedAt
+  
+  users       LegacyUser[]
+  permissions StaffPrivilege[]
+  
+  @@map("roles")
+}
+
+model PermissionModule {
+  id          Int       @id @default(autoincrement())
+  module_name String    @db.VarChar(100)
+  module_slug String    @db.VarChar(100)
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @default(now()) @updatedAt
+  
+  permissions Permission[]
+  
+  @@map("permission_modules")
+}
+
+model Permission {
+  id              Int       @id @default(autoincrement())
+  module_id       Int
+  permission_name String    @db.VarChar(100)
+  permission_slug String    @db.VarChar(100)
+  created_at      DateTime? @default(now())
+  updated_at      DateTime? @default(now()) @updatedAt
+  
+  module           PermissionModule @relation(fields: [module_id], references: [id], onDelete: Cascade)
+  staff_privileges StaffPrivilege[]
+  
+  @@index([module_id])
+  @@index([permission_slug])
+  @@map("permission")
+}
+
+model StaffPrivilege {
+  id            Int       @id @default(autoincrement())
+  role_id       Int
+  permission_id Int
+  can_view      Boolean   @default(false)
+  can_add       Boolean   @default(false)
+  can_edit      Boolean   @default(false)
+  can_delete    Boolean   @default(false)
+  created_at    DateTime? @default(now())
+  updated_at    DateTime? @default(now()) @updatedAt
+  
+  role       Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+  
+  @@index([role_id])
+  @@index([permission_id])
+  @@unique([role_id, permission_id])
+  @@map("staff_privileges")
+}
+
+model LegacyUser {
+  id                  Int       @id @default(autoincrement())
+  branch_id           Int
+  user_id             String    @db.VarChar(50)
+  role_id             Int?
+  club_id             Int?
+  username            String    @db.VarChar(100)
+  member_id           String?   @db.VarChar(100)
+  password            String    @db.VarChar(255)
+  status              String    @default("active")
+  full_name           String    @db.VarChar(255)
+  gender              String
+  email_address       String    @db.VarChar(255)
+  mobile_number       String    @db.VarChar(15)
+  aadhar_number       String    @db.VarChar(20)
+  residential_address String    @db.Text
+  state_id            Int
+  district_id         Int
+  identity_proof      String    @db.VarChar(255)
+  profile_photo       String    @db.VarChar(255)
+  remember_token      String?   @db.VarChar(255)
+  last_login          DateTime?
+  created_at          DateTime? @default(now())
+  updated_at          DateTime? @default(now()) @updatedAt
+  
+  role Role? @relation(fields: [role_id], references: [id], onDelete: SetNull)
+  
+  @@index([user_id])
+  @@index([username])
+  @@index([email_address])
+  @@index([role_id])
+  @@index([status])
+  @@map("tbl_user")
+}
+
+model PaymentFailure {
+  id                Int      @id @default(autoincrement())
+  order_id          String?  @db.VarChar(255)
+  payment_id        String?  @db.VarChar(255)
+  error_code        String?  @db.VarChar(100)
+  error_description String?  @db.Text
+  error_source      String?  @db.VarChar(100)
+  error_reason      String?  @db.VarChar(255)
+  amount            Int?
+  created_at        DateTime @default(now()) @db.Timestamp(0)
+  
+  @@index([order_id])
+  @@index([payment_id])
+  @@index([created_at])
+  @@map("payment_failures")
+}
+
+model NewsArticle {
+  id             Int       @id @default(autoincrement())
+  title          String    @db.VarChar(255)
+  slug           String    @unique @db.VarChar(255)
+  excerpt        String    @db.Text
+  content        String    @db.LongText
+  category       String    @db.VarChar(100)
+  author         String    @db.VarChar(100)
+  featuredImage  String?   @db.VarChar(255)
+  isPublished    Boolean   @default(false)
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  
+  @@index([slug])
+  @@index([category])
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@map("news_articles")
+}
+
+model FrontCmsSetting {
+  id                      Int     @id @default(autoincrement())
+  application_title       String  @db.VarChar(255)
+  url_alias               String? @db.VarChar(255)
+  cms_active              Int     @default(0) @db.TinyInt
+  online_admission        Int     @default(0) @db.TinyInt
+  theme                   String  @db.VarChar(255)
+  captcha_status          String  @db.VarChar(20)
+  recaptcha_site_key      String  @db.VarChar(255)
+  recaptcha_secret_key    String  @db.VarChar(255)
+  address                 String  @db.VarChar(350)
+  mobile_no               String  @db.VarChar(60)
+  fax                     String  @db.VarChar(60)
+  receive_contact_email   String  @db.VarChar(255)
+  email                   String  @db.VarChar(60)
+  copyright_text          String  @db.VarChar(255)
+  fav_icon                String  @db.VarChar(255)
+  logo                    String  @db.VarChar(255)
+  footer_about_text       String  @db.VarChar(300)
+  working_hours           String  @db.VarChar(300)
+  google_analytics        String? @db.Text
+  primary_color           String  @default("#ff685c") @db.VarChar(100)
+  menu_color              String  @default("#fff") @db.VarChar(100)
+  hover_color             String  @default("#f04133") @db.VarChar(100)
+  text_color              String  @default("#232323") @db.VarChar(100)
+  text_secondary_color    String  @default("#383838") @db.VarChar(100)
+  footer_background_color String  @default("#383838") @db.VarChar(100)
+  footer_text_color       String  @default("#8d8d8d") @db.VarChar(100)
+  copyright_bg_color      String  @default("#262626") @db.VarChar(100)
+  copyright_text_color    String  @default("#8d8d8d") @db.VarChar(100)
+  border_radius           String  @default("0") @db.VarChar(100)
+  facebook_url            String  @db.VarChar(100)
+  twitter_url             String  @db.VarChar(100)
+  youtube_url             String  @db.VarChar(100)
+  google_plus             String  @db.VarChar(100)
+  linkedin_url            String  @db.VarChar(100)
+  pinterest_url           String  @db.VarChar(100)
+  instagram_url           String  @db.VarChar(100)
+  branch_id               Int
+  
+  @@map("front_cms_setting")
+}
+
+model GlobalSettings {
+  id                     Int      @id @default(autoincrement())
+  institute_name         String   @db.VarChar(255)
+  institution_code       String   @db.VarChar(255)
+  reg_prefix             String   @db.VarChar(255)
+  institute_email        String   @db.VarChar(100)
+  address                String   @db.Text
+  mobileno               String   @db.VarChar(100)
+  currency               String   @db.VarChar(100)
+  currency_symbol        String   @db.VarChar(100)
+  sms_service_provider   String   @db.VarChar(100)
+  session_id             Int
+  translation            String   @db.VarChar(100)
+  footer_text            String   @db.VarChar(255)
+  animations             String   @db.VarChar(100)
+  timezone               String   @db.VarChar(100)
+  date_format            String   @db.VarChar(100)
+  facebook_url           String   @db.VarChar(255)
+  twitter_url            String   @db.VarChar(255)
+  linkedin_url           String   @db.VarChar(255)
+  youtube_url            String   @db.VarChar(255)
+  cron_secret_key        String?  @db.VarChar(255)
+  preloader_backend      Boolean  @default(true)
+  footer_branch_switcher Boolean  @default(true)
+  cms_default_branch     Int
+  image_extension        String?  @db.Text
+  image_size             Float    @default(1024)
+  file_extension         String?  @db.Text
+  pid                    String?  @db.VarChar(255)
+  file_size              Float?   @default(1024)
+  created_at             DateTime @default(now()) @db.Timestamp(0)
+  updated_at             DateTime @updatedAt
+  
+  @@map("global_settings")
+}
+
+model WhatsappApi {
+  id              Int       @id @default(autoincrement())
+  api_url         String?   @db.Text
+  access_token    String?   @db.Text
+  phone_number_id String?   @db.VarChar(100)
+  is_active       Boolean   @default(false)
+  created_at      DateTime? @default(now())
+  updated_at      DateTime? @default(now()) @updatedAt
+
+  @@map("whatsapp_api")
+}
+
+// Race Results
+model RaceResult {
+  id                Int       @id @default(autoincrement())
+  eventId           Int
+  studentId         Int
+  
+  // Race Details
+  raceType          String    // e.g., "500M", "1000M"
+  skateCategory     String    // e.g., "QUAD", "INLINE"
+  ageCategory       String    // e.g., "U-14"
+  gender            Gender
+  
+  // Result
+  position          Int       // 1, 2, 3
+  timing            String?   // Optional timing info (e.g., "00:45:12")
+  remarks           String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  event             Event     @relation(fields: [eventId], references: [id])
+  student           Student   @relation(fields: [studentId], references: [id])
+  
+  @@unique([eventId, raceType, skateCategory, ageCategory, gender, position]) // Ensure unique winner per slot
+  @@index([eventId])
+  @@index([studentId])
+  @@map("race_results")
+}
+
+// ==========================================
+// COACH CERTIFICATION MODELS
+// ==========================================
+
+model CoachCertProgram {
+  id                Int       @id @default(autoincrement())
+  level             Int       // 1, 2, 3
+  title             String
+  description       String?   @db.Text
+
+  // Schedule
+  startDate         DateTime
+  endDate           DateTime
+  lastDateToApply   DateTime
+
+  // Location
+  venue             String
+  venueAddress      String?
+  city              String
+  state             String
+
+  // Pricing
+  price             Decimal   @db.Decimal(10, 2)
+  includesText      String?   // e.g. "Includes 2 days dormitory stay, food & camp fees"
+
+  // Capacity
+  totalSeats        Int
+  filledSeats       Int       @default(0)
+
+  // Eligibility
+  eligibilityCriteria String?  @db.Text
+  minAge            Int?
+  minExperience     Int?      // in years
+  prerequisiteLevel Int?      // Must have completed this level first (null for Level 1)
+
+  // Status
+  status            String    @default("DRAFT") // DRAFT, PUBLISHED, REGISTRATION_OPEN, REGISTRATION_CLOSED, ONGOING, COMPLETED, CANCELLED
+  isActive          Boolean   @default(true)
+
+  // Organizer Info
+  organizedBy       String?
+  approvedBy        String?
+
+  createdBy         String?
+  updatedBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  registrations     CoachCertRegistration[]
+
+  @@index([level])
+  @@index([status])
+  @@index([startDate])
+  @@index([isActive, status])
+  @@map("coach_cert_programs")
+}
+
+model CoachCertRegistration {
+  id                  Int       @id @default(autoincrement())
+  programId           Int
+
+  // Personal Details
+  fullName            String
+  fatherName          String
+  gender              String    // MALE, FEMALE, OTHER
+  dateOfBirth         DateTime
+
+  // Contact
+  phone               String
+  email               String
+
+  // Address
+  address             String    @db.Text
+  city                String
+  district            String
+  state               String
+  pincode             String
+
+  // Skating Details
+  bloodGroup          String?
+  skatingExperience   Int?      // in years
+  tshirtSize          String?
+
+  // Documents
+  photo               String?   // file path
+  aadhaarNumber       String
+  aadhaarCard         String?   // file path
+
+  // Registration
+  registrationNumber  String    @unique  // SSFI-COACH-L1-001
+  registrationDate    DateTime  @default(now())
+
+  // Payment
+  amount              Decimal   @db.Decimal(10, 2)
+  paymentStatus       String    @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
+  paymentId           String?
+  transactionId       String?
+
+  // Completion & Certification
+  status              String    @default("REGISTERED") // REGISTERED, PAYMENT_PENDING, CONFIRMED, ATTENDED, COMPLETED, FAILED, CANCELLED
+  isCompleted         Boolean   @default(false)
+  completedAt         DateTime?
+  rating              Decimal?  @db.Decimal(2, 1)  // 1.0 to 5.0
+  remarks             String?   @db.Text
+  certificateNumber   String?
+  certificateIssuedAt DateTime?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  program             CoachCertProgram @relation(fields: [programId], references: [id])
+
+  @@unique([programId, phone])
+  @@unique([programId, aadhaarNumber])
+  @@index([programId])
+  @@index([status])
+  @@index([isCompleted])
+  @@index([registrationNumber])
+  @@map("coach_cert_registrations")
+}
+
+// ==========================================
+// ADD THIS TO THE END OF schema.prisma
+// (before the closing of the file)
+// ==========================================
+
+model BeginnerCertProgram {
+  id                Int       @id @default(autoincrement())
+  category          String    // SPEED_SKATING, ARTISTIC, INLINE_HOCKEY, GENERAL
+  title             String
+  description       String?   @db.Text
+
+  // Schedule
+  startDate         DateTime
+  endDate           DateTime
+  lastDateToApply   DateTime
+
+  // Location
+  venue             String
+  venueAddress      String?
+  city              String
+  state             String
+
+  // Pricing
+  price             Decimal   @db.Decimal(10, 2)
+  includesText      String?
+
+  // Capacity
+  totalSeats        Int
+  filledSeats       Int       @default(0)
+
+  // Eligibility
+  eligibilityCriteria String?  @db.Text
+  minAge            Int?
+  maxAge            Int?
+  ageGroup          String?   // e.g. "5-8", "9-12", "13-17"
+
+  // Status
+  status            String    @default("DRAFT")
+  isActive          Boolean   @default(true)
+
+  // Organizer Info
+  organizedBy       String?
+  approvedBy        String?
+
+  createdBy         String?
+  updatedBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  registrations     BeginnerCertRegistration[]
+
+  @@index([category])
+  @@index([status])
+  @@index([startDate])
+  @@index([isActive, status])
+  @@map("beginner_cert_programs")
+}
+
+// ==========================================
+// CMS CONTENT MODELS
+// ==========================================
+
+model TeamMember {
+  id           Int      @id @default(autoincrement())
+  name         String
+  role         String
+  bio          String?  @db.Text
+  photo        String?  // path to uploaded WebP file
+  email        String?
+  linkedinUrl  String?
+  displayOrder Int      @default(0)
+  showOnHome   Boolean  @default(false)  // show on homepage OurTeam section
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([showOnHome])
+  @@index([displayOrder])
+  @@map("team_members")
+}
+
+model Milestone {
+  id           Int      @id @default(autoincrement())
+  year         String   // free text: "2001", "2025-26", "Today"
+  title        String
+  description  String   @db.Text
+  icon         String   @default("Trophy") // key from fixed icon set
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@map("milestones")
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+model BeginnerCertRegistration {
+  id                  Int       @id @default(autoincrement())
+  programId           Int
+
+  // Student Details
+  fullName            String
+  fatherName          String
+  motherName          String?
+  gender              String
+  dateOfBirth         DateTime
+  age                 Int?
+
+  // Contact
+  phone               String    // Guardian phone
+  email               String
+  whatsapp            String?
+
+  // Address
+  address             String    @db.Text
+  city                String
+  district            String
+  state               String
+  pincode             String
+
+  // Skating Details
+  bloodGroup          String?
+  skatingExperience   Int?      // in months
+  currentSkillLevel   String?   // BEGINNER, BASIC, INTERMEDIATE
+  clubName            String?
+  tshirtSize          String?
+
+  // Guardian Details
+  guardianName        String
+  guardianRelation    String    // FATHER, MOTHER, GUARDIAN
+  guardianPhone       String
+  guardianEmail       String?
+
+  // Documents
+  photo               String?
+  aadhaarNumber       String
+  aadhaarCard         String?
+  birthCertificate    String?
+
+  // Registration
+  registrationNumber  String    @unique
+  registrationDate    DateTime  @default(now())
+
+  // Payment
+  amount              Decimal   @db.Decimal(10, 2)
+  paymentStatus       String    @default("PENDING")
+  paymentId           String?
+  transactionId       String?
+
+  // Completion & Certification
+  status              String    @default("REGISTERED")
+  isCompleted         Boolean   @default(false)
+  completedAt         DateTime?
+  grade               String?   // GOLD, SILVER, BRONZE, PARTICIPATION
+  rating              Decimal?  @db.Decimal(2, 1)
+  remarks             String?   @db.Text
+  certificateNumber   String?
+  certificateIssuedAt DateTime?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  program             BeginnerCertProgram @relation(fields: [programId], references: [id])
+
+  @@unique([programId, phone])
+  @@unique([programId, aadhaarNumber])
+  @@index([programId])
+  @@index([status])
+  @@index([isCompleted])
+  @@map("beginner_cert_registrations")
+}
