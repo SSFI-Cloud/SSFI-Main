@@ -15,6 +15,11 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'api.ssfiskate.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: '*.ssfiskate.com',
         pathname: '/**',
       },
@@ -50,9 +55,9 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://www.google.com https://www.gstatic.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: blob: http://localhost:5001 https://ssfiskate.com https://*.ssfiskate.com",
+              "img-src 'self' data: blob: http://localhost:5001 https://ssfiskate.com https://api.ssfiskate.com https://*.ssfiskate.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' http://localhost:5001 https://ssfiskate.com https://*.ssfiskate.com https://api.razorpay.com https://lumberjack-cx.razorpay.com",
+              "connect-src 'self' http://localhost:5001 https://ssfiskate.com https://api.ssfiskate.com https://*.ssfiskate.com https://api.razorpay.com https://lumberjack-cx.razorpay.com",
               "frame-src https://www.google.com https://maps.google.com https://api.razorpay.com",
               "object-src 'none'",
               "base-uri 'self'",
