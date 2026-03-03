@@ -1,18 +1,30 @@
 import { PrismaClient } from '@prisma/client';
 
-// Prevent multiple instances of Prisma Client in development
-// https://www.prisma.io/docs/guides/database/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
+const DATABASE_URL = process.env.DATABASE_URL || 
+  'mysql://u745371806_ssfi_users:ssFI2026@127.0.0.1:3306/u745371806_ssfi_prod?connection_limit=3&pool_timeout=10&connect_timeout=10';
+
+// Set it in process.env so Prisma schema env("DATABASE_URL") also picks it up
+process.env.DATABASE_URL = DATABASE_URL;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+function createPrismaClient() {
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: DATABASE_URL,
+      },
+    },
+    log: ['error'],
   });
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// Always cache prisma instance globally - prevents new instance per request
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = createPrismaClient();
+}
 
+export const prisma = globalForPrisma.prisma;
 export default prisma;

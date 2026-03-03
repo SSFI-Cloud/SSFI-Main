@@ -1,5 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { Prisma } from '@prisma/client';
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientInitializationError,
+  PrismaClientUnknownRequestError,
+  PrismaClientRustPanicError,
+  PrismaClientValidationError,
+} from '@prisma/client/runtime/library';
 import { ZodError } from 'zod';
 import logger from '../utils/logger.util';
 import { AppError } from '../utils/errors';
@@ -41,41 +47,53 @@ export const errorHandler = (
     message = err.message;
   }
 
-  // Prisma Errors
-  else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+  // Prisma Known Request Errors
+  else if (err instanceof PrismaClientKnownRequestError) {
     statusCode = 400;
+    const prismaErr = err as PrismaClientKnownRequestError;
 
-    switch (err.code) {
-      case 'P2002':
-        // Unique constraint violation
-        const target = err.meta?.target;
-        const field = Array.isArray(target) ? target.join(', ') : target || 'field';
+    switch (prismaErr.code) {
+      case 'P2002': {
+        const target = prismaErr.meta?.target;
+        const field = Array.isArray(target) ? target.join(', ') : (target as string) || 'field';
         message = `Duplicate entry: ${field} already exists`;
         break;
-
+      }
       case 'P2025':
-        // Record not found
         statusCode = 404;
         message = 'Record not found';
         break;
-
       case 'P2003':
-        // Foreign key constraint failed
         message = 'Related record not found';
         break;
-
       case 'P2014':
-        // Required relation violation
         message = 'Required relation is missing';
         break;
-
       default:
         message = 'Database operation failed';
     }
   }
 
+  // Prisma Initialization Error (e.g. DATABASE_URL missing or DB unreachable)
+  else if (err instanceof PrismaClientInitializationError) {
+    statusCode = 503;
+    message = 'Database connection failed. Please try again later.';
+  }
+
+  // Prisma Unknown Request Error
+  else if (err instanceof PrismaClientUnknownRequestError) {
+    statusCode = 500;
+    message = 'An unknown database error occurred';
+  }
+
+  // Prisma Rust Panic Error
+  else if (err instanceof PrismaClientRustPanicError) {
+    statusCode = 500;
+    message = 'A critical database error occurred';
+  }
+
   // Prisma Validation Error
-  else if (err instanceof Prisma.PrismaClientValidationError) {
+  else if (err instanceof PrismaClientValidationError) {
     statusCode = 400;
     message = 'Invalid data provided';
   }
@@ -84,7 +102,7 @@ export const errorHandler = (
   else if (err instanceof ZodError) {
     statusCode = 400;
     message = 'Validation failed';
-    errors = err.errors.map(e => ({
+    errors = err.errors.map((e: any) => ({
       field: e.path.join('.'),
       message: e.message
     }));
@@ -104,7 +122,6 @@ export const errorHandler = (
   else if (err.name === 'MulterError') {
     statusCode = 400;
     const multerErr = err as any;
-
     if (multerErr.code === 'LIMIT_FILE_SIZE') {
       message = 'File too large';
     } else if (multerErr.code === 'LIMIT_UNEXPECTED_FILE') {
@@ -114,7 +131,7 @@ export const errorHandler = (
     }
   }
 
-  // Send error response
+  // Build error response
   const response: any = {
     success: false,
     message,

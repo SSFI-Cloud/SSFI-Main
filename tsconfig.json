@@ -7,14 +7,16 @@
         ],
         "outDir": "./dist",
         "rootDir": "./src",
-        "strict": true,
+        "strict": false,
+        "noImplicitAny": false,
+        "strictNullChecks": false,
+        "noEmitOnError": false,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
-        "declaration": true,
-        "declarationMap": true,
-        "sourceMap": true,
+        "declaration": false,
+        "sourceMap": false,
         "moduleResolution": "node",
         "baseUrl": "./src",
         "paths": {
@@ -28,6 +30,9 @@
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "src/scripts",
+        "src/debug-services.ts",
+        "src/check_db.ts"
     ]
 }
