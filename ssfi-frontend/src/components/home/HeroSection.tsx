@@ -56,7 +56,7 @@ const FALLBACK_SLIDES = [
     ctaText: 'Apply for Certification',
     ctaLink: '/affiliated-coaches',
     secondaryCta: { text: 'Program Details', link: '/affiliated-coaches' },
-    image: '/images/hero/slide-3.webp',
+    image: '/images/hero/hero_speed_new.jpg',
     gradient: 'from-emerald-600/30 via-green-500/20 to-transparent',
     icon: GraduationCap,
   },
@@ -70,13 +70,13 @@ const FALLBACK_SLIDES = [
     ctaText: 'Register Now',
     ctaLink: '/auth/register',
     secondaryCta: { text: 'Check Eligibility', link: '/about' },
-    image: '/images/hero/slide-4.webp',
+    image: '/images/hero/hero_national_new.jpg',
     gradient: 'from-purple-600/30 via-violet-500/20 to-transparent',
     icon: UserPlus,
   },
 ];
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1').replace('/api/v1', '');
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1').replace('/api/v1', '');
 
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);

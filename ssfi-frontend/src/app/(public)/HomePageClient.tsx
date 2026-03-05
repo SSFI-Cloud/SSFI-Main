@@ -4,8 +4,10 @@ import dynamic from 'next/dynamic';
 import HeroSection from '@/components/home/HeroSection';
 
 // Eagerly loaded — above the fold
-import GlobeStats from '@/components/home/GlobeStats';
 import EventHighlightCards from '@/components/home/EventHighlightCards';
+
+// GlobeStats uses a COBE 3D WebGL globe that causes scroll jank if loaded eagerly
+const GlobeStats = dynamic(() => import('@/components/home/GlobeStats'), { ssr: false });
 
 // Lazy loaded — below the fold (reduces initial JS bundle by ~80KB+)
 const CoachCertification = dynamic(() => import('@/components/home/CoachCertification'), { ssr: false });
