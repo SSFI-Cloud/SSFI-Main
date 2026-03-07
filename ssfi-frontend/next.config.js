@@ -68,16 +68,15 @@ const nextConfig = {
         ],
       },
       {
-        // Prevent shared caches (Hostinger LiteSpeed, Cloudflare) from caching
-        // HTML pages for too long. Next.js defaults to s-maxage=31536000 for
-        // static pages which causes stale HTML after deployments.
-        // Short s-maxage (60s) + stale-while-revalidate gives fast responses
-        // while ensuring fresh content within ~1 minute of a deploy.
+        // CRITICAL: Never let CDN/proxy cache HTML pages.
+        // After deployments, chunk hashes change. Stale HTML references
+        // old chunks that no longer exist → ChunkLoadError.
+        // Only hashed static assets (_next/static/) should be cached.
         source: '/:path((?!_next/static|_next/image|images|uploads|favicon\\.ico).*)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
+            value: 'public, max-age=0, s-maxage=0, must-revalidate',
           },
         ],
       },
