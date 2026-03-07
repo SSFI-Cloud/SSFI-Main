@@ -23,6 +23,7 @@ router.use(protect);
 router.get('/', injectScopeFilters, clubController.getClubs);
 router.get('/:id', clubController.getClub);
 
+router.put('/:id', restrictTo(UserRole.GLOBAL_ADMIN), clubController.updateClub);
 router.put('/:id/status', restrictTo(UserRole.GLOBAL_ADMIN), clubController.updateClubStatus);
 
 export default router;

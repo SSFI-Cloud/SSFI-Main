@@ -73,6 +73,20 @@ const studentUpload = uploadFields([
 ]);
 
 /**
+ * @route   POST /api/v1/affiliations/student/initiate
+ * @desc    Initiate Student Registration with Payment
+ * @access  Public (when registration is open)
+ */
+router.post('/student/initiate', studentUpload, affiliationController.initiateStudentRegistration);
+
+/**
+ * @route   POST /api/v1/affiliations/student/verify
+ * @desc    Verify Student Registration Payment
+ * @access  Public
+ */
+router.post('/student/verify', affiliationController.verifyStudentPayment);
+
+/**
  * @route   POST /api/v1/affiliations/student
  * @desc    Register a Student
  * @access  Public (when registration is open)

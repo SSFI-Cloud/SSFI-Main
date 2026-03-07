@@ -309,6 +309,76 @@ class PaymentController {
     }
 
     /**
+     * Get payment receipt / details
+     * GET /api/v1/payments/:id/receipt
+     */
+    async getReceipt(req: Request, res: Response, next: NextFunction) {
+        try {
+            const paymentId = parseInt(req.params.id);
+            if (!paymentId || isNaN(paymentId)) {
+                return res.status(400).json({ status: 'error', message: 'Invalid payment ID' });
+            }
+
+            const prisma = (await import('../config/prisma')).default;
+
+            const payment = await prisma.payment.findUnique({
+                where: { id: paymentId },
+                include: {
+                    user: {
+                        select: {
+                            uid: true,
+                            email: true,
+                            phone: true,
+                            role: true,
+                            student: { select: { name: true } },
+                            clubOwner: { select: { name: true } },
+                            statePerson: { select: { name: true } },
+                            districtPerson: { select: { name: true } },
+                        },
+                    },
+                },
+            });
+
+            if (!payment) {
+                return res.status(404).json({ status: 'error', message: 'Payment not found' });
+            }
+
+            const userName =
+                payment.user?.student?.name ||
+                payment.user?.clubOwner?.name ||
+                payment.user?.statePerson?.name ||
+                payment.user?.districtPerson?.name ||
+                'N/A';
+
+            return res.status(200).json({
+                status: 'success',
+                data: {
+                    id: payment.id,
+                    amount: Number(payment.amount),
+                    currency: payment.currency,
+                    paymentType: payment.paymentType,
+                    status: payment.status,
+                    razorpayOrderId: payment.razorpayOrderId,
+                    razorpayPaymentId: payment.razorpayPaymentId,
+                    description: payment.description,
+                    createdAt: payment.createdAt,
+                    updatedAt: payment.updatedAt,
+                    user: {
+                        name: userName,
+                        uid: payment.user?.uid,
+                        email: payment.user?.email,
+                        phone: payment.user?.phone,
+                        role: payment.user?.role,
+                    },
+                },
+            });
+        } catch (error: any) {
+            console.error('Get receipt error:', error);
+            next(error);
+        }
+    }
+
+    /**
      * Handle Razorpay webhook
      * POST /api/v1/payments/webhook
      */

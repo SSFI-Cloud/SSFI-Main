@@ -1,6 +1,8 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 
 import prisma from '../config/prisma';
+import { paymentService } from './payment.service';
+import { razorpayConfig } from '../config/razorpay.config';
 class CoachCertService {
 
   // ══════════ PROGRAMS ══════════
@@ -35,9 +37,9 @@ class CoachCertService {
     return program;
   }
 
-  async listPrograms(query: { level?: string; status?: string; isActive?: string; page: string; limit: string }) {
-    const page = parseInt(query.page);
-    const limit = parseInt(query.limit);
+  async listPrograms(query: { level?: string; status?: string; isActive?: string; page?: string; limit?: string }) {
+    const page = parseInt(query.page || '1');
+    const limit = parseInt(query.limit || '20');
     const where: any = {};
     if (query.level) where.level = parseInt(query.level);
     if (query.status) where.status = query.status;
@@ -118,6 +120,86 @@ class CoachCertService {
     });
 
     return registration;
+  }
+
+  async initiateRegistration(data: any, files: { photo?: string; aadhaarCard?: string }) {
+    // 1. Register coach using existing logic
+    const registration = await this.registerCoach(data, files);
+
+    // 2. Create Razorpay order
+    const order = await paymentService.createOrder({
+      amount: Number(registration.amount) * 100, // convert to paise
+      currency: 'INR',
+      payment_type: 'COACH_CERTIFICATION',
+      entity_id: registration.id,
+      entity_type: 'coach_certification',
+      user_id: 1, // public registration, no user
+      notes: {
+        registration_number: registration.registrationNumber,
+        name: data.fullName,
+        type: 'COACH_CERTIFICATION',
+      },
+    });
+
+    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+
+    return {
+      registration,
+      razorpayOrderId: order.id,
+      amount: Number(registration.amount) * 100,
+      currency: 'INR',
+      key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+      userDetails: {
+        name: data.fullName,
+        email: data.email || '',
+        phone: data.phone,
+      },
+    };
+  }
+
+  async verifyPayment(data: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }) {
+    const isValid = paymentService.verifyPaymentSignature(data);
+    if (!isValid) throw new Error('Invalid payment signature');
+
+    const payment = await prisma.payment.findFirst({
+      where: { razorpayOrderId: data.razorpay_order_id },
+    });
+    if (!payment) throw new Error('Payment not found');
+
+    if (payment.status === 'COMPLETED') {
+      return { success: true, message: 'Payment already verified.' };
+    }
+
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: 'COMPLETED',
+        razorpayPaymentId: data.razorpay_payment_id,
+        razorpaySignature: data.razorpay_signature,
+      },
+    });
+
+    // Update registration payment status
+    const descParts = payment.description?.split('#') || [];
+    const regId = descParts[1]?.trim();
+    let registrationNumber = '';
+    if (regId) {
+      const reg = await prisma.coachCertRegistration.update({
+        where: { id: Number(regId) },
+        data: { paymentStatus: 'PAID' },
+      });
+      registrationNumber = reg.registrationNumber;
+    }
+
+    return {
+      success: true,
+      registrationNumber,
+      message: 'Payment verified successfully.',
+    };
   }
 
   async getRegistrationsByProgram(programId: number, query: any) {
@@ -207,9 +289,9 @@ class CoachCertService {
 
   // ══════════ CERTIFIED COACHES (Public) ══════════
 
-  async getCertifiedCoaches(query: { state?: string; level?: string; page: string; limit: string; search?: string }) {
-    const page = parseInt(query.page);
-    const limit = parseInt(query.limit);
+  async getCertifiedCoaches(query: { state?: string; level?: string; page?: string; limit?: string; search?: string }) {
+    const page = parseInt(query.page || '1');
+    const limit = parseInt(query.limit || '12');
 
     const where: any = { isCompleted: true, status: 'COMPLETED' };
     if (query.state) where.state = query.state;

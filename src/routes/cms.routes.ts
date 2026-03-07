@@ -2,34 +2,35 @@ import { Router } from 'express';
 import cmsController from '../controllers/cms.controller';
 import { authenticate, requireRole } from '../middleware/auth.middleware';
 import { uploadSingle } from '../middleware/upload.middleware';
+import { cacheMiddleware } from '../utils/cache.util';
 
 const router = Router();
 
 // ==========================================
-// PUBLIC ROUTES
+// PUBLIC ROUTES (cached to reduce DB queries & process usage)
 // ==========================================
 
 // Pages
-router.get('/pages/slug/:slug', cmsController.getPageBySlug);
+router.get('/pages/slug/:slug', cacheMiddleware(300), cmsController.getPageBySlug);
 
-// Banners (public - get active banners)
-router.get('/banners', cmsController.getBanners);
+// Banners (public - get active banners) — 10 min cache
+router.get('/banners', cacheMiddleware(600), cmsController.getBanners);
 
 // News
-router.get('/news', cmsController.listNews);
-router.get('/news/categories', cmsController.getNewsCategories);
-router.get('/news/slug/:slug', cmsController.getNewsBySlug);
+router.get('/news', cacheMiddleware(300), cmsController.listNews);
+router.get('/news/categories', cacheMiddleware(600), cmsController.getNewsCategories);
+router.get('/news/slug/:slug', cacheMiddleware(300), cmsController.getNewsBySlug);
 
-// Gallery — specific routes BEFORE parameterised to avoid Express eating 'slug' as :id
-router.get('/gallery', cmsController.listGalleryAlbums);
-router.get('/gallery/slug/:slug', cmsController.getGalleryAlbumBySlug);
-router.get('/gallery/:id', cmsController.getGalleryAlbumById);
+// Gallery
+router.get('/gallery', cacheMiddleware(300), cmsController.listGalleryAlbums);
+router.get('/gallery/slug/:slug', cacheMiddleware(300), cmsController.getGalleryAlbumBySlug);
+router.get('/gallery/:id', cacheMiddleware(300), cmsController.getGalleryAlbumById);
 
-// Menus
-router.get('/menus/location/:location', cmsController.getMenuByLocation);
+// Menus — 10 min cache
+router.get('/menus/location/:location', cacheMiddleware(600), cmsController.getMenuByLocation);
 
-// Site Settings (public for frontend)
-router.get('/settings', cmsController.getSiteSettings);
+// Site Settings — 10 min cache
+router.get('/settings', cacheMiddleware(600), cmsController.getSiteSettings);
 
 // ==========================================
 // ADMIN ROUTES

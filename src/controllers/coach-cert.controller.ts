@@ -61,6 +61,27 @@ export const registerCoach = asyncHandler(async (req: Request, res: Response) =>
   return successResponse(res, { statusCode: 201, message: 'Registration successful', data: registration });
 });
 
+export const initiateRegistration = asyncHandler(async (req: Request, res: Response) => {
+  const data = coachRegistrationSchema.parse(req.body);
+  const files: { photo?: string; aadhaarCard?: string } = {};
+  if (req.files && typeof req.files === 'object') {
+    const f = req.files as { [key: string]: Express.Multer.File[] };
+    if (f.photo?.[0]) files.photo = f.photo[0].path;
+    if (f.aadhaarCard?.[0]) files.aadhaarCard = f.aadhaarCard[0].path;
+  }
+  const result = await coachCertService.initiateRegistration(data, files);
+  return successResponse(res, { statusCode: 201, message: 'Registration initiated. Please complete payment.', data: result });
+});
+
+export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ success: false, message: 'Missing payment details' });
+  }
+  const result = await coachCertService.verifyPayment({ razorpay_order_id, razorpay_payment_id, razorpay_signature });
+  return successResponse(res, { message: result.message, data: result });
+});
+
 export const getProgramRegistrations = asyncHandler(async (req: AuthRequest, res: Response) => {
   const programId = parseInt(req.params.id);
   const query = registrationsQuerySchema.parse(req.query);
@@ -150,6 +171,6 @@ export const getCertifiedCoaches = asyncHandler(async (req: Request, res: Respon
 
 export default {
   createProgram, updateProgram, deleteProgram, getProgram, listPrograms, getActivePrograms,
-  registerCoach, getProgramRegistrations, exportRegistrations,
+  registerCoach, initiateRegistration, verifyPayment, getProgramRegistrations, exportRegistrations,
   markComplete, updateRegistrationStatus, getCertifiedCoaches,
 };
