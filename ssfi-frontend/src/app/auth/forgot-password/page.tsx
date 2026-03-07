@@ -313,7 +313,7 @@ export default function ForgotPasswordPage() {
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             value={newPassword}
-                                            onChange={e => { setNewPassword(e.target.value); setErrors(prev => ({ ...prev, newPassword: undefined })); }}
+                                            onChange={e => { setNewPassword(e.target.value); setErrors(prev => ({ ...prev, newPassword: '' })); }}
                                             placeholder="Min 8 chars, upper, lower, number, symbol"
                                             className="w-full pl-10 pr-12 py-3 rounded-lg bg-dark-800 border border-white/10 text-white placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
                                         />
@@ -331,7 +331,7 @@ export default function ForgotPasswordPage() {
                                         <input
                                             type={showConfirm ? 'text' : 'password'}
                                             value={confirmPassword}
-                                            onChange={e => { setConfirmPassword(e.target.value); setErrors(prev => ({ ...prev, confirmPassword: undefined })); }}
+                                            onChange={e => { setConfirmPassword(e.target.value); setErrors(prev => ({ ...prev, confirmPassword: '' })); }}
                                             placeholder="Re-enter new password"
                                             className="w-full pl-10 pr-12 py-3 rounded-lg bg-dark-800 border border-white/10 text-white placeholder-gray-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
                                         />

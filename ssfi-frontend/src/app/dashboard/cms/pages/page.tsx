@@ -49,7 +49,7 @@ export default function PagesPage() {
           <p className="text-gray-500 text-sm">Manage static content like About Us, Privacy Policy, etc.</p>
         </div>
         <Link href="/dashboard/cms/pages/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium">
+          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
           <Plus className="w-4 h-4" /> Create Page
         </Link>
       </div>
@@ -57,7 +57,7 @@ export default function PagesPage() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         <input type="text" placeholder="Search pages..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500 text-sm placeholder:text-gray-600" />
+          className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500 text-sm placeholder:text-gray-600" />
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -68,7 +68,7 @@ export default function PagesPage() {
             <FileText className="w-12 h-12 text-gray-500 mx-auto mb-3" />
             <p className="text-gray-900 font-medium mb-1">No pages found</p>
             <p className="text-gray-500 text-sm mb-5">Create your first static page.</p>
-            {!searchQuery && <Link href="/dashboard/cms/pages/new" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"><Plus className="w-4 h-4" /> Create Page</Link>}
+            {!searchQuery && <Link href="/dashboard/cms/pages/new" className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm"><Plus className="w-4 h-4" /> Create Page</Link>}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -88,7 +88,7 @@ export default function PagesPage() {
                     <tr key={page.id} className="hover:bg-gray-100/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-purple-100 text-purple-600 shrink-0 mt-0.5"><FileText className="w-4 h-4" /></div>
+                          <div className="p-2 rounded-lg bg-teal-100 text-teal-600 shrink-0 mt-0.5"><FileText className="w-4 h-4" /></div>
                           <div>
                             <p className="font-medium text-gray-900">{page.title}</p>
                             <div className="flex items-center gap-1 text-xs text-gray-600 mt-0.5"><LinkIcon className="w-3 h-3" />/{page.slug}</div>

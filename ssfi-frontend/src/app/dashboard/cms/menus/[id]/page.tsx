@@ -64,9 +64,9 @@ export default function EditMenuPage() {
     } catch { toast.error('Delete failed'); setDeleting(false); }
   };
 
-  const inputClass = "w-full px-3 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 text-sm";
+  const inputClass = "w-full px-3 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 text-sm";
 
-  if (loading) return <div className="flex justify-center items-center py-24"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+  if (loading) return <div className="flex justify-center items-center py-24"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -119,7 +119,7 @@ export default function EditMenuPage() {
                     <div className="flex items-center gap-1 text-xs text-gray-600">
                       <ExternalLink className="w-3 h-3" />
                       <span className="truncate">{item.url}</span>
-                      {item.target === '_blank' && <span className="ml-1 text-blue-400">(new tab)</span>}
+                      {item.target === '_blank' && <span className="ml-1 text-emerald-400">(new tab)</span>}
                     </div>
                   </div>
                   <button type="button" onClick={() => removeItem(idx)} className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-100 rounded-lg transition-colors shrink-0">
@@ -144,7 +144,7 @@ export default function EditMenuPage() {
                 <option value="_blank">New tab</option>
               </select>
               <button type="button" onClick={addItem}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium">
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
                 <Plus className="w-4 h-4" /> Add Item
               </button>
             </div>
@@ -153,7 +153,7 @@ export default function EditMenuPage() {
 
         <div className="flex justify-end">
           <button type="submit" disabled={saving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium">
+            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Menu
           </button>
         </div>

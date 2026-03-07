@@ -15,7 +15,7 @@ import {
     CheckCircle,
     AlertCircle
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Link from 'next/link';
 
@@ -58,9 +58,7 @@ export default function NewClubPage() {
         // Fetch states
         const fetchStates = async () => {
             try {
-                const response = await axios.get('http://localhost:5001/api/v1/states', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const response = await api.get('/states');
                 if (response.data.data?.states) {
                     setStates(response.data.data.states);
                 }
@@ -79,9 +77,7 @@ export default function NewClubPage() {
                 return;
             }
             try {
-                const response = await axios.get(`http://localhost:5001/api/v1/districts?stateId=${selectedState}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const response = await api.get('/districts', { params: { stateId: selectedState } });
                 if (response.data.data?.districts) {
                     setDistricts(response.data.data.districts);
                 }
@@ -103,13 +99,11 @@ export default function NewClubPage() {
         setError(null);
 
         try {
-            await axios.post('http://localhost:5001/api/v1/clubs', {
+            await api.post('/clubs', {
                 ...formData,
                 stateId: Number(formData.stateId),
                 districtId: Number(formData.districtId),
                 establishedYear: Number(formData.establishedYear),
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
             });
 
             setSuccess(true);
@@ -185,7 +179,7 @@ export default function NewClubPage() {
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 placeholder="e.g., Speed Skating Academy"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -196,7 +190,7 @@ export default function NewClubPage() {
                                 value={formData.code}
                                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                                 placeholder="e.g., SSA001"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -207,7 +201,7 @@ export default function NewClubPage() {
                                 max={new Date().getFullYear()}
                                 value={formData.establishedYear}
                                 onChange={(e) => setFormData({ ...formData, establishedYear: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                     </div>
@@ -228,7 +222,7 @@ export default function NewClubPage() {
                                 value={formData.contactPerson}
                                 onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                                 placeholder="Full name"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -239,7 +233,7 @@ export default function NewClubPage() {
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                 placeholder="+91 9876543210"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div className="md:col-span-2">
@@ -250,7 +244,7 @@ export default function NewClubPage() {
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 placeholder="club@example.com"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                     </div>
@@ -269,7 +263,7 @@ export default function NewClubPage() {
                                 required
                                 value={formData.stateId}
                                 onChange={(e) => handleStateChange(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 <option value="">Select State</option>
                                 {states.map(state => (
@@ -284,7 +278,7 @@ export default function NewClubPage() {
                                 value={formData.districtId}
                                 onChange={(e) => setFormData({ ...formData, districtId: e.target.value })}
                                 disabled={!selectedState}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
                             >
                                 <option value="">Select District</option>
                                 {districts.map(district => (
@@ -299,7 +293,7 @@ export default function NewClubPage() {
                                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                 rows={3}
                                 placeholder="Full club address"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                     </div>
@@ -316,7 +310,7 @@ export default function NewClubPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isLoading ? (
                             <>

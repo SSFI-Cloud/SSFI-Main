@@ -7,9 +7,9 @@ export function ChartsSection({ statistics }: { statistics: DashboardStatistics 
   const statusStats  = statistics?.studentsByStatus || {};
 
   const genderData = [
-    { label: 'Male',   value: genderStats['MALE']   || 0, color: '#3b82f6' },
-    { label: 'Female', value: genderStats['FEMALE'] || 0, color: '#ec4899' },
-    { label: 'Other',  value: genderStats['OTHER']  || 0, color: '#8b5cf6' },
+    { label: 'Male',   value: genderStats['MALE']   || 0, color: '#10b981' },
+    { label: 'Female', value: genderStats['FEMALE'] || 0, color: '#14b8a6' },
+    { label: 'Other',  value: genderStats['OTHER']  || 0, color: '#10b981' },
   ];
 
   const statusData = [

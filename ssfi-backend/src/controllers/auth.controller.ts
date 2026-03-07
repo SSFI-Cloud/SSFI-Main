@@ -172,7 +172,7 @@ class AuthController {
 
   /**
    * @route   GET /api/v1/auth/me
-   * @desc    Get current user profile
+   * @desc    Get current user profile with full role-specific data
    * @access  Private
    */
   getCurrentUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
@@ -183,15 +183,16 @@ class AuthController {
       });
     }
 
-    // User info is already in req.user from middleware
+    const fullProfile = await authService.getFullProfile(req.user.id);
+
     sendSuccess(res, 200, 'User profile retrieved', {
-      user: req.user
+      user: fullProfile
     });
   });
 
   /**
    * @route   PUT /api/v1/auth/profile
-   * @desc    Update user profile
+   * @desc    Update user role-specific profile fields (NOT phone, email, aadhaar)
    * @access  Private
    */
   updateProfile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
@@ -202,12 +203,10 @@ class AuthController {
       });
     }
 
-    const { phone, email } = req.body;
-
-    const updatedUser = await authService.updateProfile(req.user.id, { phone, email });
+    const updatedProfile = await authService.updateProfile(req.user.id, req.body);
 
     sendSuccess(res, 200, 'Profile updated successfully', {
-      user: updatedUser
+      user: updatedProfile
     });
   });
 }

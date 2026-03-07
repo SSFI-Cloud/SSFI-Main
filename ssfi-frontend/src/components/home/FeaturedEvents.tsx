@@ -63,11 +63,11 @@ const FeaturedEvents = () => {
   const getCategoryColor = (category: Event['category']) => {
     switch (category) {
       case 'NATIONAL':
-        return 'from-red-500 to-orange-500';
+        return 'from-teal-500 to-emerald-500';
       case 'STATE':
-        return 'from-blue-500 to-cyan-500';
+        return 'from-emerald-500 to-cyan-500';
       case 'DISTRICT':
-        return 'from-purple-500 to-pink-500';
+        return 'from-emerald-500 to-teal-500';
     }
   };
 
@@ -81,7 +81,7 @@ const FeaturedEvents = () => {
         );
       case 'CLOSING_SOON':
         return (
-          <span className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-semibold border border-orange-500/30 flex items-center gap-1">
+          <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold border border-emerald-500/30 flex items-center gap-1">
             <Clock className="w-3 h-3" />
             Closing Soon
           </span>
@@ -204,7 +204,7 @@ const FeaturedEvents = () => {
 
                     {/* Participants */}
                     <div className="flex items-center gap-3 text-gray-400">
-                      <Users className="w-4 h-4 text-purple-400" />
+                      <Users className="w-4 h-4 text-emerald-400" />
                       <span className="text-sm">{event.participants} Participants</span>
                     </div>
                   </div>

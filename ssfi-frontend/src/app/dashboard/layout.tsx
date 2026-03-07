@@ -53,9 +53,9 @@ const navItems: NavItem[] = [
 
 const roleColors: Record<string, string> = {
   red: 'bg-red-100 text-red-700 border-red-200',
-  blue: 'bg-blue-100 text-blue-700 border-blue-200',
+  blue: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   green: 'bg-green-100 text-green-700 border-green-200',
-  purple: 'bg-purple-100 text-purple-700 border-purple-200',
+  purple: 'bg-teal-100 text-teal-700 border-teal-200',
   amber: 'bg-amber-100 text-amber-700 border-amber-200',
 };
 
@@ -73,7 +73,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!item.children) return [];
     if (userRole === 'GLOBAL_ADMIN') return item.children;
     return item.children.filter(child => {
-      if (child.href.includes('state-secretaries')) return userRole === 'GLOBAL_ADMIN';
+      if (child.href.includes('state-secretaries')) return (userRole as string) === 'GLOBAL_ADMIN';
       if (child.href.includes('district-secretaries')) return ['GLOBAL_ADMIN', 'STATE_SECRETARY'].includes(userRole);
       if (child.href.includes('clubs')) return ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'].includes(userRole);
       if (child.href.includes('students')) return ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'].includes(userRole);
@@ -103,13 +103,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* User Info */}
       <div className="px-4 py-4 border-b border-white/10">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-          <div className="relative w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-base flex-shrink-0 overflow-hidden">
+          <div className="relative w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-base flex-shrink-0 overflow-hidden">
             {user?.profile_photo
               ? <Image src={user.profile_photo} alt={user.name || 'User'} fill className="object-cover" />
               : <span>{user?.name?.[0]?.toUpperCase() || 'U'}</span>}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-gray-900 font-semibold text-sm truncate">{user?.name || 'User'}</p>
+            <p className="text-white font-semibold text-sm truncate">{user?.name || 'User'}</p>
             <span className={`inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider border ${roleColorCls}`}>
               {roleConfig?.label || userRole}
             </span>
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {hasChildren ? (
                 <button
                   onClick={() => toggleExpanded(item.label)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all text-sm ${active ? 'bg-blue-600 text-white' : 'text-white/60 hover:bg-white/8 hover:text-white'}`}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all text-sm ${active ? 'bg-emerald-600 text-white' : 'text-white/60 hover:bg-white/8 hover:text-white'}`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   <span className="flex-1 font-medium">{item.label}</span>
@@ -141,7 +141,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm ${active ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30' : 'text-white/60 hover:bg-white/8 hover:text-white'}`}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm ${active ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30' : 'text-white/60 hover:bg-white/8 hover:text-white'}`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
                   <span className="font-medium">{item.label}</span>
@@ -155,7 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       key={child.href}
                       href={child.href}
                       onClick={() => setSidebarOpen(false)}
-                      className={`block px-3 py-2 rounded-lg text-xs transition-all ${isActive(child.href) ? 'bg-blue-600/20 text-blue-400 font-semibold' : 'text-white/50 hover:text-white hover:bg-white/5'}`}
+                      className={`block px-3 py-2 rounded-lg text-xs transition-all ${isActive(child.href) ? 'bg-emerald-600/20 text-emerald-400 font-semibold' : 'text-white/50 hover:text-white hover:bg-white/5'}`}
                     >
                       {child.label}
                     </Link>
@@ -219,6 +219,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </div>
       </main>
+      {/* <!-- Dashboard built by Indefine (indefine.in) & LearnCrew (learncrew.org) | Lakshmanan Annamalai | 2026 --> */}
     </div>
   );
 }

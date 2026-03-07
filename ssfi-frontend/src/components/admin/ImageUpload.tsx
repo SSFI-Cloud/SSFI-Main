@@ -48,14 +48,14 @@ export default function ImageUpload({ value, onChange, type, label, hint }: Imag
     if (file) handleFile(file);
   };
 
-  const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1').replace('/api/v1', '');
+  const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1').replace('/api/v1', '');
 
   return (
     <div className="space-y-2">
-      {label && <label className="text-sm font-medium text-slate-300">{label}</label>}
+      {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
 
       {value ? (
-        <div className="relative group rounded-xl overflow-hidden border border-slate-700 bg-slate-900">
+        <div className="relative group rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
           <div className={`relative w-full ${type === 'team' ? 'aspect-[4/5]' : 'aspect-video'} max-h-64`}>
             <Image
               src={value.startsWith('http') ? value : `${API_BASE}${value}`}
@@ -83,22 +83,22 @@ export default function ImageUpload({ value, onChange, type, label, hint }: Imag
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           className={`flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed rounded-xl cursor-pointer transition-colors min-h-[120px]
-            ${dragOver ? 'border-blue-500 bg-blue-500/10' : 'border-slate-600 hover:border-slate-500 hover:bg-slate-800/50'}`}
+            ${dragOver ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'}`}
         >
           {uploading ? (
             <>
-              <Loader2 className="w-7 h-7 text-blue-400 animate-spin" />
-              <p className="text-sm text-slate-400">Processing image…</p>
+              <Loader2 className="w-7 h-7 text-emerald-500 animate-spin" />
+              <p className="text-sm text-gray-500">Processing image...</p>
             </>
           ) : (
             <>
-              <div className="p-3 bg-slate-800 rounded-xl">
-                <Upload className="w-5 h-5 text-slate-400" />
+              <div className="p-3 bg-gray-100 rounded-xl">
+                <Upload className="w-5 h-5 text-gray-500" />
               </div>
               <div className="text-center">
-                <p className="text-sm text-slate-300">Click or drag image here</p>
-                <p className="text-xs text-slate-500 mt-1">Converted to WebP • {DIMENSIONS[type]}</p>
-                {hint && <p className="text-xs text-slate-600 mt-0.5">{hint}</p>}
+                <p className="text-sm text-gray-700">Click or drag image here</p>
+                <p className="text-xs text-gray-500 mt-1">Converted to WebP &bull; {DIMENSIONS[type]}</p>
+                {hint && <p className="text-xs text-gray-400 mt-0.5">{hint}</p>}
               </div>
             </>
           )}

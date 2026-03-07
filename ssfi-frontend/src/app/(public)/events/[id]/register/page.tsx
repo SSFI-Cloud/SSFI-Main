@@ -72,20 +72,20 @@ function StepIndicator({ step }: { step: number }) {
             <div className="flex flex-col items-center">
               <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300
                 ${done
-                  ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25'
                   : active
-                  ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25 ring-4 ring-blue-500/20'
+                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 ring-4 ring-emerald-500/20'
                   : 'bg-gray-100 text-gray-400'}`}>
                 {done ? <CheckCircle2 className="w-5 h-5" /> : idx}
               </div>
               <span className={`text-xs mt-1.5 font-medium hidden sm:block whitespace-nowrap transition-colors
-                ${active ? 'text-blue-600' : done ? 'text-gray-500' : 'text-gray-300'}`}>
+                ${active ? 'text-emerald-600' : done ? 'text-gray-500' : 'text-gray-300'}`}>
                 {label}
               </span>
             </div>
             {i < steps.length - 1 && (
               <div className={`w-12 md:w-20 h-0.5 mx-1 mb-4 transition-all duration-500
-                ${done ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-gray-200'}`} />
+                ${done ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : 'bg-gray-200'}`} />
             )}
           </div>
         );
@@ -219,9 +219,9 @@ export default function EventRegistrationPage() {
   };
 
   // ── Shared styles ──
-  const inputCls = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 shadow-sm transition-colors";
+  const inputCls = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 shadow-sm transition-colors";
   const labelCls = "block text-sm font-semibold text-gray-700 mb-1.5";
-  const btnPrimary = "inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 transition-all disabled:opacity-40 disabled:cursor-not-allowed";
+  const btnPrimary = "inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all disabled:opacity-40 disabled:cursor-not-allowed";
   const btnSecondary = "inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors";
 
   // ── Render ──
@@ -237,7 +237,7 @@ export default function EventRegistrationPage() {
             className="flex items-center gap-2 text-white/40 hover:text-white/70 text-sm mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Event
           </button>
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-bold mb-4">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold mb-4">
             <Sparkles className="w-4 h-4" /> Event Registration
           </span>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 leading-tight">
@@ -259,7 +259,7 @@ export default function EventRegistrationPage() {
                 </span>
               )}
               {event.entryFee > 0 && (
-                <span className="font-bold text-blue-300">₹{Number(event.entryFee).toLocaleString('en-IN')}</span>
+                <span className="font-bold text-emerald-300">₹{Number(event.entryFee).toLocaleString('en-IN')}</span>
               )}
             </div>
           )}
@@ -284,7 +284,7 @@ export default function EventRegistrationPage() {
 
               <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                  <Fingerprint className="w-5 h-5 text-blue-500" /> Enter Your SSFI UID
+                  <Fingerprint className="w-5 h-5 text-emerald-500" /> Enter Your SSFI UID
                 </h2>
                 <p className="text-sm text-gray-500 mb-5">
                   Your details and event eligibility will be verified automatically.
@@ -298,12 +298,12 @@ export default function EventRegistrationPage() {
                     onChange={e => { setUid(e.target.value); setLookupError(''); setStudentData(null); }}
                     onKeyDown={e => e.key === 'Enter' && handleLookup()}
                     placeholder="e.g. SSFI/BS/TN/25/S0001"
-                    className={`flex-1 px-4 py-3 bg-gray-50 border ${lookupError ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-blue-400'} rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm font-mono transition-colors`}
+                    className={`flex-1 px-4 py-3 bg-gray-50 border ${lookupError ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'} rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm font-mono transition-colors`}
                   />
                   <button
                     onClick={handleLookup}
                     disabled={lookupLoading || !uid.trim()}
-                    className="px-5 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-sm shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 transition-all disabled:opacity-50 flex items-center gap-2"
+                    className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all disabled:opacity-50 flex items-center gap-2"
                   >
                     {lookupLoading
                       ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -357,16 +357,16 @@ export default function EventRegistrationPage() {
                     </div>
 
                     {/* Fee bar */}
-                    <div className="bg-blue-50 border-t border-blue-100 px-4 py-3 flex items-center justify-between text-sm">
+                    <div className="bg-emerald-50 border-t border-emerald-100 px-4 py-3 flex items-center justify-between text-sm">
                       <div>
-                        <p className="text-blue-700 font-medium">
+                        <p className="text-emerald-700 font-medium">
                           {eventFee.isLateFee ? '⚠️ Late fee applies' : '✅ Regular registration fee'}
                         </p>
                         {eventFee.isLateFee && (
-                          <p className="text-blue-500 text-xs">Includes late fee of ₹{eventFee.lateFee.toLocaleString('en-IN')}</p>
+                          <p className="text-emerald-500 text-xs">Includes late fee of ₹{eventFee.lateFee.toLocaleString('en-IN')}</p>
                         )}
                       </div>
-                      <p className="text-blue-800 font-extrabold text-lg">₹{eventFee.totalFee.toLocaleString('en-IN')}</p>
+                      <p className="text-emerald-800 font-extrabold text-lg">₹{eventFee.totalFee.toLocaleString('en-IN')}</p>
                     </div>
                   </motion.div>
                 )}
@@ -399,10 +399,10 @@ export default function EventRegistrationPage() {
               <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-amber-500" /> Select Skating Category
+                    <Trophy className="w-5 h-5 text-teal-500" /> Select Skating Category
                   </h2>
                   <button onClick={() => setStep(1)}
-                    className="text-xs text-blue-500 font-semibold flex items-center gap-1 hover:text-blue-700 transition-colors">
+                    className="text-xs text-emerald-500 font-semibold flex items-center gap-1 hover:text-emerald-700 transition-colors">
                     <RefreshCw className="w-3 h-3" /> Change UID
                   </button>
                 </div>
@@ -426,15 +426,15 @@ export default function EventRegistrationPage() {
                       <button key={cat.value} onClick={() => setCategory(cat.value)}
                         className={`relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left
                           ${active
-                            ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm'
+                            ? 'border-emerald-400 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-sm'
                             : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'}`}>
                         <span className="text-2xl">{cat.emoji}</span>
                         <div className="min-w-0">
-                          <p className={`font-bold text-sm ${active ? 'text-blue-700' : 'text-gray-800'}`}>{cat.label}</p>
-                          <p className={`text-xs ${active ? 'text-blue-500' : 'text-gray-400'}`}>{cat.desc}</p>
+                          <p className={`font-bold text-sm ${active ? 'text-emerald-700' : 'text-gray-800'}`}>{cat.label}</p>
+                          <p className={`text-xs ${active ? 'text-emerald-500' : 'text-gray-400'}`}>{cat.desc}</p>
                         </div>
                         {active && (
-                          <CheckCircle2 className="w-4 h-4 text-blue-500 ml-auto flex-shrink-0 absolute top-3 right-3" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto flex-shrink-0 absolute top-3 right-3" />
                         )}
                       </button>
                     );
@@ -466,7 +466,7 @@ export default function EventRegistrationPage() {
 
               <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-violet-500" /> Select Races
+                  <Calendar className="w-5 h-5 text-emerald-500" /> Select Races
                 </h2>
                 {raceRules && (
                   <p className="text-sm text-gray-500 mb-5">
@@ -489,7 +489,7 @@ export default function EventRegistrationPage() {
                         <label key={race.id}
                           className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all
                             ${isSelected
-                              ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50'
+                              ? 'border-emerald-400 bg-gradient-to-br from-emerald-50 to-teal-50'
                               : 'border-gray-100 bg-gray-50 hover:border-gray-200'}
                             ${isMandatory ? 'cursor-default' : 'cursor-pointer'}`}>
                           <input
@@ -497,13 +497,13 @@ export default function EventRegistrationPage() {
                             checked={isSelected}
                             onChange={() => toggleRace(race.id)}
                             disabled={isMandatory}
-                            className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500/20 flex-shrink-0"
+                            className="w-4 h-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500/20 flex-shrink-0"
                           />
-                          <span className={`text-sm font-medium flex-1 ${isSelected ? 'text-blue-700' : 'text-gray-700'}`}>
+                          <span className={`text-sm font-medium flex-1 ${isSelected ? 'text-emerald-700' : 'text-gray-700'}`}>
                             {race.name}
                           </span>
                           {isMandatory && (
-                            <span className="text-xs font-bold text-blue-500 bg-blue-100 px-2.5 py-1 rounded-full">
+                            <span className="text-xs font-bold text-emerald-500 bg-emerald-100 px-2.5 py-1 rounded-full">
                               Mandatory
                             </span>
                           )}
@@ -517,7 +517,7 @@ export default function EventRegistrationPage() {
                 <div className={`mt-4 p-3 rounded-xl text-sm flex items-center gap-2
                   ${selectedRaces.length >= (raceRules?.min || 1)
                     ? 'bg-emerald-50 border border-emerald-100 text-emerald-700'
-                    : 'bg-amber-50 border border-amber-100 text-amber-700'}`}>
+                    : 'bg-teal-50 border border-teal-100 text-teal-700'}`}>
                   {selectedRaces.length >= (raceRules?.min || 1)
                     ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                     : <AlertCircle className="w-4 h-4 flex-shrink-0" />}
@@ -555,7 +555,7 @@ export default function EventRegistrationPage() {
               {/* Summary card */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-blue-500" /> Registration Summary
+                  <Zap className="w-5 h-5 text-emerald-500" /> Registration Summary
                 </h2>
 
                 <div className="divide-y divide-gray-100">
@@ -585,7 +585,7 @@ export default function EventRegistrationPage() {
                       <button key={s} onClick={() => setSuitSize(s)}
                         className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all
                           ${suitSize === s
-                            ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700'
+                            ? 'border-emerald-400 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-700'
                             : 'border-gray-200 text-gray-600 hover:border-gray-300 bg-white'}`}>
                         {s}
                       </button>
@@ -598,7 +598,7 @@ export default function EventRegistrationPage() {
                   <div>
                     <p className="text-sm text-gray-400">Total Entry Fee</p>
                     {eventFee.isLateFee && (
-                      <p className="text-xs text-orange-500 mt-0.5">
+                      <p className="text-xs text-emerald-500 mt-0.5">
                         Includes late fee of ₹{eventFee.lateFee.toLocaleString('en-IN')}
                       </p>
                     )}
@@ -611,7 +611,7 @@ export default function EventRegistrationPage() {
 
               {/* Email notice */}
               {studentData.email && (
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-700">
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-sm text-emerald-700">
                   <Mail className="w-4 h-4 flex-shrink-0" />
                   A confirmation email will be sent to <strong className="ml-1">{studentData.email}</strong>
                 </div>
@@ -623,7 +623,7 @@ export default function EventRegistrationPage() {
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
                 <button onClick={handleSubmit} disabled={submitting}
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                   {submitting
                     ? <><Loader2 className="w-4 h-4 animate-spin" /> Registering…</>
                     : <><Zap className="w-4 h-4" /> Register Now</>}
@@ -644,7 +644,7 @@ export default function EventRegistrationPage() {
               <motion.div
                 initial={{ scale: 0 }} animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
-                className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-blue-500/30">
+                className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-emerald-500/30">
                 <CheckCircle2 className="w-10 h-10 text-white" />
               </motion.div>
 
@@ -654,9 +654,9 @@ export default function EventRegistrationPage() {
               </p>
 
               {/* Confirmation number */}
-              <div className="inline-block bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl px-8 py-5 mb-5">
+              <div className="inline-block bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl px-8 py-5 mb-5">
                 <p className="text-xs text-gray-400 mb-1 uppercase tracking-widest">Confirmation Number</p>
-                <p className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 tracking-wider font-mono">
+                <p className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 tracking-wider font-mono">
                   {regSuccess.confirmationNumber}
                 </p>
                 <p className="text-sm text-gray-500 mt-1.5">
@@ -673,7 +673,7 @@ export default function EventRegistrationPage() {
               )}
 
               {/* Next steps box */}
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 mb-6 max-w-md mx-auto text-left">
+              <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 text-sm text-teal-700 mb-6 max-w-md mx-auto text-left">
                 <p className="font-semibold mb-1">📋 Next Steps</p>
                 <p>Complete payment to secure your spot. Save your confirmation number — you will need to present it at the venue on event day.</p>
               </div>
@@ -684,7 +684,7 @@ export default function EventRegistrationPage() {
                   onClick={() => router.push(
                     `/payment?registrationId=${encodeURIComponent(regSuccess.confirmationNumber)}&amount=${regSuccess.totalFee}&eventId=${eventId}&eventName=${encodeURIComponent(event?.name || '')}`
                   )}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 transition-all">
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all">
                   <Zap className="w-4 h-4" /> Complete Payment
                 </button>
                 <Link href="/events"

@@ -33,7 +33,7 @@ export default function TermsPage() {
               <h2 className="text-2xl font-semibold text-white mb-4">1. Acceptance of Terms</h2>
               <p>
                 By accessing and using the website{' '}
-                <span className="text-blue-400">www.ssfiskate.com</span>, you agree to be bound by
+                <span className="text-emerald-400">www.ssfiskate.com</span>, you agree to be bound by
                 these Terms of Service. If you do not agree with any part of these terms, please do
                 not use our website.
               </p>

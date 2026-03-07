@@ -14,7 +14,7 @@ export default function GlobalError({
                     <h2 className="text-4xl font-bold mb-4">Something went wrong!</h2>
                     <button
                         onClick={() => reset()}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium transition-colors"
+                        className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white font-medium transition-colors"
                     >
                         Try again
                     </button>

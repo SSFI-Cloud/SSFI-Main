@@ -72,7 +72,7 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
         {/* Days Until Badge */}
         {daysUntil > 0 && daysUntil <= 30 && (
           <div className="absolute top-4 right-4">
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 backdrop-blur-sm">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-teal-500/20 text-teal-400 border border-teal-500/30 backdrop-blur-sm">
               {daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days left`}
             </span>
           </div>
@@ -124,7 +124,7 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-dark-300">
-              <Users className="w-4 h-4 text-violet-400" />
+              <Users className="w-4 h-4 text-emerald-400" />
               <span>{registrationCount} registered</span>
             </div>
             {event.maxParticipants && (

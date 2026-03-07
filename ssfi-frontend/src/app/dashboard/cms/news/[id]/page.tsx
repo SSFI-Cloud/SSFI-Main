@@ -87,12 +87,12 @@ export default function EditNewsPage() {
     } catch { toast.error('Delete failed'); setDeleting(false); }
   };
 
-  const inputClass = "w-full px-3 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 text-sm placeholder:text-gray-600";
+  const inputClass = "w-full px-3 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 text-sm placeholder:text-gray-600";
   const labelClass = "text-sm font-medium text-gray-700";
 
   if (loading) return (
     <div className="flex justify-center items-center py-24">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
     </div>
   );
 
@@ -157,7 +157,7 @@ export default function EditNewsPage() {
               <span className="text-sm font-medium">{form.isPublished ? 'Published' : 'Draft'}</span>
             </button>
             <button type="submit" disabled={saving}
-              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
+              className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Save Changes
             </button>
@@ -168,7 +168,7 @@ export default function EditNewsPage() {
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map(cat => (
                 <button key={cat} type="button" onClick={() => set('category', form.category === cat ? '' : cat)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${form.category === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${form.category === cat ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                   {cat}
                 </button>
               ))}

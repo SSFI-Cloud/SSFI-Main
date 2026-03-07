@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { Loader2, AlertCircle, CalendarClock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -18,9 +18,7 @@ export default function RegistrationGuard({ children, type }: RegistrationGuardP
     useEffect(() => {
         const checkActiveWindow = async () => {
             try {
-                // Determine API URL - consistent with other components
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1';
-                const response = await axios.get(`${apiUrl}/registration-windows/active/${type}`);
+                const response = await api.get(`/registration-windows/active/${type}`);
 
                 if (response.data.success && response.data.data) {
                     setActiveWindow(response.data.data);
@@ -48,7 +46,7 @@ export default function RegistrationGuard({ children, type }: RegistrationGuardP
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-950">
                 <div className="text-center">
-                    <Loader2 className="w-10 h-10 text-blue-500 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-10 h-10 text-emerald-500 animate-spin mx-auto mb-4" />
                     <p className="text-slate-400">Verifying registration status...</p>
                 </div>
             </div>
@@ -76,7 +74,7 @@ export default function RegistrationGuard({ children, type }: RegistrationGuardP
                     </p>
                     <a
                         href="/"
-                        className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+                        className="inline-flex items-center justify-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors"
                     >
                         Back to Home
                     </a>

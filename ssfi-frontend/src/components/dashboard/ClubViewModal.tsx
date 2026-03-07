@@ -88,7 +88,7 @@ export default function ClubViewModal({ club, isLoading, onClose }: ClubViewModa
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
                                 <Shield className="w-5 h-5 text-gray-900" />
                             </div>
                             <div>
@@ -109,7 +109,7 @@ export default function ClubViewModal({ club, isLoading, onClose }: ClubViewModa
                     <div className="overflow-y-auto flex-1">
                         {isLoading ? (
                             <div className="flex items-center justify-center py-20">
-                                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                                <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
                             </div>
                         ) : !club ? (
                             <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-600">
@@ -121,8 +121,8 @@ export default function ClubViewModal({ club, isLoading, onClose }: ClubViewModa
                                 {/* Stats strip */}
                                 <div className="grid grid-cols-3 gap-3">
                                     {[
-                                        { label: 'Skaters',  value: club.skatersCount,  Icon: Users,    color: 'text-purple-600', bg: 'bg-purple-50' },
-                                        { label: 'District', value: club.district_name, Icon: Building2, color: 'text-blue-600',   bg: 'bg-blue-50' },
+                                        { label: 'Skaters',  value: club.skatersCount,  Icon: Users,    color: 'text-teal-600', bg: 'bg-teal-50' },
+                                        { label: 'District', value: club.district_name, Icon: Building2, color: 'text-emerald-600',   bg: 'bg-emerald-50' },
                                         { label: 'Est. Year', value: club.established_year, Icon: Calendar, color: 'text-emerald-600', bg: 'bg-emerald-100' },
                                     ].map(({ label, value, Icon, color, bg }) => (
                                         <div key={label} className={`${bg} rounded-xl p-3 text-center border border-gray-100`}>
@@ -136,7 +136,7 @@ export default function ClubViewModal({ club, isLoading, onClose }: ClubViewModa
                                 {/* Club details */}
                                 {(club.address || club.website) && (
                                     <div>
-                                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-blue-500">Club Details</p>
+                                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-emerald-500">Club Details</p>
                                         <div className="bg-white rounded-xl border border-gray-200 px-4">
                                             {club.address && <Field icon={MapPin} label="Address" value={club.address} />}
                                             {club.website && <Field icon={Globe} label="Website" value={club.website} />}
@@ -151,7 +151,7 @@ export default function ClubViewModal({ club, isLoading, onClose }: ClubViewModa
                                         <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
                                             <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                 {club.owner.profilePhoto
-                                                    ? <img src={`http://localhost:5001${club.owner.profilePhoto}`} alt="Club Owner" className="object-cover w-full h-full" />
+                                                    ? <img src={`https://api.ssfiskate.com${club.owner.profilePhoto}`} alt="Club Owner" className="object-cover w-full h-full" />
                                                     : <User className="w-7 h-7 text-gray-600" />}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -163,7 +163,7 @@ export default function ClubViewModal({ club, isLoading, onClose }: ClubViewModa
                                                 {club.owner.uid && (
                                                     <div className="flex items-center gap-1.5 mt-1">
                                                         <Hash className="w-3 h-3 text-gray-500" />
-                                                        <span className="text-xs font-mono text-blue-600">{club.owner.uid}</span>
+                                                        <span className="text-xs font-mono text-emerald-600">{club.owner.uid}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -171,7 +171,7 @@ export default function ClubViewModal({ club, isLoading, onClose }: ClubViewModa
 
                                         {/* Owner personal details */}
                                         <div>
-                                            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-blue-500">Owner Details</p>
+                                            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-emerald-500">Owner Details</p>
                                             <div className="bg-white rounded-xl border border-gray-200 px-4">
                                                 <Field icon={User}  label="Gender" value={club.owner.gender} />
                                                 <Field icon={Phone} label="Phone"  value={club.owner.phone} />
@@ -181,7 +181,7 @@ export default function ClubViewModal({ club, isLoading, onClose }: ClubViewModa
 
                                         {/* Membership dates */}
                                         <div>
-                                            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-blue-500">Membership</p>
+                                            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-emerald-500">Membership</p>
                                             <div className="bg-white rounded-xl border border-gray-200 px-4">
                                                 <Field icon={Calendar} label="Registration Date" value={fmtDate(club.owner.registrationDate)} />
                                                 <Field icon={Clock}    label="Expiry Date"        value={fmtDate(club.owner.expiryDate)} />

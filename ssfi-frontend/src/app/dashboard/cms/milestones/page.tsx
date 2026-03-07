@@ -98,14 +98,14 @@ export default function MilestonesPage() {
           <p className="text-gray-500 text-sm mt-1">Timeline shown on the About page</p>
         </div>
         <button onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
           <Plus className="w-4 h-4" /> Add Milestone
         </button>
       </div>
 
       {/* List */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>
+        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
       ) : milestones.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
           <Trophy className="w-12 h-12 text-gray-500 mx-auto mb-3" />
@@ -119,13 +119,13 @@ export default function MilestonesPage() {
               <div key={m.id}
                 className={`flex items-center gap-4 p-4 bg-white border rounded-xl transition-colors ${m.isActive ? 'border-gray-200' : 'border-gray-100 opacity-60'}`}>
                 {/* Icon */}
-                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
                   <IconComp className="w-5 h-5 text-gray-900" />
                 </div>
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">{m.year}</span>
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">{m.year}</span>
                     <p className="font-semibold text-gray-900 truncate">{m.title}</p>
                   </div>
                   <p className="text-sm text-gray-500 mt-0.5 line-clamp-1">{m.description}</p>
@@ -135,7 +135,7 @@ export default function MilestonesPage() {
                 {/* Actions */}
                 <div className="flex items-center gap-1">
                   <button onClick={() => toggleActive(m)}
-                    className={`p-2 rounded-lg transition-colors ${m.isActive ? 'text-blue-600 hover:bg-blue-100' : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'}`}>
+                    className={`p-2 rounded-lg transition-colors ${m.isActive ? 'text-emerald-600 hover:bg-emerald-100' : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'}`}>
                     {m.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                   </button>
                   <button onClick={() => openEdit(m)}
@@ -168,28 +168,28 @@ export default function MilestonesPage() {
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-700">Year Label *</label>
                   <input value={form.year || ''} onChange={e => setForm(f => ({ ...f, year: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500"
                     placeholder="e.g. 2001, 2024–25" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-700">Display Order</label>
                   <input type="number" min={0} value={form.displayOrder ?? 0}
                     onChange={e => setForm(f => ({ ...f, displayOrder: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500" />
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500" />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-gray-700">Title *</label>
                 <input value={form.title || ''} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500"
                   placeholder="e.g. Federation Founded" />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-gray-700">Description *</label>
                 <textarea rows={3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500 resize-none"
                   placeholder="Brief description of this milestone..." />
               </div>
 
@@ -200,7 +200,7 @@ export default function MilestonesPage() {
                   {Object.entries(ICONS).map(([key, IconComp]) => (
                     <button key={key} type="button"
                       onClick={() => setForm(f => ({ ...f, icon: key }))}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-colors ${form.icon === key ? 'border-blue-500 bg-blue-100 text-blue-600' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-200'}`}>
+                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-colors ${form.icon === key ? 'border-emerald-500 bg-emerald-100 text-emerald-600' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-200'}`}>
                       <IconComp className="w-5 h-5" />
                       <span className="text-xs leading-tight text-center">{key}</span>
                     </button>
@@ -210,14 +210,14 @@ export default function MilestonesPage() {
 
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={!!form.isActive} onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))}
-                  className="w-4 h-4 accent-blue-500" />
+                  className="w-4 h-4 accent-emerald-500" />
                 <span className="text-sm text-gray-700">Active (visible on website)</span>
               </label>
             </div>
             <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
               <button onClick={closeForm} className="px-4 py-2 text-gray-500 hover:text-gray-900 hover:bg-white rounded-xl transition-colors">Cancel</button>
               <button onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50">
+                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {editing ? 'Save Changes' : 'Add Milestone'}
               </button>

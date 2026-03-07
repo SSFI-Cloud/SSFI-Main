@@ -177,7 +177,7 @@ export default function EventResultsPage() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center p-20">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
             </div>
         );
     }
@@ -225,7 +225,7 @@ export default function EventResultsPage() {
                     <select
                         value={selectedSkate}
                         onChange={(e) => { setSelectedSkate(e.target.value); setSelectedAge(''); setSelectedGender(''); setSelectedRace(''); }}
-                        className="form-select w-full px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        className="form-select w-full px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     >
                         <option value="">Select Skate Type</option>
                         {uniqueSkateCategories.map((c: any) => <option key={c} value={c}>{c}</option>)}
@@ -235,7 +235,7 @@ export default function EventResultsPage() {
                         value={selectedAge}
                         disabled={!selectedSkate}
                         onChange={(e) => { setSelectedAge(e.target.value); setSelectedGender(''); setSelectedRace(''); }}
-                        className="form-select w-full px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="form-select w-full px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         <option value="">Select Age Category</option>
                         {uniqueAgeCategories.map((c: any) => <option key={c} value={c}>{c}</option>)}
@@ -245,7 +245,7 @@ export default function EventResultsPage() {
                         value={selectedGender}
                         disabled={!selectedAge}
                         onChange={(e) => { setSelectedGender(e.target.value); setSelectedRace(''); }}
-                        className="form-select w-full px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="form-select w-full px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         <option value="">Select Gender</option>
                         {uniqueGenders.map((c: any) => <option key={c} value={c}>{c}</option>)}
@@ -255,7 +255,7 @@ export default function EventResultsPage() {
                         value={selectedRace}
                         disabled={!selectedGender}
                         onChange={(e) => setSelectedRace(e.target.value)}
-                        className="form-select w-full px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="form-select w-full px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         <option value="">Select Race</option>
                         {uniqueRaces.map((c: any) => <option key={c} value={c}>{c} meters</option>)}
@@ -268,13 +268,13 @@ export default function EventResultsPage() {
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white">
                         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                            <Users className="w-5 h-5 text-blue-400" />
+                            <Users className="w-5 h-5 text-emerald-400" />
                             Participants ({participants.length})
                         </h2>
                         <button
                             onClick={handleSave}
                             disabled={isSaving || participants.length === 0}
-                            className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-lg shadow-blue-900/20 font-medium"
+                            className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-lg shadow-emerald-900/20 font-medium"
                         >
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             {isSaving ? 'Saving...' : 'Save Results'}

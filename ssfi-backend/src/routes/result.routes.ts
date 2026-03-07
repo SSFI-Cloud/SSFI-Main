@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import { resultController } from '../controllers/result.controller';
 import { authenticate, requireRole } from '../middleware/auth.middleware';
+import { cacheMiddleware } from '../utils/cache.util';
 
 const router = Router();
 
 // ─── PUBLIC ROUTES (no auth) ─────────────────────────────────────────────────
 // These MUST be declared before the /:eventId routes to avoid param conflicts.
 
-router.get('/public/recent', resultController.getPublicRecentResults);
-router.get('/public/events', resultController.getPublicAllEvents);
-router.get('/public/event/:eventId', resultController.getPublicEventResults);
+router.get('/public/recent', cacheMiddleware(600), resultController.getPublicRecentResults); // 10 min
+router.get('/public/events', cacheMiddleware(600), resultController.getPublicAllEvents);     // 10 min
+router.get('/public/event/:eventId', cacheMiddleware(300), resultController.getPublicEventResults);
 
 // ─── ADMIN / ORGANISER ROUTES ─────────────────────────────────────────────────
 

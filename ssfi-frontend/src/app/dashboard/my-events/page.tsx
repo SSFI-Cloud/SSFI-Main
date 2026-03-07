@@ -17,7 +17,7 @@ import {
     Filter,
     ArrowRight
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 interface Event {
@@ -67,9 +67,7 @@ export default function MyEventsPage() {
             if (!token) return;
             try {
                 // 1. Fetch Events
-                const eventsRes = await axios.get('http://localhost:5001/api/v1/events/my-events', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const eventsRes = await api.get('/events/my-events');
 
                 if (eventsRes.data.status === 'success') {
                     // Map backend "events" to frontend "Registration" structure
@@ -103,9 +101,7 @@ export default function MyEventsPage() {
                 // We haven't imported certificateService at the top. Let's do a direct call to be safe with imports or use api client if available.
                 // But wait, I should preferably use the service. 
                 // Let's assume I can add the import.
-                const certRes = await axios.get('http://localhost:5001/api/v1/certificates/my-certificates', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const certRes = await api.get('/certificates/my-certificates');
 
                 // @ts-ignore
                 const certs = certRes.data || [];
@@ -177,7 +173,7 @@ export default function MyEventsPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
                             <Trophy className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -189,7 +185,7 @@ export default function MyEventsPage() {
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center">
                             <Clock className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -233,7 +229,7 @@ export default function MyEventsPage() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search events..."
-                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                 </div>
                 <div className="relative">
@@ -241,7 +237,7 @@ export default function MyEventsPage() {
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="pl-10 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none min-w-[150px]"
+                        className="pl-10 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none min-w-[150px]"
                     >
                         <option value="all">All Events</option>
                         <option value="upcoming">Upcoming</option>
@@ -254,7 +250,7 @@ export default function MyEventsPage() {
             <div className="space-y-4">
                 {isLoading ? (
                     <div className="py-12 text-center">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                     </div>
                 ) : filteredRegistrations.length === 0 ? (
                     <div className="py-12 text-center text-gray-500">
@@ -289,7 +285,7 @@ export default function MyEventsPage() {
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
                                                         {reg.event.eventLevel && (
-                                                            <span className="text-xs font-medium text-blue-600 px-2 py-0.5 bg-blue-100 rounded-full">{reg.event.eventLevel}</span>
+                                                            <span className="text-xs font-medium text-emerald-600 px-2 py-0.5 bg-emerald-100 rounded-full">{reg.event.eventLevel}</span>
                                                         )}
                                                         {getStatusBadge(reg.status)}
                                                     </div>
@@ -372,7 +368,7 @@ export default function MyEventsPage() {
                                                             </button>
                                                         )}
                                                         {!isUpcoming && reg.status === 'APPROVED' && (
-                                                            <button className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors">
+                                                            <button className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors">
                                                                 <Download className="w-4 h-4" />
                                                                 Certificate
                                                             </button>

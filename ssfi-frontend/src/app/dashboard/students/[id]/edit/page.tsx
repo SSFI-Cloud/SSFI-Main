@@ -9,7 +9,7 @@ import {
     GraduationCap, Heart, Shield, Loader2, AlertCircle, CheckCircle,
     Users, Hash, Camera
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 const BLOOD_GROUPS = ['A_POSITIVE','A_NEGATIVE','B_POSITIVE','B_NEGATIVE','O_POSITIVE','O_NEGATIVE','AB_POSITIVE','AB_NEGATIVE'];
@@ -56,9 +56,7 @@ export default function EditStudentPage() {
         const fetchStudent = async () => {
             setIsLoading(true);
             try {
-                const res = await axios.get(`http://localhost:5001/api/v1/students/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get(`/students/${id}`);
                 const s = res.data?.data?.student || res.data?.data || res.data;
                 setStudentName(`${s.first_name || ''} ${s.last_name || ''}`.trim() || s.name || '');
                 setSsfiId(s.ssfi_id || s.uid || '');
@@ -104,9 +102,7 @@ export default function EditStudentPage() {
         setIsSaving(true);
         setError(null);
         try {
-            await axios.put(`http://localhost:5001/api/v1/students/${id}`, form, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.put(`/students/${id}`, form);
             setSuccess(true);
             setTimeout(() => router.push('/dashboard/students'), 1500);
         } catch (err: any) {
@@ -115,14 +111,14 @@ export default function EditStudentPage() {
         }
     };
 
-    const inputCls = "w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow text-sm";
-    const selectCls = "w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm";
+    const inputCls = "w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-shadow text-sm";
+    const selectCls = "w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-sm";
     const labelCls = "block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide";
 
     if (isLoading) return (
         <div className="flex items-center justify-center h-96">
             <div className="text-center space-y-3">
-                <Loader2 className="w-10 h-10 text-blue-500 animate-spin mx-auto" />
+                <Loader2 className="w-10 h-10 text-emerald-500 animate-spin mx-auto" />
                 <p className="text-gray-500 text-sm">Loading student data...</p>
             </div>
         </div>
@@ -135,7 +131,7 @@ export default function EditStudentPage() {
             </div>
             <p className="text-gray-900 font-semibold">Failed to load student</p>
             <p className="text-gray-500 text-sm">{error}</p>
-            <Link href="/dashboard/students" className="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm hover:bg-blue-600">
+            <Link href="/dashboard/students" className="px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm hover:bg-emerald-600">
                 Back to Students
             </Link>
         </div>
@@ -154,7 +150,7 @@ export default function EditStudentPage() {
                         <h1 className="text-xl font-bold text-gray-900">Edit Student</h1>
                         <div className="flex items-center gap-2 mt-0.5">
                             {studentName && <p className="text-sm text-gray-500">{studentName}</p>}
-                            {ssfiId && <span className="text-xs font-mono bg-blue-50 text-blue-600 px-2 py-0.5 rounded-lg border border-blue-100">#{ssfiId}</span>}
+                            {ssfiId && <span className="text-xs font-mono bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-lg border border-emerald-100">#{ssfiId}</span>}
                         </div>
                     </div>
                 </div>
@@ -320,7 +316,7 @@ export default function EditStudentPage() {
                 {/* Actions */}
                 <div className="flex items-center gap-3 pt-2">
                     <button type="submit" disabled={isSaving || success}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                        className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         {isSaving ? 'Saving...' : 'Save Changes'}
                     </button>
@@ -338,10 +334,10 @@ function Section({ title, icon: Icon, color, children }: {
     title: string; icon: any; color: 'blue'|'green'|'red'|'purple'|'amber'; children: React.ReactNode
 }) {
     const colors = {
-        blue:   'from-blue-500 to-indigo-600',
+        blue:   'from-emerald-500 to-teal-600',
         green:  'from-green-500 to-emerald-600',
-        red:    'from-red-500 to-rose-600',
-        purple: 'from-purple-500 to-violet-600',
+        red:    'from-red-500 to-teal-600',
+        purple: 'from-teal-500 to-emerald-600',
         amber:  'from-amber-400 to-orange-500',
     };
     return (

@@ -49,8 +49,8 @@ export default function CTASection() {
                     </h2>
 
                     <p className="text-lg md:text-xl text-dark-400 mb-10 max-w-2xl mx-auto">
-                        Join the Skating Sports Federation of India and become part of a community
-                        dedicated to excellence in skating sports.
+                        Join the Speed Skating Federation of India and become part of a community
+                        dedicated to excellence in speed skating.
                     </p>
 
                     {/* Feature pills */}

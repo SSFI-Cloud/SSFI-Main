@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-500 border-t-transparent" />
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-emerald-500 border-t-transparent" />
           <p className="text-sm text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -35,7 +35,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex flex-col items-center justify-center h-96 gap-4">
         <p className="text-red-500 text-sm">{error || 'Failed to load dashboard'}</p>
-        <button onClick={() => fetchDashboard()} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition-colors">
+        <button onClick={() => fetchDashboard()} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm hover:bg-emerald-700 transition-colors">
           <RefreshCw className="w-4 h-4" /> Retry
         </button>
       </div>
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
           <QuickAction title="Create Event"       description="Set up a new competition"         icon={Trophy}    href="/dashboard/events/new"                    color="blue"   />
           <QuickAction title="Add Student"        description="Register a new student"           icon={UserPlus}  href="/dashboard/students/new"                  color="green"  />
           <QuickAction title="Registration Windows" description="Manage open periods"            icon={Calendar}  href="/dashboard/registration-windows"          color="purple" />
-          <QuickAction title="View Reports"       description="Analytics & insights"             icon={TrendingUp} href="/dashboard/reports"                     color="amber"  />
+          <QuickAction title="View Reports"       description="Analytics & insights"             icon={TrendingUp} href="/dashboard/reports"                     color="teal"  />
         </div>
       </motion.div>
 

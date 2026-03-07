@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, ArrowRight, Award, GraduationCap, User, Phone, Mail, MapPin,
-  Calendar, Upload, FileText, CheckCircle2, Loader2, AlertCircle,
+  Calendar, Upload, FileText, CheckCircle2, Loader2, AlertCircle, CreditCard,
 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/api/client';
@@ -81,6 +81,28 @@ function CoachCertRegisterForm() {
     return Object.keys(e).length === 0;
   };
 
+  const openRazorpay = (order: any, onVerify: (r: any) => Promise<void>) => {
+    if (order.key === 'rzp_test_mock') {
+      toast.success('Mock payment — simulating success…');
+      setTimeout(() => onVerify({
+        razorpay_order_id: order.razorpayOrderId,
+        razorpay_payment_id: `pay_mock_${Date.now()}`,
+        razorpay_signature: 'mock_signature',
+      }), 1500);
+      return;
+    }
+    const rzp = new (window as any).Razorpay({
+      key: order.key, amount: order.amount, currency: order.currency,
+      name: 'SSFI', description: 'Coach Certification Registration',
+      order_id: order.razorpayOrderId,
+      prefill: order.userDetails,
+      theme: { color: '#10b981' },
+      handler: onVerify,
+    });
+    rzp.on('payment.failed', (r: any) => toast.error(r.error?.description || 'Payment failed'));
+    rzp.open();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) { toast.error('Please fix the errors'); return; }
@@ -100,12 +122,24 @@ function CoachCertRegisterForm() {
       if (photo) formData.append('photo', photo);
       if (aadhaarCard) formData.append('aadhaarCard', aadhaarCard);
 
-      const res = await api.post('/coach-cert/register', formData, {
+      // Step 1: Initiate registration + create payment order
+      const res = await api.post('/coach-cert/initiate', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      const order = res.data?.data;
+      if (!order?.razorpayOrderId) throw new Error('Failed to create payment order');
 
-      toast.success('Registration successful! Reg No: ' + (res.data?.data?.registrationNumber || ''));
-      router.push('/coach-certification');
+      // Step 2: Open Razorpay checkout
+      openRazorpay(order, async (response: any) => {
+        try {
+          // Step 3: Verify payment
+          await api.post('/coach-cert/verify-payment', response);
+          toast.success('Registration & payment successful!');
+          router.push(`/payment/success?order_id=${encodeURIComponent(response.razorpay_order_id)}&payment_id=${encodeURIComponent(response.razorpay_payment_id)}`);
+        } catch (verifyErr: any) {
+          toast.error(verifyErr?.response?.data?.message || 'Payment verification failed');
+        }
+      });
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Registration failed');
     } finally { setSubmitting(false); }
@@ -155,7 +189,7 @@ function CoachCertRegisterForm() {
 
           {/* Personal Details */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><User className="w-5 h-5 text-blue-500" /> Personal Details</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><User className="w-5 h-5 text-emerald-500" /> Personal Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Full Name *</label>
@@ -204,7 +238,7 @@ function CoachCertRegisterForm() {
 
           {/* Address */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><MapPin className="w-5 h-5 text-rose-500" /> Address</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><MapPin className="w-5 h-5 text-teal-500" /> Address</h2>
             <div className="space-y-4">
               <div>
                 <label className={labelCls}>Address *</label>
@@ -241,7 +275,7 @@ function CoachCertRegisterForm() {
 
           {/* Skating & Additional */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Award className="w-5 h-5 text-violet-500" /> Skating &amp; Additional</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Award className="w-5 h-5 text-emerald-500" /> Skating &amp; Additional</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className={labelCls}>Blood Group</label>
@@ -266,7 +300,7 @@ function CoachCertRegisterForm() {
 
           {/* Documents */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><FileText className="w-5 h-5 text-amber-500" /> Documents</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><FileText className="w-5 h-5 text-teal-500" /> Documents</h2>
             <div className="space-y-4">
               <div>
                 <label className={labelCls}>Aadhaar Number *</label>
@@ -316,8 +350,8 @@ function CoachCertRegisterForm() {
             </Link>
             <button type="submit" disabled={submitting}
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all disabled:opacity-50">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              Submit Registration
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+              {submitting ? 'Processing...' : 'Pay & Register'}
             </button>
           </div>
         </form>

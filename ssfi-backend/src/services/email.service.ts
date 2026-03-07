@@ -40,7 +40,7 @@ function layout(opts: {
                 <div style="display:inline-block;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.25);border-radius:14px;padding:10px 22px;margin-bottom:14px;">
                   <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:3px;font-family:Georgia,serif;">SSFI</span>
                 </div>
-                <p style="margin:0;color:rgba(255,255,255,0.5);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;">Skating Sports Federation of India</p>
+                <p style="margin:0;color:rgba(255,255,255,0.5);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;">Speed Skating Federation of India</p>
               </td>
             </tr>
           </table>
@@ -64,7 +64,7 @@ function layout(opts: {
       <!-- ── FOOTER ── -->
       <tr>
         <td style="background:#F8FAFC;border-top:1px solid #E5E7EB;padding:20px 40px;text-align:center;">
-          <p style="margin:0 0 6px;font-size:12px;color:#9CA3AF;">Skating Sports Federation of India</p>
+          <p style="margin:0 0 6px;font-size:12px;color:#9CA3AF;">Speed Skating Federation of India</p>
           <p style="margin:0;font-size:11px;color:#D1D5DB;">This is a system-generated email. Please do not reply directly to this message.</p>
         </td>
       </tr>
@@ -175,7 +175,13 @@ class EmailService {
         });
     }
 
-    private async send(to: string, subject: string, html: string, tag: string): Promise<void> {
+    private async send(
+        to: string,
+        subject: string,
+        html: string,
+        tag: string,
+        opts?: { replyTo?: string; text?: string },
+    ): Promise<void> {
         if (!process.env.SMTP_HOST) {
             logger.warn(`SMTP not configured — skipping ${tag} email`, { to });
             return;
@@ -186,12 +192,24 @@ class EmailService {
                 to,
                 subject,
                 html,
+                ...(opts?.replyTo ? { replyTo: opts.replyTo } : {}),
+                ...(opts?.text ? { text: opts.text } : {}),
             });
             logger.info(`[email:${tag}] sent → ${to}`);
         } catch (err) {
             logger.error(`[email:${tag}] failed → ${to}`, err);
-            throw err;
+            // Don't throw — email failure should not break the request
         }
+    }
+
+    /**
+     * Fire-and-forget email — does NOT block the caller.
+     * Use this from controllers so the HTTP response returns immediately.
+     */
+    sendInBackground(to: string, subject: string, html: string, tag: string): void {
+        this.send(to, subject, html, tag).catch(() => {
+            // Already logged inside send()
+        });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -245,7 +263,7 @@ class EmailService {
         };
 
         const body = `
-          ${greeting(name, `Welcome to the Skating Sports Federation of India! Your account has been successfully created. Below are your login credentials to access the SSFI portal.`)}
+          ${greeting(name, `Welcome to the Speed Skating Federation of India! Your account has been successfully created. Below are your login credentials to access the SSFI portal.`)}
 
           ${credentialCard(details.uid, details.password, roleLabel[details.role] || details.role)}
 
@@ -312,8 +330,8 @@ class EmailService {
 
         const body = `
           ${greeting(data.name, isRenewal
-            ? `Your SSFI <strong>${typeLabel}</strong> membership has been renewed successfully. Thank you for continuing to be part of the Skating Sports Federation of India.`
-            : `Thank you for registering with the Skating Sports Federation of India. Your <strong>${typeLabel}</strong> application has been received and is currently under review by our team.`
+            ? `Your SSFI <strong>${typeLabel}</strong> membership has been renewed successfully. Thank you for continuing to be part of the Speed Skating Federation of India.`
+            : `Thank you for registering with the Speed Skating Federation of India. Your <strong>${typeLabel}</strong> application has been received and is currently under review by our team.`
           )}
 
           ${uidBox('Your SSFI UID', data.uid)}
@@ -373,7 +391,7 @@ class EmailService {
         ].filter(Boolean).join('');
 
         const body = `
-          ${greeting(data.name, `We are pleased to inform you that your <strong>${typeLabel}</strong> application with the Skating Sports Federation of India has been <strong style="color:#15803D;">approved</strong>. Welcome to the SSFI family!`)}
+          ${greeting(data.name, `We are pleased to inform you that your <strong>${typeLabel}</strong> application with the Speed Skating Federation of India has been <strong style="color:#15803D;">approved</strong>. Welcome to the SSFI family!`)}
 
           <!-- Approved badge -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
@@ -423,7 +441,7 @@ class EmailService {
         const subject = `SSFI Application Update — ${typeLabel}`;
 
         const body = `
-          ${greeting(data.name, `We regret to inform you that your <strong>${typeLabel}</strong> application with the Skating Sports Federation of India could not be approved at this time.`)}
+          ${greeting(data.name, `We regret to inform you that your <strong>${typeLabel}</strong> application with the Speed Skating Federation of India could not be approved at this time.`)}
 
           <!-- UID reference -->
           ${uidBox('Application Reference', data.uid, '#DC2626')}
@@ -598,6 +616,176 @@ class EmailService {
         });
 
         await this.send(to, subject, html, 'beginner-cert');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 8. CONTACT FORM NOTIFICATION (sent to admin)
+    // ─────────────────────────────────────────────────────────────────────────
+    async sendContactFormNotification(data: {
+        name: string;
+        email: string;
+        phone?: string;
+        subject?: string;
+        message: string;
+    }): Promise<void> {
+        const receiverEmail = process.env.CONTACT_RECEIVER_EMAIL || process.env.SMTP_USER || '';
+        if (!receiverEmail) {
+            logger.warn('No CONTACT_RECEIVER_EMAIL configured — skipping contact notification');
+            return;
+        }
+
+        const esc = EmailService.escapeHtml;
+        const subjectLine = data.subject
+            ? `Contact Form: ${data.subject}`
+            : `New Contact Form Message from ${data.name}`;
+
+        const detailRows = [
+            row('Name', esc(data.name), true),
+            row('Email', `<a href="mailto:${esc(data.email)}" style="color:${BRAND_BLUE};font-weight:600;">${esc(data.email)}</a>`),
+            data.phone ? row('Phone', esc(data.phone)) : '',
+            data.subject ? row('Subject', esc(data.subject)) : '',
+        ].filter(Boolean).join('');
+
+        const body = `
+          ${greeting('Admin', `A new message has been submitted through the SSFI website contact form. Details are below.`)}
+
+          ${sectionCard('SENDER DETAILS', `<table width="100%" cellpadding="0" cellspacing="0" border="0">${detailRows}</table>`)}
+
+          ${sectionCard('MESSAGE', `
+            <div style="background:#F9FAFB;border-left:4px solid #10B981;border-radius:6px;padding:16px;font-size:14px;color:#374151;line-height:1.7;white-space:pre-wrap;">${esc(data.message)}</div>
+          `)}
+
+          ${alertBox('info', `You can reply directly to this email — it will be sent to <strong>${esc(data.email)}</strong>.`)}
+        `;
+
+        const html = layout({
+            title: 'New Contact Form Message',
+            bannerColor: 'linear-gradient(135deg,#10B981,#0D9488)',
+            bannerIcon: '📬',
+            bannerText: 'New Contact Form Submission',
+            body,
+        });
+
+        // Plain-text fallback for email clients that don't support HTML
+        const text = [
+            '=== New Contact Form Message — SSFI Website ===',
+            '',
+            `From:    ${data.name}`,
+            `Email:   ${data.email}`,
+            data.phone ? `Phone:   ${data.phone}` : null,
+            data.subject ? `Subject: ${data.subject}` : null,
+            '',
+            '--- Message ---',
+            data.message,
+            '',
+            '--- Sent from ssfiskate.com contact form ---',
+        ].filter(line => line !== null).join('\n');
+
+        await this.send(receiverEmail, subjectLine, html, 'contact-form', {
+            replyTo: `"${data.name}" <${data.email}>`,
+            text,
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 9. RENEWAL REMINDER
+    // ─────────────────────────────────────────────────────────────────────────
+    async sendRenewalReminder(to: string, data: {
+        name: string;
+        uid: string;
+        role: string;
+        daysUntilExpiry: number;
+        expiryDate: Date;
+    }): Promise<void> {
+        const roleLabel: Record<string, string> = {
+            STATE_SECRETARY: 'State Secretary',
+            DISTRICT_SECRETARY: 'District Secretary',
+            CLUB_OWNER: 'Club Owner',
+            STUDENT: 'Student',
+        };
+        const typeLabel = roleLabel[data.role] || data.role;
+        const expiryStr = data.expiryDate.toLocaleDateString('en-IN', {
+            year: 'numeric', month: 'long', day: 'numeric',
+        });
+        const isExpired = data.daysUntilExpiry <= 0;
+        const isUrgent = data.daysUntilExpiry <= 7;
+
+        const subject = isExpired
+            ? `SSFI Membership Expired — Renew Now`
+            : `SSFI Membership ${isUrgent ? 'Expiring Soon' : 'Renewal Reminder'} — ${data.daysUntilExpiry} days left`;
+
+        const urgencyMessage = isExpired
+            ? `Your SSFI <strong>${typeLabel}</strong> membership expired on <strong>${expiryStr}</strong>. Your account access has been restricted. Please renew immediately to restore full access.`
+            : isUrgent
+                ? `Your SSFI <strong>${typeLabel}</strong> membership expires in <strong>${data.daysUntilExpiry} days</strong> on <strong>${expiryStr}</strong>. Renew now to avoid any disruption to your account.`
+                : `Your SSFI <strong>${typeLabel}</strong> membership will expire on <strong>${expiryStr}</strong> (${data.daysUntilExpiry} days from now). Please plan to renew before the expiry date.`;
+
+        const body = `
+          ${greeting(data.name, urgencyMessage)}
+
+          ${uidBox('Your SSFI UID', data.uid, isExpired ? '#DC2626' : isUrgent ? '#D97706' : BRAND_BLUE)}
+
+          ${sectionCard('MEMBERSHIP DETAILS', `
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              ${row('Role', typeLabel)}
+              ${row('Expiry Date', `<strong style="color:${isExpired ? '#DC2626' : isUrgent ? '#D97706' : '#111827'};">${expiryStr}</strong>`)}
+              ${row('Status', isExpired
+                ? `<span style="color:#DC2626;font-weight:700;">Expired</span>`
+                : isUrgent
+                    ? `<span style="color:#D97706;font-weight:700;">Expiring Soon</span>`
+                    : `<span style="color:#15803D;font-weight:700;">Active</span>`
+              )}
+            </table>
+          `)}
+
+          ${isExpired
+            ? alertBox('danger', `Your account has been restricted due to expired membership. You will not be able to access dashboard features, register for events, or manage your organization until you renew.`)
+            : isUrgent
+                ? alertBox('warning', `Your membership expires in <strong>${data.daysUntilExpiry} days</strong>. After expiry, your account access will be restricted and you will not be able to participate in events.`)
+                : alertBox('info', `This is a friendly reminder to renew your membership before <strong>${expiryStr}</strong>. Early renewal ensures uninterrupted access to all SSFI services.`)
+          }
+
+          ${sectionCard('HOW TO RENEW', `
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr><td style="padding:7px 0;color:#374151;font-size:13px;">1.&nbsp;&nbsp;Log in to the SSFI portal at <a href="https://ssfiskate.com" style="color:${BRAND_BLUE};font-weight:600;">ssfiskate.com</a></td></tr>
+              <tr><td style="padding:7px 0;color:#374151;font-size:13px;">2.&nbsp;&nbsp;Navigate to your Dashboard</td></tr>
+              <tr><td style="padding:7px 0;color:#374151;font-size:13px;">3.&nbsp;&nbsp;Click on the renewal banner or go to Settings</td></tr>
+              <tr><td style="padding:7px 0;color:#374151;font-size:13px;">4.&nbsp;&nbsp;Complete the payment to renew your membership</td></tr>
+            </table>
+          `)}
+
+          <p style="margin:0;font-size:13px;color:#9CA3AF;text-align:center;line-height:1.6;">
+            For questions or assistance, contact us at <a href="mailto:${process.env.SMTP_USER || 'info@ssfiskate.com'}" style="color:${BRAND_BLUE};">${process.env.SMTP_USER || 'info@ssfiskate.com'}</a>
+          </p>
+        `;
+
+        const bannerColor = isExpired
+            ? 'linear-gradient(135deg,#B91C1C,#991B1B)'
+            : isUrgent
+                ? 'linear-gradient(135deg,#D97706,#B45309)'
+                : 'linear-gradient(135deg,#0891B2,#0E7490)';
+
+        const html = layout({
+            title: subject,
+            bannerColor,
+            bannerIcon: isExpired ? '🚨' : isUrgent ? '⏰' : '🔔',
+            bannerText: isExpired ? 'Membership Expired' : isUrgent ? 'Membership Expiring Soon' : 'Membership Renewal Reminder',
+            body,
+        });
+
+        await this.send(to, subject, html, `renewal-reminder:${data.daysUntilExpiry}d`);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // UTILITY
+    // ─────────────────────────────────────────────────────────────────────────
+    private static escapeHtml(str: string): string {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 }
 

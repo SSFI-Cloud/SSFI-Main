@@ -89,14 +89,14 @@ export default function ContactMessagesPage() {
           <p className="text-gray-500 text-sm mt-1">Messages submitted via the website contact form</p>
         </div>
         <button onClick={toggleFilter}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${filterUnread ? 'bg-blue-600 border-blue-500 text-white' : 'border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-200'}`}>
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${filterUnread ? 'bg-emerald-600 border-emerald-500 text-white' : 'border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-200'}`}>
           <Mail className="w-4 h-4" />
           {filterUnread ? 'Showing Unread' : 'All Messages'}
         </button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>
+        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
       ) : messages.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
           <MessageSquare className="w-12 h-12 text-gray-500 mx-auto mb-3" />
@@ -108,7 +108,7 @@ export default function ContactMessagesPage() {
             <div key={msg.id}
               onClick={() => openMessage(msg)}
               className={`flex items-start gap-4 p-4 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${!msg.isRead ? 'bg-blue-950/20' : ''}`}>
-              <div className={`mt-1 p-2 rounded-lg shrink-0 ${msg.isRead ? 'bg-gray-100 text-gray-500' : 'bg-blue-100 text-blue-600'}`}>
+              <div className={`mt-1 p-2 rounded-lg shrink-0 ${msg.isRead ? 'bg-gray-100 text-gray-500' : 'bg-emerald-100 text-emerald-600'}`}>
                 {msg.isRead ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -136,7 +136,7 @@ export default function ContactMessagesPage() {
         <div className="flex justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
             <button key={p} onClick={() => load(p)}
-              className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${p === page ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-100'}`}>
+              className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${p === page ? 'bg-emerald-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-100'}`}>
               {p}
             </button>
           ))}
@@ -164,17 +164,17 @@ export default function ContactMessagesPage() {
               {/* Sender info */}
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 p-3 bg-white rounded-2xl">
-                  <User className="w-5 h-5 text-blue-600 shrink-0" />
+                  <User className="w-5 h-5 text-emerald-600 shrink-0" />
                   <div>
                     <p className="text-xs text-gray-600">Name</p>
                     <p className="text-sm font-medium text-gray-900">{selected.name}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-white rounded-2xl">
-                  <Mail className="w-5 h-5 text-purple-600 shrink-0" />
+                  <Mail className="w-5 h-5 text-teal-600 shrink-0" />
                   <div>
                     <p className="text-xs text-gray-600">Email</p>
-                    <a href={`mailto:${selected.email}`} className="text-sm font-medium text-blue-600 hover:underline">{selected.email}</a>
+                    <a href={`mailto:${selected.email}`} className="text-sm font-medium text-emerald-600 hover:underline">{selected.email}</a>
                   </div>
                 </div>
                 {selected.phone && (
@@ -196,7 +196,7 @@ export default function ContactMessagesPage() {
               </div>
 
               {/* Message body */}
-              <div className="bg-white rounded-2xl p-4 border-l-4 border-blue-500">
+              <div className="bg-white rounded-2xl p-4 border-l-4 border-emerald-500">
                 <p className="text-sm text-gray-500 mb-2 font-medium">Message</p>
                 <p className="text-gray-900 whitespace-pre-wrap leading-relaxed">{selected.message}</p>
               </div>
@@ -204,7 +204,7 @@ export default function ContactMessagesPage() {
               {/* Reply button */}
               <div className="flex justify-end">
                 <a href={`mailto:${selected.email}?subject=Re: ${encodeURIComponent(selected.subject || 'Your inquiry')}`}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium">
+                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
                   <Mail className="w-4 h-4" /> Reply via Email
                 </a>
               </div>

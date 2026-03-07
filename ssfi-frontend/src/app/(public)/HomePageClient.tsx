@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import HeroSection from '@/components/home/HeroSection';
 
 // Eagerly loaded — above the fold
-import GlobeStats from '@/components/home/GlobeStats';
 import EventHighlightCards from '@/components/home/EventHighlightCards';
 
 // Lazy loaded — below the fold (reduces initial JS bundle by ~80KB+)
@@ -20,37 +19,34 @@ const PartnersMarquee = dynamic(() => import('@/components/home/PartnersMarquee'
 export default function HomePageClient() {
   return (
     <main className="min-h-screen bg-white">
-      {/* 1. Hero — dark full-screen slider */}
+      {/* 1. Hero — dark full-screen slider + stats strip + community stats */}
       <HeroSection />
 
-      {/* 2. Globe Stats — social proof, big counter, cobe globe (LIGHT) */}
-      <GlobeStats />
-
-      {/* 3. Events & Programs — 3 highlight cards (LIGHT) */}
+      {/* 2. Events & Programs — 3 highlight cards (LIGHT) */}
       <EventHighlightCards />
 
-      {/* 4. Coach Certification — right after events for context (DARK) */}
+      {/* 3. Coach Certification — right after events for context (DARK) */}
       <CoachCertification />
 
-      {/* 5. Why Join SSFI — value proposition, features (LIGHT) */}
+      {/* 4. Why Join SSFI — value proposition, features (LIGHT) */}
       <WhyJoinSSFI />
 
-      {/* 6. Beginner Certification — separated from coach cert (DARK) */}
+      {/* 5. Beginner Certification — separated from coach cert (DARK) */}
       <BeginnerCertification />
 
-      {/* 7. Championship Highlights — recent results (LIGHT) */}
+      {/* 6. Championship Highlights — recent results (LIGHT) */}
       <RecentResults />
 
-      {/* 8. Our Team — leadership (DARK) */}
+      {/* 7. Our Team — leadership (DARK) */}
       <OurTeam />
 
-      {/* 9. Meet Rollie — fun mascot break (LIGHT) */}
+      {/* 8. Meet Rollie — fun mascot break (LIGHT) */}
       <MeetRollie />
 
-      {/* 10. Donations — emotional appeal (LIGHT/pink) */}
+      {/* 9. Donations — emotional appeal (LIGHT/pink) */}
       <DonationsSection />
 
-      {/* 11. Partners Marquee — trust signals (LIGHT) */}
+      {/* 10. Partners Marquee — trust signals (LIGHT) */}
       <PartnersMarquee />
     </main>
   );

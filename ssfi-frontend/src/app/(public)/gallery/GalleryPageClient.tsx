@@ -35,11 +35,11 @@ const placeholderAlbums: GalleryAlbum[] = [
 
 const CARD_ACCENTS = [
     { gradient: 'from-emerald-400 to-teal-500', bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100', border: 'hover:border-emerald-200', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    { gradient: 'from-violet-400 to-purple-500', bg: 'bg-violet-50', text: 'text-violet-600', iconBg: 'bg-violet-100', border: 'hover:border-violet-200', badge: 'bg-violet-50 text-violet-700 border-violet-200' },
-    { gradient: 'from-amber-400 to-orange-500', bg: 'bg-amber-50', text: 'text-amber-600', iconBg: 'bg-amber-100', border: 'hover:border-amber-200', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
-    { gradient: 'from-rose-400 to-pink-500', bg: 'bg-rose-50', text: 'text-rose-600', iconBg: 'bg-rose-100', border: 'hover:border-rose-200', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
+    { gradient: 'from-teal-400 to-emerald-500', bg: 'bg-teal-50', text: 'text-teal-600', iconBg: 'bg-teal-100', border: 'hover:border-teal-200', badge: 'bg-teal-50 text-teal-700 border-teal-200' },
+    { gradient: 'from-teal-400 to-emerald-500', bg: 'bg-teal-50', text: 'text-teal-600', iconBg: 'bg-teal-100', border: 'hover:border-teal-200', badge: 'bg-teal-50 text-teal-700 border-teal-200' },
+    { gradient: 'from-emerald-500 to-cyan-500', bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100', border: 'hover:border-emerald-200', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
     { gradient: 'from-sky-400 to-cyan-500', bg: 'bg-sky-50', text: 'text-sky-600', iconBg: 'bg-sky-100', border: 'hover:border-sky-200', badge: 'bg-sky-50 text-sky-700 border-sky-200' },
-    { gradient: 'from-fuchsia-400 to-purple-500', bg: 'bg-fuchsia-50', text: 'text-fuchsia-600', iconBg: 'bg-fuchsia-100', border: 'hover:border-fuchsia-200', badge: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200' },
+    { gradient: 'from-cyan-400 to-teal-500', bg: 'bg-cyan-50', text: 'text-cyan-600', iconBg: 'bg-cyan-100', border: 'hover:border-cyan-200', badge: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
 ];
 
 /* ── 3D carousel transforms ── */
@@ -80,18 +80,18 @@ export default function GalleryPageClient() {
                 <div className="absolute inset-0 opacity-[0.04]"
                     style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h40v40H0z\' fill=\'none\' stroke=\'white\' stroke-width=\'0.5\'/%3E%3C/svg%3E")' }} />
                 <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%)' }} />
+                    style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)' }} />
                 <div className="absolute -bottom-20 -left-20 w-[300px] h-[300px] rounded-full"
                     style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)' }} />
 
                 <div className="relative max-w-7xl mx-auto px-4 pt-32 pb-20 md:pt-40 md:pb-28">
                     <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 text-sm font-bold mb-6">
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold mb-6">
                             <Camera className="w-4 h-4" /> Photo Gallery
                         </span>
                         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5">
                             Event{' '}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-violet-400">Gallery</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">Gallery</span>
                         </h1>
                         <p className="text-white/50 text-lg md:text-xl max-w-2xl mx-auto">
                             Memorable moments from championships, workshops, and training programs across India
@@ -106,25 +106,25 @@ export default function GalleryPageClient() {
                             { icon: Eye, label: 'Views', value: '15K+' },
                         ].map((s, i) => (
                             <div key={i} className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-sm">
-                                <s.icon className="w-4 h-4 text-fuchsia-400" />
+                                <s.icon className="w-4 h-4 text-emerald-400" />
                                 <span className="text-white font-bold text-sm">{s.value}</span>
                                 <span className="text-white/40 text-sm">{s.label}</span>
                             </div>
                         ))}
                     </motion.div>
                 </div>
-                <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(168,85,247,0.4), transparent)' }} />
+                <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.4), transparent)' }} />
             </section>
 
             {/* ═══════ 3D CAROUSEL — light bg ═══════ */}
             <section className="py-16 md:py-24 relative overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-violet-100/30 rounded-full blur-[200px] -z-0" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-emerald-100/30 rounded-full blur-[200px] -z-0" />
 
                 <div className="max-w-7xl mx-auto px-4 relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                         className="text-center mb-12">
                         <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
-                            Immersive Event <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-violet-500">Visuals</span>
+                            Immersive Event <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Visuals</span>
                         </h2>
                         <p className="text-gray-400 max-w-xl mx-auto text-lg">
                             A curated reel of championships, workshops, and memorable skating moments
@@ -135,7 +135,7 @@ export default function GalleryPageClient() {
                         <div className="flex flex-col items-center justify-center py-20">
                             <div className="relative w-14 h-14 mb-4">
                                 <div className="absolute inset-0 rounded-full border-[3px] border-gray-200" />
-                                <div className="absolute inset-0 rounded-full border-[3px] border-t-fuchsia-500 animate-spin" />
+                                <div className="absolute inset-0 rounded-full border-[3px] border-t-emerald-500 animate-spin" />
                             </div>
                             <p className="text-gray-400 text-sm">Loading gallery…</p>
                         </div>
@@ -203,7 +203,7 @@ export default function GalleryPageClient() {
                                     <p className="text-gray-500 mt-2 max-w-lg mx-auto">{albums[activeIndex].description}</p>
                                 )}
                                 <Link href={`/gallery/${albums[activeIndex]?.slug}`}
-                                    className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-gradient-to-r from-fuchsia-500 to-violet-500 text-white font-bold rounded-xl shadow-lg shadow-fuchsia-200/40 hover:shadow-fuchsia-300/50 hover:scale-[1.03] transition-all">
+                                    className="inline-flex items-center gap-2 mt-4 px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-200/40 hover:shadow-emerald-300/50 hover:scale-[1.03] transition-all">
                                     <ImageIcon className="w-4 h-4" /> View All Photos <ChevronRight className="w-4 h-4" />
                                 </Link>
                             </motion.div>
@@ -217,11 +217,11 @@ export default function GalleryPageClient() {
                 <div className="absolute inset-0 opacity-[0.04]"
                     style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h40v40H0z\' fill=\'none\' stroke=\'white\' stroke-width=\'0.5\'/%3E%3C/svg%3E")' }} />
                 <div className="absolute -top-40 right-0 w-[400px] h-[400px] rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%)' }} />
+                    style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)' }} />
 
                 <div className="max-w-7xl mx-auto px-4 relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
-                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.08] text-fuchsia-400 text-sm font-bold mb-6">
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.08] text-emerald-400 text-sm font-bold mb-6">
                             <Sparkles className="w-4 h-4" /> Browse Collection
                         </span>
                         <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">All Event Albums</h2>
@@ -235,7 +235,7 @@ export default function GalleryPageClient() {
                                 <motion.div key={album.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }} transition={{ delay: index * 0.06 }}>
                                     <Link href={`/gallery/${album.slug}`} className="group block">
-                                        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden hover:border-fuchsia-500/25 hover:shadow-xl hover:shadow-fuchsia-500/5 transition-all duration-300">
+                                        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden hover:border-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
                                             {/* Top accent bar */}
                                             <div className={`h-1 bg-gradient-to-r ${ac.gradient}`} />
 
@@ -263,7 +263,7 @@ export default function GalleryPageClient() {
 
                                             {/* Info */}
                                             <div className="p-5">
-                                                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-fuchsia-400 transition-colors">{album.title}</h3>
+                                                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-emerald-400 transition-colors">{album.title}</h3>
                                                 {album.description && <p className="text-white/40 text-sm mb-3 line-clamp-2">{album.description}</p>}
                                                 <div className="flex items-center gap-4 text-xs text-white/30">
                                                     {album.event?.eventDate && (

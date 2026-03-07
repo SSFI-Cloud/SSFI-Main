@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import apiClient from '@/lib/api/client';
 import { PAGE_TEMPLATES } from '@/types/cms';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 export default function EditPagePage() {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function EditPagePage() {
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({ title: '', slug: '', content: '', excerpt: '', template: 'default', status: 'DRAFT' as 'PUBLISHED' | 'DRAFT' | 'ARCHIVED', sortOrder: 0 });
+  const [form, setForm] = useState({ title: '', slug: '', content: '', excerpt: '', featuredImage: null as string | null, template: 'default', status: 'DRAFT' as 'PUBLISHED' | 'DRAFT' | 'ARCHIVED', sortOrder: 0 });
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
@@ -24,7 +25,7 @@ export default function EditPagePage() {
       try {
         const res = await apiClient.get(`/cms/admin/pages/${id}`);
         const p = res.data.data;
-        setForm({ title: p.title || '', slug: p.slug || '', content: p.content || '', excerpt: p.excerpt || '', template: p.template || 'default', status: p.status || 'DRAFT', sortOrder: p.sortOrder || 0 });
+        setForm({ title: p.title || '', slug: p.slug || '', content: p.content || '', excerpt: p.excerpt || '', featuredImage: p.featuredImage || null, template: p.template || 'default', status: p.status || 'DRAFT', sortOrder: p.sortOrder || 0 });
       } catch { toast.error('Failed to load page'); router.push('/dashboard/cms/pages'); }
       finally { setLoading(false); }
     };
@@ -52,9 +53,9 @@ export default function EditPagePage() {
     } catch { toast.error('Delete failed'); setDeleting(false); }
   };
 
-  const inputClass = "w-full px-3 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 text-sm";
+  const inputClass = "w-full px-3 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 text-sm";
 
-  if (loading) return <div className="flex justify-center items-center py-24"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+  if (loading) return <div className="flex justify-center items-center py-24"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -103,7 +104,7 @@ export default function EditPagePage() {
               {form.status === 'PUBLISHED' ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               <span className="text-sm font-medium">{form.status === 'PUBLISHED' ? 'Published' : 'Draft'}</span>
             </button>
-            <button type="submit" disabled={saving} className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
+            <button type="submit" disabled={saving} className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
             </button>
           </div>
@@ -111,10 +112,14 @@ export default function EditPagePage() {
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Template</h3>
             {PAGE_TEMPLATES.map(t => (
               <button key={t.value} type="button" onClick={() => set('template', t.value)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${form.template === t.value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${form.template === t.value ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                 {t.label}
               </button>
             ))}
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Featured Image</h3>
+            <ImageUpload type="news" value={form.featuredImage} onChange={url => set('featuredImage', url)} />
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-2">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Sort Order</h3>

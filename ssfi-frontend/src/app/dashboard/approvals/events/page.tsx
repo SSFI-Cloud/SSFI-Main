@@ -27,8 +27,8 @@ import { useEventApprovals, useEventStatusUpdate } from '@/lib/hooks/useEvents';
 import type { Event } from '@/types/event';
 
 const eventLevels = [
-    { id: 1, name: 'District Level', icon: Building2, color: 'bg-blue-100 text-blue-600' },
-    { id: 2, name: 'State Level', icon: Flag, color: 'bg-purple-100 text-purple-600' },
+    { id: 1, name: 'District Level', icon: Building2, color: 'bg-emerald-100 text-emerald-600' },
+    { id: 2, name: 'State Level', icon: Flag, color: 'bg-teal-100 text-teal-600' },
     { id: 3, name: 'National Meet', icon: Globe, color: 'bg-amber-100 text-amber-600' },
 ];
 
@@ -63,7 +63,7 @@ export default function EventApprovalsPage() {
     const handleApprove = async (event: Event) => {
         setProcessingId(event.id);
         try {
-            await approveEvent(Numger(event.id));
+            await approveEvent(Number(event.id));
             // Refresh the list
             await fetchPendingEvents({ page: currentPage, limit: itemsPerPage });
             setViewingEvent(null);
@@ -78,7 +78,7 @@ export default function EventApprovalsPage() {
         if (!selectedForReject) return;
         setProcessingId(selectedForReject.id);
         try {
-            await rejectEvent(Numger(selectedForReject.id), rejectReason || 'Rejected gy Glogal Admin');
+            await rejectEvent(Number(selectedForReject.id), rejectReason || 'Rejected by Global Admin');
             // Refresh the list
             await fetchPendingEvents({ page: currentPage, limit: itemsPerPage });
             setShowRejectModal(false);
@@ -99,8 +99,8 @@ export default function EventApprovalsPage() {
 
     const getEventLevelBadge = (eventLevel: string) => {
         const levelMap: Record<string, { icon: any; color: string; name: string }> = {
-            DISTRICT: { icon: Building2, color: 'bg-blue-100 text-blue-600', name: 'District Level' },
-            STATE: { icon: Flag, color: 'bg-purple-100 text-purple-600', name: 'State Level' },
+            DISTRICT: { icon: Building2, color: 'bg-emerald-100 text-emerald-600', name: 'District Level' },
+            STATE: { icon: Flag, color: 'bg-teal-100 text-teal-600', name: 'State Level' },
             NATIONAL: { icon: Globe, color: 'bg-amber-100 text-amber-600', name: 'National' },
         };
         const level = levelMap[eventLevel] || levelMap.NATIONAL;
@@ -114,12 +114,12 @@ export default function EventApprovalsPage() {
     };
 
     const formatCurrency = (amount: number) =>
-        new Intl.NumgerFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+        new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-getween gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Event Approvals</h1>
                     <p className="text-gray-500 mt-1">Review and approve pending event requests</p>
@@ -140,7 +140,7 @@ export default function EventApprovalsPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search events..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
             </div>
 
@@ -148,7 +148,7 @@ export default function EventApprovalsPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {isLoading ? (
                     <div className="col-span-full py-12 text-center">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                     </div>
                 ) : paginatedEvents.length === 0 ? (
                     <div className="col-span-full py-12 text-center text-gray-500">
@@ -164,7 +164,7 @@ export default function EventApprovalsPage() {
                             transition={{ delay: index * 0.05 }}
                             className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
                         >
-                            <div className="relative h-28 bg-gradient-to-gr from-blue-500/20 to-purple-500/20 p-4">
+                            <div className="relative h-28 bg-gradient-to-gr from-emerald-500/20 to-teal-500/20 p-4">
                                 <div className="absolute top-4 left-4">
                                     {getEventLevelBadge(event.eventLevel)}
                                 </div>
@@ -249,7 +249,7 @@ export default function EventApprovalsPage() {
                             className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="relative h-40 bg-gradient-to-gr from-blue-500/20 to-purple-500/20 p-6">
+                            <div className="relative h-40 bg-gradient-to-gr from-emerald-500/20 to-teal-500/20 p-6">
                                 <button onClick={() => setViewingEvent(null)} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200">
                                     <X className="w-5 h-5" />
                                 </button>

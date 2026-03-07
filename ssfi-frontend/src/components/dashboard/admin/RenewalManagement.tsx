@@ -118,8 +118,8 @@ export default function RenewalManagement() {
 
     const getRoleBadgeColor = (role: string) => {
         switch (role) {
-            case 'STATE_SECRETARY': return 'bg-purple-100 text-purple-600';
-            case 'DISTRICT_SECRETARY': return 'bg-blue-100 text-blue-600';
+            case 'STATE_SECRETARY': return 'bg-teal-100 text-teal-600';
+            case 'DISTRICT_SECRETARY': return 'bg-emerald-100 text-emerald-600';
             case 'CLUB_OWNER': return 'bg-green-100 text-green-600';
             case 'STUDENT': return 'bg-amber-100 text-amber-600';
             default: return 'bg-gray-100 text-gray-500';
@@ -261,7 +261,7 @@ export default function RenewalManagement() {
                                 placeholder="Search..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:border-blue-500 w-48"
+                                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:border-emerald-500 w-48"
                             />
                         </div>
 
@@ -282,7 +282,7 @@ export default function RenewalManagement() {
                                         <select
                                             value={roleFilter}
                                             onChange={(e) => setRoleFilter(e.target.value as Role)}
-                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
+                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500"
                                         >
                                             <option value="">All Roles</option>
                                             <option value="STATE_SECRETARY">State Secretary</option>
@@ -297,7 +297,7 @@ export default function RenewalManagement() {
                                             <select
                                                 value={daysFilter}
                                                 onChange={(e) => setDaysFilter(Number(e.target.value))}
-                                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
+                                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500"
                                             >
                                                 <option value={7}>7 days</option>
                                                 <option value={15}>15 days</option>
@@ -317,7 +317,7 @@ export default function RenewalManagement() {
                 <div className="overflow-x-auto">
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500" />
+                            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-500" />
                         </div>
                     ) : filteredAccounts.length === 0 ? (
                         <div className="text-center py-12 text-gray-500">
@@ -395,7 +395,7 @@ export default function RenewalManagement() {
                                                             setSelectedAccount(account);
                                                             setUnlockModalOpen(true);
                                                         }}
-                                                        className="px-3 py-1.5 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                                                        className="px-3 py-1.5 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
                                                     >
                                                         <Unlock className="w-4 h-4" />
                                                         Unlock
@@ -431,7 +431,7 @@ export default function RenewalManagement() {
                                 <select
                                     value={renewalMonths}
                                     onChange={(e) => setRenewalMonths(Number(e.target.value))}
-                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
+                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500"
                                 >
                                     <option value={6}>6 months</option>
                                     <option value={12}>12 months (1 year)</option>
@@ -500,7 +500,7 @@ export default function RenewalManagement() {
                                     value={unlockReason}
                                     onChange={(e) => setUnlockReason(e.target.value)}
                                     placeholder="Enter reason for unlocking this account..."
-                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:border-blue-500 h-24 resize-none"
+                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:border-emerald-500 h-24 resize-none"
                                 />
                             </div>
 
@@ -514,7 +514,7 @@ export default function RenewalManagement() {
                                 <button
                                     onClick={handleUnlock}
                                     disabled={!unlockReason.trim() || actionLoading}
-                                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
                                     {actionLoading ? (
                                         <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />

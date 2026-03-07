@@ -31,7 +31,7 @@ export const createPage = async (data: CreatePage, createdBy: string) => {
       ...data,
       publishedAt: data.status === 'PUBLISHED' ? new Date() : null,
       createdBy,
-    },
+    } as any,
   });
 
   logger.info(`Page created: ${page.slug}`, { createdBy });
@@ -127,7 +127,7 @@ export const createBanner = async (data: CreateBanner, createdBy: string) => {
       startDate: data.startDate ? new Date(data.startDate) : null,
       endDate: data.endDate ? new Date(data.endDate) : null,
       createdBy,
-    },
+    } as any,
   });
 
   logger.info(`Banner created: ${banner.title}`, { createdBy });
@@ -197,7 +197,7 @@ export const createNews = async (data: CreateNews, createdBy: string) => {
       ...data,
       publishedAt: data.status === 'PUBLISHED' ? new Date() : null,
       createdBy,
-    },
+    } as any,
   });
 
   logger.info(`News created: ${news.slug}`, { createdBy });
@@ -324,7 +324,7 @@ export const createGalleryAlbum = async (data: CreateGalleryAlbum, createdBy: st
   if (existingSlug) throw new AppError('An album with this slug already exists', 409);
 
   const album = await prisma.galleryAlbum.create({
-    data: { ...data, createdBy },
+    data: { ...data, createdBy } as any,
   });
 
   logger.info(`Gallery album created: ${album.slug}`, { createdBy });
@@ -396,7 +396,7 @@ export const addGalleryItem = async (data: CreateGalleryItem, createdBy: string)
   if (!album) throw new AppError('Album not found', 404);
 
   const item = await prisma.galleryItem.create({
-    data: { ...data, createdBy },
+    data: { ...data, createdBy } as any,
   });
 
   // Update album cover if not set
@@ -524,7 +524,7 @@ export const getSiteSettings = async () => {
     settings = await prisma.siteSettings.create({
       data: {
         siteName: 'SSFI',
-        siteTagline: 'Skating Sports Federation of India',
+        siteTagline: 'Speed Skating Federation of India',
       },
     });
   }

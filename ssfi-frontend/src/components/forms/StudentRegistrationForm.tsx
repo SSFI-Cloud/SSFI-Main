@@ -45,7 +45,7 @@ export default function StudentRegistrationForm() {
     setCurrentStep, nextStep, prevStep, markStepComplete, resetForm,
   } = useRegistrationStore();
 
-  const { registerStudent } = useRegisterStudent();
+  const { initiateStudentRegistration, verifyStudentPayment } = useRegisterStudent();
   const { initiateRenewal, verifyRenewal, isLoading: renewLoading } = useRenewal();
 
   const handleStepComplete = (stepData: Partial<StudentRegistrationData>) => {
@@ -63,10 +63,24 @@ export default function StudentRegistrationForm() {
         toast.error(errors[0]?.message || 'Please check all required fields');
         return;
       }
-      const student = await registerStudent(formData as StudentRegistrationData);
-      toast.success('Registration submitted successfully!');
-      resetForm();
-      router.push(`/register/success?type=student&uid=${student.uid}`);
+
+      // Step 1: Submit registration + create payment order
+      const order = await initiateStudentRegistration(formData as StudentRegistrationData);
+
+      // Step 2: Open Razorpay checkout
+      openRazorpay(order, async (response) => {
+        try {
+          // Step 3: Verify payment
+          const result = await verifyStudentPayment(response);
+          if (result?.success) {
+            toast.success('Registration & payment successful!');
+            resetForm();
+            router.push(`/register/success?type=student&uid=${result.uid || order.uid}`);
+          }
+        } catch (e: any) {
+          toast.error(e.message || 'Payment verification failed');
+        }
+      });
     } catch (err: any) {
       toast.error(err.message || 'Registration failed. Please try again.');
     } finally {
@@ -86,7 +100,7 @@ export default function StudentRegistrationForm() {
     }
     const rzp = new (window as any).Razorpay({
       key: order.key, amount: order.amount, currency: order.currency,
-      name: 'SSFI', description: 'Student Membership Renewal',
+      name: 'SSFI', description: 'Student Registration',
       order_id: order.razorpayOrderId, prefill: order.userDetails,
       theme: { color: '#10b981' }, handler: onVerify,
     });
@@ -140,7 +154,7 @@ export default function StudentRegistrationForm() {
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> SSFI Affiliation
               </div>
               <h1 className="text-2xl font-bold">Student Registration</h1>
-              <p className="text-white/50 text-sm mt-1">Join the Skating Sports Federation of India</p>
+              <p className="text-white/50 text-sm mt-1">Join the Speed Skating Federation of India</p>
             </div>
           </div>
         </div>

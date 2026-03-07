@@ -294,11 +294,11 @@ const FeaturedChampionships = () => {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'NATIONAL':
-        return 'from-red-500 to-orange-500';
+        return 'from-teal-500 to-emerald-500';
       case 'STATE':
-        return 'from-blue-500 to-cyan-500';
+        return 'from-emerald-500 to-cyan-500';
       case 'DISTRICT':
-        return 'from-purple-500 to-pink-500';
+        return 'from-emerald-500 to-teal-500';
       default:
         return 'from-gray-500 to-gray-600';
     }
@@ -384,7 +384,7 @@ const FeaturedChampionships = () => {
                     {/* Hot Badge */}
                     {championship.isHot && (
                       <div className="absolute top-4 right-4 z-10">
-                        <div className="px-3 py-1 rounded-full bg-orange-500 text-white text-xs font-bold shadow-lg flex items-center gap-1 animate-pulse">
+                        <div className="px-3 py-1 rounded-full bg-emerald-500 text-white text-xs font-bold shadow-lg flex items-center gap-1 animate-pulse">
                           <Flame className="w-3 h-3 fill-white" />
                           <span>HOT EVENT</span>
                         </div>

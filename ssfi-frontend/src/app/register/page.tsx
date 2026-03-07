@@ -80,7 +80,7 @@ export default function AffiliationRegistrationPage() {
             </span>
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-            Join the Skating Sports Federation of India. Register as a State Secretary,
+            Join the Speed Skating Federation of India. Register as a State Secretary,
             District Secretary, or affiliate your Club.
           </p>
         </motion.div>
@@ -151,8 +151,8 @@ export default function AffiliationRegistrationPage() {
                         </div>
                         {isOpen && (
                           <div className="flex items-center gap-2 text-sm">
-                            <Clock className="w-4 h-4 text-amber-500" />
-                            <span className="text-amber-600 font-medium">
+                            <Clock className="w-4 h-4 text-teal-500" />
+                            <span className="text-teal-600 font-medium">
                               {getDaysRemaining(window.endDate)} days remaining
                             </span>
                           </div>

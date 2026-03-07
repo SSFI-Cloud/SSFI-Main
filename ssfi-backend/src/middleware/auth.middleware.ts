@@ -2,8 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { PrismaClient, UserRole } from '@prisma/client';
 import { AppError } from '../utils/errors';
+import { getCache, setCache, deleteCache } from '../utils/cache.util';
 
 import prisma from '../config/prisma';
+
+// Cache TTL for authenticated user lookups (2 minutes)
+const AUTH_CACHE_TTL = 120;
 // Extend Express Request type
 declare global {
   namespace Express {
@@ -56,7 +60,16 @@ export const authenticate = async (
       process.env.JWT_SECRET as string
     ) as JWTPayload;
 
-    // Check if user exists and is active
+    // Check cache first to avoid DB query on every request
+    const cacheKey = `auth_user_${decoded.id}`;
+    let cachedUser = getCache<Express.Request['user']>(cacheKey);
+
+    if (cachedUser) {
+      req.user = cachedUser;
+      return next();
+    }
+
+    // Cache miss - query DB
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       include: {
@@ -98,8 +111,11 @@ export const authenticate = async (
       stateId: user.statePerson?.stateId,
       districtId: user.districtPerson?.districtId || user.clubOwner?.club.districtId,
       clubId: user.clubOwner?.clubId,
-      studentId: user.student?.id, // Student ID is CUID (String)
+      studentId: user.student?.id,
     };
+
+    // Cache the user data for subsequent requests
+    setCache(cacheKey, req.user, AUTH_CACHE_TTL);
 
     next();
   } catch (error) {
@@ -256,6 +272,15 @@ export const optionalAuth = async (
       process.env.JWT_SECRET as string
     ) as JWTPayload;
 
+    // Check cache first
+    const cacheKey = `auth_user_${decoded.id}`;
+    let cachedUser = getCache<Express.Request['user']>(cacheKey);
+
+    if (cachedUser) {
+      req.user = cachedUser;
+      return next();
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       include: {
@@ -278,6 +303,7 @@ export const optionalAuth = async (
         clubId: user.clubOwner?.clubId,
         studentId: user.student?.id,
       };
+      setCache(cacheKey, req.user, AUTH_CACHE_TTL);
     }
 
     next();
@@ -287,10 +313,18 @@ export const optionalAuth = async (
   }
 };
 
+/**
+ * Invalidate cached user data (call after profile/role/status changes)
+ */
+export const invalidateUserCache = (userId: number): void => {
+  deleteCache(`auth_user_${userId}`);
+};
+
 export default {
   authenticate,
   checkRenewal,
   requireRole,
   checkHierarchicalAccess,
-  optionalAuth
+  optionalAuth,
+  invalidateUserCache
 };

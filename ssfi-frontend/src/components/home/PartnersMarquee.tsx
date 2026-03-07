@@ -30,7 +30,7 @@ export default function PartnersMarquee() {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Trusted Partners
           </span>
           <h2 className="text-2xl md:text-3xl font-headline font-bold text-gray-900">
-            Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">Partners</span> &amp; Affiliations
+            Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Partners</span> &amp; Affiliations
           </h2>
           <p className="text-gray-400 text-sm mt-2">Proudly associated with India&apos;s premier sports and government bodies</p>
         </motion.div>

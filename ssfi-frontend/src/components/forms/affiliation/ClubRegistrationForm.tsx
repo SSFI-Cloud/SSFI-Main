@@ -36,7 +36,7 @@ type FormData = z.infer<typeof formSchema>;
 type Mode = 'choose' | 'renew' | 'new';
 
 const inputCls = (err?: boolean) =>
-  `w-full px-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:border-pink-500 text-sm transition-all ${err ? 'border-red-400 focus:ring-red-400/20' : 'border-gray-200 focus:ring-pink-500/20'}`;
+  `w-full px-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:border-teal-500 text-sm transition-all ${err ? 'border-red-400 focus:ring-red-400/20' : 'border-gray-200 focus:ring-teal-500/20'}`;
 
 export default function ClubRegistrationForm() {
   const router = useRouter();
@@ -51,7 +51,7 @@ export default function ClubRegistrationForm() {
   const { fetchDistricts, data: districts, clearDistricts } = useDistricts();
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: { status: 'ACTIVE', establishedYear: new Date().getFullYear() },
   });
 
@@ -85,7 +85,7 @@ export default function ClubRegistrationForm() {
       key: order.key, amount: order.amount, currency: order.currency,
       name: 'SSFI', description: 'Club Affiliation Fee',
       order_id: order.razorpayOrderId, prefill: order.userDetails,
-      theme: { color: '#ec4899' }, handler: onVerify,
+      theme: { color: '#14b8a6' }, handler: onVerify,
     });
     rzp.on('payment.failed', (r: any) => toast.error(r.error.description || 'Payment failed'));
     rzp.open();
@@ -136,12 +136,12 @@ export default function ClubRegistrationForm() {
             <ChevronLeft className="w-4 h-4" /> Back to Registration
           </button>
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-pink-500/20 border border-pink-500/30 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <Users className="w-7 h-7 text-pink-400" />
+            <div className="w-14 h-14 bg-teal-500/20 border border-teal-500/30 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Users className="w-7 h-7 text-teal-400" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-pink-500/10 border border-pink-500/20 rounded-full text-pink-400 text-xs font-medium mb-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-pink-400" /> SSFI Affiliation
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-500/10 border border-teal-500/20 rounded-full text-teal-400 text-xs font-medium mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" /> SSFI Affiliation
               </div>
               <h1 className="text-2xl font-bold">Club Registration</h1>
               <p className="text-white/50 text-sm mt-1">Affiliate your skating club or renew existing membership with SSFI</p>
@@ -183,7 +183,7 @@ export default function ClubRegistrationForm() {
                 <button onClick={() => { setMode('choose'); setRenewMember(null); }} className="text-sm text-gray-400 hover:text-gray-600">Change</button>
               </div>
               <div className="p-6 space-y-4">
-                <div className="p-4 bg-pink-50 border border-pink-100 rounded-xl space-y-2">
+                <div className="p-4 bg-teal-50 border border-teal-100 rounded-xl space-y-2">
                   <div className="flex justify-between text-sm"><span className="text-gray-500">Club Name</span><span className="font-medium text-gray-900">{renewMember.clubName || renewMember.name}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-gray-500">UID</span><span className="font-mono text-gray-900">{renewMember.uid}</span></div>
                   {renewMember.stateName && <div className="flex justify-between text-sm"><span className="text-gray-500">State</span><span className="text-gray-900">{renewMember.stateName}</span></div>}
@@ -194,7 +194,7 @@ export default function ClubRegistrationForm() {
                   <p className="text-sm text-amber-700">Renewing will extend your club affiliation by 1 year from the current expiry date.</p>
                 </div>
                 <button type="button" onClick={handleRenew} disabled={renewLoading}
-                  className="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2">
+                  className="w-full py-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2">
                   {renewLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
                   Proceed to Payment
                 </button>
@@ -216,7 +216,7 @@ export default function ClubRegistrationForm() {
                 {/* Club Details */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <Users className="w-4 h-4 text-pink-500" />
+                    <Users className="w-4 h-4 text-teal-500" />
                     <h2 className="font-semibold text-gray-900">Club Details</h2>
                   </div>
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -276,7 +276,7 @@ export default function ClubRegistrationForm() {
                 {/* Contact Person */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <User className="w-4 h-4 text-blue-500" />
+                    <User className="w-4 h-4 text-emerald-500" />
                     <h2 className="font-semibold text-gray-900">Contact Person</h2>
                   </div>
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -323,7 +323,7 @@ export default function ClubRegistrationForm() {
                           </button>
                         </div>
                       ) : (
-                        <div onClick={() => logoRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-pink-300 hover:bg-pink-50 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all">
+                        <div onClick={() => logoRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all">
                           <Upload className="w-6 h-6 text-gray-400" />
                           <span className="text-xs text-gray-500 text-center">Upload logo<br />PNG, JPG</span>
                         </div>
@@ -336,17 +336,17 @@ export default function ClubRegistrationForm() {
                 {/* Terms & Submit */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <label className="flex items-start gap-3 cursor-pointer mb-5">
-                    <input type="checkbox" {...register('termsAccepted')} className="mt-0.5 w-4 h-4 rounded border-gray-300 text-pink-500 focus:ring-pink-500/20" />
+                    <input type="checkbox" {...register('termsAccepted')} className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500/20" />
                     <span className="text-sm text-gray-600">
                       I declare that all information provided is accurate. I agree to SSFI&apos;s{' '}
-                      <a href="/terms" className="text-pink-500 hover:underline">Terms &amp; Conditions</a> and{' '}
-                      <a href="/privacy" className="text-pink-500 hover:underline">Privacy Policy</a>.
+                      <a href="/terms" className="text-teal-500 hover:underline">Terms &amp; Conditions</a> and{' '}
+                      <a href="/privacy" className="text-teal-500 hover:underline">Privacy Policy</a>.
                     </span>
                   </label>
                   {errors.termsAccepted && <p className="mb-4 text-xs text-red-500">{errors.termsAccepted.message}</p>}
 
                   <button type="submit" disabled={isLoading}
-                    className="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-pink-500/25">
+                    className="w-full py-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-teal-500/25">
                     {isLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : <><Check className="w-5 h-5" /> Submit &amp; Pay Registration Fee</>}
                   </button>
                 </div>

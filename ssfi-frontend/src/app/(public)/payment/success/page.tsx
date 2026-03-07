@@ -78,7 +78,7 @@ export default function PaymentSuccessPage() {
         return (
             <div className="min-h-screen bg-slate-900 flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-blue-400 animate-spin mx-auto" />
+                    <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mx-auto" />
                     <p className="text-slate-400 mt-4">Loading payment details...</p>
                 </div>
             </div>
@@ -200,7 +200,7 @@ export default function PaymentSuccessPage() {
 
                             <Link
                                 href="/dashboard"
-                                className="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2 transition-colors"
+                                className="w-full py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center justify-center gap-2 transition-colors"
                             >
                                 <Home className="w-5 h-5" />
                                 Go to Dashboard
@@ -210,7 +210,7 @@ export default function PaymentSuccessPage() {
                         {/* Support */}
                         <p className="text-center text-xs text-slate-500 pt-4">
                             For any queries, contact support at{' '}
-                            <a href="mailto:support@speedskatingfederation.in" className="text-blue-400 hover:underline">
+                            <a href="mailto:support@speedskatingfederation.in" className="text-emerald-400 hover:underline">
                                 support@speedskatingfederation.in
                             </a>
                         </p>

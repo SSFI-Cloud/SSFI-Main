@@ -8,12 +8,12 @@ import Link from 'next/link';
 import { api } from '@/lib/api/client';
 
 const features = [
-  { icon: CreditCard, title: 'Official ID Card', description: 'Get your official SSFI membership card with unique identification number', color: 'text-blue-500', bg: 'bg-blue-500/10', borderTint: 'border-blue-200/40', glassBg: 'from-blue-500/[0.04]' },
+  { icon: CreditCard, title: 'Official ID Card', description: 'Get your official SSFI membership card with unique identification number', color: 'text-emerald-500', bg: 'bg-emerald-500/10', borderTint: 'border-emerald-200/40', glassBg: 'from-emerald-500/[0.04]' },
   { icon: Trophy, title: 'National Recognition', description: 'Participate in nationally recognized skating championships and events', color: 'text-emerald-500', bg: 'bg-emerald-500/10', borderTint: 'border-emerald-200/40', glassBg: 'from-emerald-500/[0.04]' },
-  { icon: Shield, title: 'Insurance Coverage', description: 'Comprehensive insurance coverage for all registered athletes', color: 'text-amber-500', bg: 'bg-amber-500/10', borderTint: 'border-amber-200/40', glassBg: 'from-amber-500/[0.04]' },
-  { icon: Users, title: 'Expert Coaching', description: 'Access to certified coaches and training programs nationwide', color: 'text-purple-500', bg: 'bg-purple-500/10', borderTint: 'border-purple-200/40', glassBg: 'from-purple-500/[0.04]' },
-  { icon: Globe, title: 'International Events', description: 'Opportunities to represent India in international competitions', color: 'text-rose-500', bg: 'bg-rose-500/10', borderTint: 'border-rose-200/40', glassBg: 'from-rose-500/[0.04]' },
-  { icon: Award, title: 'Certificates & Awards', description: 'Digital certificates and awards for all event participations', color: 'text-teal-500', bg: 'bg-teal-500/10', borderTint: 'border-teal-200/40', glassBg: 'from-teal-500/[0.04]' },
+  { icon: Shield, title: 'Insurance Coverage', description: 'Comprehensive insurance coverage for all registered athletes', color: 'text-emerald-500', bg: 'bg-emerald-500/10', borderTint: 'border-emerald-200/40', glassBg: 'from-emerald-500/[0.04]' },
+  { icon: Users, title: 'Expert Coaching', description: 'Access to certified coaches and training programs nationwide', color: 'text-emerald-500', bg: 'bg-emerald-500/10', borderTint: 'border-emerald-200/40', glassBg: 'from-emerald-500/[0.04]' },
+  { icon: Globe, title: 'International Events', description: 'Opportunities to represent India in international competitions', color: 'text-emerald-500', bg: 'bg-emerald-500/10', borderTint: 'border-emerald-200/40', glassBg: 'from-emerald-500/[0.04]' },
+  { icon: Award, title: 'Certificates & Awards', description: 'Digital certificates and awards for all event participations', color: 'text-emerald-500', bg: 'bg-emerald-500/10', borderTint: 'border-emerald-200/40', glassBg: 'from-emerald-500/[0.04]' },
 ];
 
 const tags = ['#Students', '#Athletes', '#Coaches', '#Schools', '#Clubs', '#State Associations'];
@@ -36,11 +36,15 @@ const WhyJoinSSFI = () => {
 
   return (
     <section className="relative py-28 overflow-hidden bg-gray-50">
+      {/* Ghost "SSFI" watermark */}
+      <div className="absolute inset-0 flex items-start justify-center pt-16 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+        <span className="font-hero italic font-black text-[36vw] lg:text-[26vw] leading-none tracking-tight text-gray-400/20 whitespace-nowrap">S.S.F.I</span>
+      </div>
       {/* Dotted pattern */}
       <div className="absolute inset-0 opacity-[0.25]" style={{ backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       {/* Skating SVG decorations */}
       <svg viewBox="0 0 100 100" className="absolute top-20 right-8 w-24 h-24 opacity-10 text-emerald-500" fill="none"><path d="M30 70 Q50 20 70 70" stroke="currentColor" strokeWidth="2" /><circle cx="35" cy="75" r="5" stroke="currentColor" strokeWidth="1.5" /><circle cx="65" cy="75" r="5" stroke="currentColor" strokeWidth="1.5" /></svg>
-      <svg viewBox="0 0 100 100" className="absolute bottom-16 left-6 w-20 h-20 opacity-10 text-blue-500 rotate-[-15deg]" fill="none"><path d="M30 70 Q50 20 70 70" stroke="currentColor" strokeWidth="2" /><circle cx="35" cy="75" r="5" stroke="currentColor" strokeWidth="1.5" /><circle cx="65" cy="75" r="5" stroke="currentColor" strokeWidth="1.5" /></svg>
+      <svg viewBox="0 0 100 100" className="absolute bottom-16 left-6 w-20 h-20 opacity-10 text-emerald-500 rotate-[-15deg]" fill="none"><path d="M30 70 Q50 20 70 70" stroke="currentColor" strokeWidth="2" /><circle cx="35" cy="75" r="5" stroke="currentColor" strokeWidth="1.5" /><circle cx="65" cy="75" r="5" stroke="currentColor" strokeWidth="1.5" /></svg>
 
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-100/30 rounded-full blur-[180px]" />
 
@@ -66,7 +70,7 @@ const WhyJoinSSFI = () => {
           <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.1 }} className="relative">
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/60">
               <Image src="/images/whyssfi.webp" alt="SSFI Athletes" fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-emerald-900/10" />
               {/* Glassmorphism stats card overlay */}
               <div className="absolute bottom-5 left-5 right-5 bg-white/80 backdrop-blur-xl rounded-xl p-5 border border-white/60 shadow-lg">
                 <div className="flex items-center justify-between gap-4">
@@ -76,12 +80,12 @@ const WhyJoinSSFI = () => {
                   </div>
                   <div className="h-10 w-px bg-gray-200/60" />
                   <div className="text-center flex-1">
-                    <p className="text-2xl sm:text-3xl font-headline font-bold text-blue-600">{stats.states}</p>
+                    <p className="text-2xl sm:text-3xl font-headline font-bold text-emerald-600">{stats.states}</p>
                     <p className="text-xs text-gray-400 mt-1">State Associations</p>
                   </div>
                   <div className="h-10 w-px bg-gray-200/60" />
                   <div className="text-center flex-1">
-                    <p className="text-2xl sm:text-3xl font-headline font-bold text-amber-600">{stats.clubs}+</p>
+                    <p className="text-2xl sm:text-3xl font-headline font-bold text-teal-600">{stats.clubs}+</p>
                     <p className="text-xs text-gray-400 mt-1">Affiliated Clubs</p>
                   </div>
                 </div>
@@ -91,7 +95,7 @@ const WhyJoinSSFI = () => {
               className="absolute -top-4 -right-4 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl p-4 shadow-xl shadow-emerald-500/30">
               <Trophy className="w-8 h-8 text-white mb-1" />
               <p className="text-xs font-bold text-white">Official</p>
-              <p className="text-[10px] text-white/80">Federation</p>
+              <p className="text-[11px] text-white/80">Federation</p>
             </motion.div>
           </motion.div>
         </div>

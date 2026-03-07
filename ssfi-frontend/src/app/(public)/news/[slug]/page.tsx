@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import NewsDetailClient from './NewsDetailClient';
 import { ArticleSchema, BreadcrumbSchema } from '@/components/seo/StructuredData';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1';
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ssfiskate.com';
 const API_BASE = API_URL.replace('/api/v1', '');
 

@@ -42,7 +42,7 @@ class OTPService {
 
     if (user.email) {
       // Send via email
-      await emailService.sendOTPEmail(user.email, otp, parseInt(expiryMinutes));
+      emailService.sendOTPEmail(user.email, otp, parseInt(expiryMinutes));
     } else {
       // No email on record — log to console in dev, fail gracefully in prod
       if (process.env.NODE_ENV === 'development') {

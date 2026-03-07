@@ -106,7 +106,7 @@ export function MovingBorderButton({
                 style={{ borderRadius: `calc(${borderRadius} * 0.96)` }}
             >
                 <MovingBorder duration={duration} rx="30%" ry="30%">
-                    <div className="h-20 w-20 opacity-[0.8] bg-[radial-gradient(#F59E0B_40%,transparent_60%)]" />
+                    <div className="h-20 w-20 opacity-[0.8] bg-[radial-gradient(#10b981_40%,transparent_60%)]" />
                 </MovingBorder>
             </div>
 
@@ -114,9 +114,9 @@ export function MovingBorderButton({
             <div
                 className={cn(
                     "relative flex items-center justify-center gap-2 w-full h-full",
-                    "bg-amber-500 text-black font-semibold",
+                    "bg-emerald-500 text-black font-semibold",
                     "transition-all duration-300",
-                    "hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-500/50",
+                    "hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/50",
                     disabled && "opacity-50 cursor-not-allowed",
                     className
                 )}

@@ -16,7 +16,7 @@ import {
     Globe,
     IndianRupee
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Link from 'next/link';
 
@@ -52,7 +52,7 @@ export default function EditEventPage() {
     const router = useRouter();
     const params = useParams();
     const eventId = params.id as string;
-    const { token } = useAuth();
+    const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -82,28 +82,25 @@ export default function EditEventPage() {
     useEffect(() => {
         const fetchStates = async () => {
             try {
-                const response = await axios.get('http://localhost:5001/api/v1/states', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (response.data.data?.states) {
-                    setStates(response.data.data.states);
+                const response = await api.get('/states', { params: { limit: 100 } });
+                const statesData = (response.data as any)?.data?.states || (response.data as any)?.states;
+                if (statesData) {
+                    setStates(statesData);
                 }
             } catch (err) {
                 console.error('Failed to fetch states', err);
             }
         };
-        if (token) fetchStates();
-    }, [token]);
+        fetchStates();
+    }, []);
 
     // Fetch existing event data
     useEffect(() => {
         const fetchEvent = async () => {
             try {
                 setIsFetching(true);
-                const response = await axios.get(`http://localhost:5001/api/v1/events/${eventId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const event = response.data.data;
+                const response = await api.get(`/events/${eventId}`);
+                const event = (response.data as any)?.data ?? response.data;
 
                 // Format dates for input fields (YYYY-MM-DD)
                 const formatDate = (dateStr: string) => {
@@ -135,8 +132,8 @@ export default function EditEventPage() {
                 setIsFetching(false);
             }
         };
-        if (token && eventId) fetchEvent();
-    }, [token, eventId]);
+        if (eventId) fetchEvent();
+    }, [eventId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -144,11 +141,11 @@ export default function EditEventPage() {
         setError(null);
 
         try {
-            await axios.put(`http://localhost:5001/api/v1/events/${eventId}`, {
+            await api.put(`/events/${eventId}`, {
                 name: formData.name,
                 code: formData.code,
-                type: formData.type,
-                category: formData.category,
+                eventType: formData.category,
+                disciplines: [formData.type],
                 eventLevel: formData.level,
                 stateId: formData.stateId ? Number(formData.stateId) : null,
                 eventDate: new Date(formData.eventDate).toISOString(),
@@ -160,8 +157,6 @@ export default function EditEventPage() {
                 description: formData.description,
                 entryFee: Number(formData.baseFee),
                 maxParticipants: Number(formData.maxParticipants),
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
             });
 
             setSuccess(true);
@@ -178,7 +173,7 @@ export default function EditEventPage() {
     if (isFetching) {
         return (
             <div className="p-6 flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
             </div>
         );
     }
@@ -233,7 +228,7 @@ export default function EditEventPage() {
                 {/* Basic Information */}
                 <div>
                     <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Trophy className="w-5 h-5 text-blue-400" />
+                        <Trophy className="w-5 h-5 text-emerald-400" />
                         Event Information
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -245,7 +240,7 @@ export default function EditEventPage() {
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 placeholder="e.g., 15th State Speed Skating Championship 2024"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -256,7 +251,7 @@ export default function EditEventPage() {
                                 value={formData.code}
                                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                                 placeholder="e.g., SSC2024"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -265,7 +260,7 @@ export default function EditEventPage() {
                                 required
                                 value={formData.level}
                                 onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 {eventLevels.map(level => (
                                     <option key={level.value} value={level.value}>{level.label}</option>
@@ -277,7 +272,7 @@ export default function EditEventPage() {
                             <select
                                 value={formData.type}
                                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 {eventTypes.map(type => (
                                     <option key={type} value={type}>{type}</option>
@@ -289,7 +284,7 @@ export default function EditEventPage() {
                             <select
                                 value={formData.category}
                                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 {eventCategories.map(cat => (
                                     <option key={cat} value={cat}>{cat}</option>
@@ -303,7 +298,7 @@ export default function EditEventPage() {
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 rows={3}
                                 placeholder="Event description and details"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                     </div>
@@ -323,7 +318,7 @@ export default function EditEventPage() {
                                 required
                                 value={formData.eventDate}
                                 onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -332,7 +327,7 @@ export default function EditEventPage() {
                                 type="date"
                                 value={formData.endDate}
                                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -341,7 +336,7 @@ export default function EditEventPage() {
                                 type="date"
                                 value={formData.registrationStartDate}
                                 onChange={(e) => setFormData({ ...formData, registrationStartDate: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -350,7 +345,7 @@ export default function EditEventPage() {
                                 type="date"
                                 value={formData.registrationEndDate}
                                 onChange={(e) => setFormData({ ...formData, registrationEndDate: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                     </div>
@@ -359,7 +354,7 @@ export default function EditEventPage() {
                 {/* Location */}
                 <div>
                     <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-purple-400" />
+                        <MapPin className="w-5 h-5 text-teal-400" />
                         Venue Details
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -371,7 +366,7 @@ export default function EditEventPage() {
                                 value={formData.venue}
                                 onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                                 placeholder="e.g., Jawaharlal Nehru Stadium"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -382,7 +377,7 @@ export default function EditEventPage() {
                                 value={formData.city}
                                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                                 placeholder="e.g., Chennai"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -390,7 +385,7 @@ export default function EditEventPage() {
                             <select
                                 value={formData.stateId}
                                 onChange={(e) => setFormData({ ...formData, stateId: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 <option value="">Select State</option>
                                 {states.map(state => (
@@ -415,7 +410,7 @@ export default function EditEventPage() {
                                 min="0"
                                 value={formData.baseFee}
                                 onChange={(e) => setFormData({ ...formData, baseFee: Number(e.target.value) })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -425,7 +420,7 @@ export default function EditEventPage() {
                                 min="1"
                                 value={formData.maxParticipants}
                                 onChange={(e) => setFormData({ ...formData, maxParticipants: Number(e.target.value) })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                     </div>
@@ -442,7 +437,7 @@ export default function EditEventPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isLoading ? (
                             <>

@@ -121,7 +121,7 @@ export default function DocumentsStep({ onComplete, onSubmit, isSubmitting }: Do
         </ul>
       </div>
 
-      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+      <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
         <label className="flex items-start gap-3 cursor-pointer">
           <input type="checkbox" checked={termsAccepted}
             onChange={(e) => { setTermsAccepted(e.target.checked); setValue('termsAccepted', e.target.checked); updateFormData({ termsAccepted: e.target.checked }); }}

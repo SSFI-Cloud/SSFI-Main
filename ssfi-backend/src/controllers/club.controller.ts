@@ -25,6 +25,19 @@ export const getClubs = async (req: Request, res: Response, next: NextFunction) 
     }
 };
 
+export const updateClub = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const result = await clubService.updateClub(Number(id), req.body);
+        res.status(200).json({
+            status: 'success',
+            data: { club: result },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const updateClubStatus = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
@@ -66,16 +79,11 @@ export const initiateRegistration = async (req: Request, res: Response, next: Ne
             }
         }
 
-        console.log('Raw req.body:', JSON.stringify(req.body, null, 2));
-        console.log('Raw districtId type:', typeof req.body.districtId);
-
         if (req.body.districtId) req.body.districtId = Number(req.body.districtId);
         if (req.body.stateId) req.body.stateId = Number(req.body.stateId);
         if (req.body.establishedYear) req.body.establishedYear = Number(req.body.establishedYear);
 
         const validData = clubRegistrationSchema.parse(req.body);
-        console.log('Parsed validData:', JSON.stringify(validData, null, 2));
-        console.log('Parsed districtId type:', typeof validData.districtId);
 
         const result = await affiliationService.initiateClubRegistration(validData, String(activeWindow.id));
 

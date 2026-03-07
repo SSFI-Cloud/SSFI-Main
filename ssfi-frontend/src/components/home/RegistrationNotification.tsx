@@ -13,6 +13,7 @@ import {
     ArrowRight,
     Flame,
 } from 'lucide-react';
+import { api } from '@/lib/api/client';
 
 // Types
 interface ActiveRegistration {
@@ -35,20 +36,20 @@ const registrationTypeConfig: Record<
 > = {
     student: {
         icon: Users,
-        gradient: 'from-blue-600 to-cyan-500',
-        color: 'text-blue-400',
+        gradient: 'from-emerald-600 to-cyan-500',
+        color: 'text-emerald-400',
         label: 'Student Registration',
     },
     club: {
         icon: Shield,
-        gradient: 'from-purple-600 to-pink-500',
-        color: 'text-purple-400',
+        gradient: 'from-emerald-600 to-teal-500',
+        color: 'text-emerald-400',
         label: 'Club Affiliation',
     },
     district: {
         icon: Building2,
-        gradient: 'from-amber-600 to-orange-500',
-        color: 'text-amber-400',
+        gradient: 'from-teal-600 to-emerald-500',
+        color: 'text-teal-400',
         label: 'District Association',
     },
     state: {
@@ -65,15 +66,13 @@ export default function RegistrationNotification({
     const [activeRegistrations, setActiveRegistrations] = useState<ActiveRegistration[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Fetch active registrations
+    // Fetch active registrations (uses api.get which deduplicates with Header's call)
     useEffect(() => {
         const fetchActiveRegistrations = async () => {
             try {
-                const response = await fetch('/api/registration-windows/active');
-                const data = await response.json();
-
-                if (data.success && data.data) {
-                    setActiveRegistrations(data.data);
+                const response = await api.get('/registration-windows/active');
+                if (response.data?.success && response.data?.data) {
+                    setActiveRegistrations(response.data.data);
                 }
             } catch (error) {
                 console.error('Failed to fetch active registrations:', error);
@@ -184,9 +183,9 @@ export default function RegistrationNotification({
                             animate={{
                                 scale: [1, 1.1, 1],
                                 boxShadow: [
-                                    '0 0 0 0 rgba(249, 115, 22, 0)',
-                                    '0 0 20px 10px rgba(249, 115, 22, 0.3)',
-                                    '0 0 0 0 rgba(249, 115, 22, 0)',
+                                    '0 0 0 0 rgba(16, 185, 129, 0)',
+                                    '0 0 20px 10px rgba(16, 185, 129, 0.3)',
+                                    '0 0 0 0 rgba(16, 185, 129, 0)',
                                 ],
                             }}
                             transition={{
@@ -194,7 +193,7 @@ export default function RegistrationNotification({
                                 repeat: Infinity,
                                 ease: 'easeInOut',
                             }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold shadow-lg"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold shadow-lg"
                         >
                             <Flame className="w-4 h-4 fill-white" />
                             HOT

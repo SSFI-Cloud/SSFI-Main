@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import AboutPageClient from './AboutPageClient';
 import { OrganizationSchema, BreadcrumbSchema } from '@/components/seo/StructuredData';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1';
 
 export const metadata: Metadata = {
   title: 'About SSFI',

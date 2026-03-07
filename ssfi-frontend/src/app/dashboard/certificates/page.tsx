@@ -19,21 +19,21 @@ interface Certificate {
   downloadUrl: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1';
 
 function positionLabel(position: string): { label: string; color: string; bg: string } {
   if (position === '1') return { label: '🥇 1st Place',  color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-200' };
   if (position === '2') return { label: '🥈 2nd Place',  color: 'text-slate-600',  bg: 'bg-slate-50 border-slate-200'  };
   if (position === '3') return { label: '🥉 3rd Place',  color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200' };
-  return                       { label: '🎽 Participant', color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200'    };
+  return                       { label: '🎽 Participant', color: 'text-emerald-700',   bg: 'bg-emerald-50 border-emerald-200'    };
 }
 
 function categoryColor(cat: string) {
   const map: Record<string, string> = {
-    ADJUSTABLE:   'bg-purple-100 text-purple-700',
-    PRO_INLINE:   'bg-blue-100 text-blue-700',
+    ADJUSTABLE:   'bg-teal-100 text-teal-700',
+    PRO_INLINE:   'bg-emerald-100 text-emerald-700',
     QUAD:         'bg-green-100 text-green-700',
-    RECREATIONAL: 'bg-amber-100 text-amber-700',
+    RECREATIONAL: 'bg-emerald-100 text-emerald-700',
   };
   return map[cat?.toUpperCase()] || 'bg-gray-100 text-gray-600';
 }
@@ -76,8 +76,8 @@ function CertCard({
       {/* Top stripe */}
       <div className={`h-1.5 w-full ${
         isWinner
-          ? 'bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400'
-          : 'bg-gradient-to-r from-blue-500 to-indigo-500'
+          ? 'bg-gradient-to-r from-yellow-400 via-emerald-400 to-yellow-400'
+          : 'bg-gradient-to-r from-emerald-500 to-teal-500'
       }`} />
 
       <div className="p-5">
@@ -119,8 +119,8 @@ function CertCard({
           disabled={downloading === cert.id}
           className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition
             ${isWinner
-              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600 shadow-sm'
-              : 'bg-blue-600 text-white hover:bg-blue-700'}
+              ? 'bg-gradient-to-r from-yellow-500 to-emerald-500 text-white hover:from-yellow-600 hover:to-emerald-600 shadow-sm'
+              : 'bg-emerald-600 text-white hover:bg-emerald-700'}
             disabled:opacity-60 disabled:cursor-not-allowed`}
         >
           {downloading === cert.id ? (
@@ -198,7 +198,7 @@ export default function CertificatesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Award className="w-7 h-7 text-blue-600" />
+            <Award className="w-7 h-7 text-emerald-600" />
             My Certificates
           </h1>
           <p className="text-gray-500 text-sm mt-1">
@@ -218,7 +218,7 @@ export default function CertificatesPage() {
       {!loading && certificates.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Total Certificates', value: certificates.length, Icon: FileText,    bg: 'bg-blue-50',   ic: 'text-blue-600'   },
+            { label: 'Total Certificates', value: certificates.length, Icon: FileText,    bg: 'bg-emerald-50',   ic: 'text-emerald-600'   },
             { label: 'Podium Finishes',    value: winners.length,      Icon: Medal,       bg: 'bg-yellow-50', ic: 'text-yellow-600' },
             { label: 'Participations',     value: participants.length, Icon: CheckCircle, bg: 'bg-green-50',  ic: 'text-green-600'  },
           ].map(stat => (
@@ -239,7 +239,7 @@ export default function CertificatesPage() {
       {loading && (
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
-            <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-10 h-10 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-gray-500 text-sm">Loading your certificates…</p>
           </div>
         </div>
@@ -283,7 +283,7 @@ export default function CertificatesPage() {
       {!loading && participants.length > 0 && (
         <section>
           <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-blue-500" />
+            <CheckCircle className="w-4 h-4 text-emerald-500" />
             Participation Certificates
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

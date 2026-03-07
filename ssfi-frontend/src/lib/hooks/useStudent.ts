@@ -21,54 +21,61 @@ const LOCATIONS_API = '/locations';
 // STUDENT HOOKS
 // ============================================
 
+/** Helper: build student registration FormData from typed data */
+const buildStudentFormData = (data: StudentRegistrationData): FormData => {
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && key !== 'termsAccepted') {
+      if (key === 'profilePhoto' || key === 'aadhaarCardImage' || key === 'birthCertificate') {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else if (typeof value === 'string' && value.startsWith('data:')) {
+          const byteString = atob(value.split(',')[1]);
+          const mimeString = value.split(',')[0].split(':')[1].split(';')[0];
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          const blob = new Blob([ab], { type: mimeString });
+          formData.append(key, blob, `${key}.${mimeString.split('/')[1]}`);
+        } else {
+          formData.append(key, value as string);
+        }
+      } else {
+        formData.append(key, String(value));
+      }
+    }
+  });
+  return formData;
+};
+
+export interface StudentPaymentOrder {
+  uid: string;
+  name: string;
+  razorpayOrderId: string;
+  amount: number;
+  currency: string;
+  key: string;
+  userDetails: { name: string; email: string; phone: string };
+}
+
 /**
- * Hook for registering a new student
+ * Hook for registering a new student (with payment flow)
  */
 export const useRegisterStudent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /** Legacy: direct registration without payment */
   const registerStudent = useCallback(async (data: StudentRegistrationData): Promise<Student> => {
     setIsLoading(true);
     setError(null);
-
     try {
-      // Create FormData for file uploads
-      const formData = new FormData();
-
-      // Add all text fields
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && key !== 'termsAccepted') {
-          if (key === 'profilePhoto' || key === 'aadhaarCardImage' || key === 'birthCertificate') {
-            // Handle file fields separately if they're File objects
-            if (value instanceof File) {
-              formData.append(key, value);
-            } else if (typeof value === 'string' && value.startsWith('data:')) {
-              // It's a base64 string, convert to blob
-              const byteString = atob(value.split(',')[1]);
-              const mimeString = value.split(',')[0].split(':')[1].split(';')[0];
-              const ab = new ArrayBuffer(byteString.length);
-              const ia = new Uint8Array(ab);
-              for (let i = 0; i < byteString.length; i++) {
-                ia[i] = byteString.charCodeAt(i);
-              }
-              const blob = new Blob([ab], { type: mimeString });
-              formData.append(key, blob, `${key}.${mimeString.split('/')[1]}`);
-            } else {
-              formData.append(key, value as string);
-            }
-          } else {
-            formData.append(key, String(value));
-          }
-        }
-      });
-
+      const formData = buildStudentFormData(data);
       const response = await apiClient.post<{ data: Student }>(STUDENT_REGISTRATION_API, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-
       return response.data.data;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to register student';
@@ -79,7 +86,51 @@ export const useRegisterStudent = () => {
     }
   }, []);
 
-  return { registerStudent, isLoading, error };
+  /** Step 1: Submit registration + create Razorpay order */
+  const initiateStudentRegistration = useCallback(async (data: StudentRegistrationData): Promise<StudentPaymentOrder> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const formData = buildStudentFormData(data);
+      const response = await apiClient.post<{ data: StudentPaymentOrder }>(
+        `${STUDENT_REGISTRATION_API}/initiate`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      return response.data.data;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Failed to initiate registration';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  /** Step 2: Verify Razorpay payment */
+  const verifyStudentPayment = useCallback(async (paymentData: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }): Promise<{ success: boolean; uid: string; message: string }> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await apiClient.post<{ data: { success: boolean; uid: string; message: string } }>(
+        `${STUDENT_REGISTRATION_API}/verify`,
+        paymentData,
+      );
+      return response.data.data;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Payment verification failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { registerStudent, initiateStudentRegistration, verifyStudentPayment, isLoading, error };
 };
 
 /**

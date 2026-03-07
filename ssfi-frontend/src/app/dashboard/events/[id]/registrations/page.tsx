@@ -218,7 +218,7 @@ function AdminRegistrationsContent() {
             'PENDING': 'bg-yellow-100 text-yellow-400 border-yellow-500/20',
             'FAILED': 'bg-red-100 text-red-400 border-red-500/20',
             'CANCELLED': 'bg-red-100 text-red-400 border-red-500/20',
-            'COMPLETED': 'bg-blue-100 text-blue-400 border-blue-500/20', // For manual payment
+            'COMPLETED': 'bg-emerald-100 text-emerald-400 border-emerald-500/20', // For manual payment
         };
 
         let colorClass = 'bg-slate-500/10 text-gray-500 border-slate-500/20';
@@ -256,7 +256,7 @@ function AdminRegistrationsContent() {
                 <div className="flex gap-3">
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
                     >
                         <Plus className="w-4 h-4" />
                         Add Student
@@ -287,7 +287,7 @@ function AdminRegistrationsContent() {
                         placeholder="Search by name, ID, or club..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full bg-white border border-gray-200 text-gray-800 pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50"
+                        className="w-full bg-white border border-gray-200 text-gray-800 pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50"
                     />
                 </div>
             </div>
@@ -296,7 +296,7 @@ function AdminRegistrationsContent() {
             <div className="bg-[#f5f6f8] border border-gray-200 rounded-xl overflow-hidden shadow-xl">
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
-                        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
                     </div>
                 ) : filteredRegistrations.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-64 text-gray-600">
@@ -421,12 +421,12 @@ function AdminRegistrationsContent() {
                                             value={manualUid}
                                             onChange={(e) => setManualUid(e.target.value)}
                                             placeholder="e.g., STU-123"
-                                            className="flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                                            className="flex-1 bg-white border border-gray-200 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-emerald-500 outline-none"
                                         />
                                         <button
                                             onClick={handleLookupStudent}
                                             disabled={isLookingUp || !manualUid}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
                                         >
                                             {isLookingUp ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
                                         </button>
@@ -492,7 +492,7 @@ function AdminRegistrationsContent() {
                                                             key={race}
                                                             onClick={() => toggleRace(race)}
                                                             className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm border ${selectedRaces.includes(race)
-                                                                ? 'bg-blue-600/20 border-blue-500 text-blue-700'
+                                                                ? 'bg-emerald-600/20 border-emerald-500 text-emerald-700'
                                                                 : 'bg-white border-gray-200 text-gray-500 hover:border-gray-200'
                                                                 }`}
                                                         >

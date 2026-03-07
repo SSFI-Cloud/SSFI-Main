@@ -18,24 +18,24 @@ const typeConfig: Record<string, {
 }> = {
   'state-secretary': {
     label: 'State Secretary',
-    icon: <Shield className="w-7 h-7 text-blue-400" />,
-    color: 'from-blue-500 to-indigo-600',
-    badge: 'bg-blue-500/10 text-blue-400',
-    badgeBorder: 'border-blue-500/20',
+    icon: <Shield className="w-7 h-7 text-emerald-400" />,
+    color: 'from-emerald-500 to-teal-600',
+    badge: 'bg-emerald-500/10 text-emerald-400',
+    badgeBorder: 'border-emerald-500/20',
   },
   'district-secretary': {
     label: 'District Secretary',
-    icon: <Building2 className="w-7 h-7 text-purple-400" />,
-    color: 'from-purple-500 to-indigo-600',
-    badge: 'bg-purple-500/10 text-purple-400',
-    badgeBorder: 'border-purple-500/20',
+    icon: <Building2 className="w-7 h-7 text-emerald-400" />,
+    color: 'from-emerald-500 to-teal-600',
+    badge: 'bg-emerald-500/10 text-emerald-400',
+    badgeBorder: 'border-emerald-500/20',
   },
   'club': {
     label: 'Club Affiliation',
-    icon: <Users className="w-7 h-7 text-pink-400" />,
-    color: 'from-pink-500 to-rose-600',
-    badge: 'bg-pink-500/10 text-pink-400',
-    badgeBorder: 'border-pink-500/20',
+    icon: <Users className="w-7 h-7 text-teal-400" />,
+    color: 'from-teal-500 to-emerald-600',
+    badge: 'bg-teal-500/10 text-teal-400',
+    badgeBorder: 'border-teal-500/20',
   },
   'student': {
     label: 'Student Registration',
@@ -109,10 +109,10 @@ function SuccessContent() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-6"
+                className="bg-emerald-50 border border-emerald-100 rounded-xl p-5 mb-6"
               >
                 <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Your SSFI UID</p>
-                <p className="text-2xl font-bold font-mono text-blue-700 break-all">{uid}</p>
+                <p className="text-2xl font-bold font-mono text-emerald-700 break-all">{uid}</p>
                 <p className="text-xs text-gray-400 mt-2">Save this UID — you will need it to login and track your application</p>
               </motion.div>
             )}
@@ -136,8 +136,8 @@ function SuccessContent() {
           transition={{ delay: 0.3 }}
           className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start gap-3"
         >
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Mail className="w-4 h-4 text-blue-600" />
+          <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Mail className="w-4 h-4 text-emerald-600" />
           </div>
           <div>
             <p className="text-sm font-medium text-gray-900">Check your email</p>
@@ -191,7 +191,7 @@ export default function RegistrationSuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-[#f5f6f8] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <SuccessContent />

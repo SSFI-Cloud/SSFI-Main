@@ -1,15 +1,22 @@
 ﻿'use client';
 
 import Link from 'next/link';
-import { ArrowRight, FileText, Newspaper, Image, Settings, Users, Flag, MailOpen } from 'lucide-react';
+import { ArrowRight, FileText, Newspaper, Image, Settings, Users, Flag, MailOpen, Layers, Menu } from 'lucide-react';
 
 const modules = [
+  {
+    title: 'Banners & Sliders',
+    description: 'Manage homepage hero slides and promotional banners.',
+    icon: Layers,
+    href: '/dashboard/cms/banners',
+    color: 'bg-teal-500',
+  },
   {
     title: 'News & Announcements',
     description: 'Manage news articles, press releases, and updates.',
     icon: Newspaper,
     href: '/dashboard/cms/news',
-    color: 'bg-blue-500',
+    color: 'bg-emerald-500',
   },
   {
     title: 'Team Members',
@@ -23,7 +30,7 @@ const modules = [
     description: 'Edit the achievements timeline shown on the About page.',
     icon: Flag,
     href: '/dashboard/cms/milestones',
-    color: 'bg-amber-500',
+    color: 'bg-teal-500',
   },
   {
     title: 'Contact Inbox',
@@ -37,14 +44,21 @@ const modules = [
     description: 'Create and edit static content pages like About, Terms.',
     icon: FileText,
     href: '/dashboard/cms/pages',
-    color: 'bg-purple-500',
+    color: 'bg-teal-500',
   },
   {
     title: 'Gallery & Media',
     description: 'Manage photo albums, videos, and media assets.',
     icon: Image,
     href: '/dashboard/cms/gallery',
-    color: 'bg-pink-500',
+    color: 'bg-teal-500',
+  },
+  {
+    title: 'Navigation Menus',
+    description: 'Configure header, footer, and mobile navigation menus.',
+    icon: Menu,
+    href: '/dashboard/cms/menus',
+    color: 'bg-cyan-500',
   },
   {
     title: 'Site Settings',

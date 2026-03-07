@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
                 protecting your privacy and ensuring transparency in how we handle your personal
                 information. This Privacy Policy outlines how we collect, use, and safeguard your
                 data when you visit our website{' '}
-                <span className="text-blue-400">www.ssfiskate.com</span> or use our services.
+                <span className="text-emerald-400">www.ssfiskate.com</span> or use our services.
               </p>
             </section>
 

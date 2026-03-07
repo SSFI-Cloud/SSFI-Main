@@ -1,30 +1,31 @@
 import { PrismaClient } from '@prisma/client';
 
-const DATABASE_URL = process.env.DATABASE_URL || 
-  'mysql://u745371806_ssfi_users:ssFI2026@127.0.0.1:3306/u745371806_ssfi_prod?connection_limit=3&pool_timeout=10&connect_timeout=10';
-
-// Set it in process.env so Prisma schema env("DATABASE_URL") also picks it up
-process.env.DATABASE_URL = DATABASE_URL;
+// Prevent multiple instances of Prisma Client in development
+// https://www.prisma.io/docs/guides/database/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-function createPrismaClient() {
-  return new PrismaClient({
-    datasources: {
-      db: {
-        url: DATABASE_URL,
-      },
-    },
-    log: ['error'],
+// Append connection pool limits to DATABASE_URL if not already set
+const dbUrl = process.env.DATABASE_URL || '';
+if (dbUrl && !dbUrl.includes('connection_limit')) {
+  const separator = dbUrl.includes('?') ? '&' : '?';
+  process.env.DATABASE_URL = `${dbUrl}${separator}connection_limit=2&pool_timeout=30`;
+}
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+    // Connection pool limited to 5 to stay within Hostinger's 200 process limit
   });
-}
 
-// Always cache prisma instance globally - prevents new instance per request
-if (!globalForPrisma.prisma) {
-  globalForPrisma.prisma = createPrismaClient();
-}
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-export const prisma = globalForPrisma.prisma;
+// Graceful disconnect helper
+export const disconnectPrisma = async () => {
+  await prisma.$disconnect();
+};
+
 export default prisma;

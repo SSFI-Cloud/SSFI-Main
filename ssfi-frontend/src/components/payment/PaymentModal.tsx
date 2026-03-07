@@ -134,17 +134,17 @@ export default function PaymentModal({
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="relative bg-gradient-to-r from-blue-500/20 to-purple-500/20 p-6">
+                    <div className="relative bg-gradient-to-r from-emerald-500/20 to-teal-500/20 p-6">
                         <button
                             onClick={onClose}
-                            className="absolute top-4 right-4 p-2 bg-slate-900/50 rounded-lg text-white hover:bg-slate-900/70"
+                            className="absolute top-4 right-4 p-2.5 bg-slate-900/50 rounded-lg text-white hover:bg-slate-900/70"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
                         <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                                <CreditCard className="w-7 h-7 text-blue-400" />
+                            <div className="w-14 h-14 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                                <CreditCard className="w-7 h-7 text-emerald-400" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-white">{title}</h2>
@@ -198,7 +198,7 @@ export default function PaymentModal({
                                         value={userPrefill.name}
                                         onChange={(e) => setUserPrefill({ ...userPrefill, name: e.target.value })}
                                         placeholder="Full Name"
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                     />
                                 </div>
                                 <div className="relative">
@@ -208,7 +208,7 @@ export default function PaymentModal({
                                         value={userPrefill.email}
                                         onChange={(e) => setUserPrefill({ ...userPrefill, email: e.target.value })}
                                         placeholder="Email Address"
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                     />
                                 </div>
                                 <div className="relative">
@@ -218,7 +218,7 @@ export default function PaymentModal({
                                         value={userPrefill.contact}
                                         onChange={(e) => setUserPrefill({ ...userPrefill, contact: e.target.value })}
                                         placeholder="Mobile Number"
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                     />
                                 </div>
                             </div>
@@ -247,7 +247,7 @@ export default function PaymentModal({
                         <motion.button
                             onClick={handlePayment}
                             disabled={isLoading || status === 'processing' || status === 'success'}
-                            className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
+                            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                         >

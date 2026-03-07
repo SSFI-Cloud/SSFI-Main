@@ -84,12 +84,18 @@ export default function BeginnerCertification() {
     : '/beginner-certification';
 
   return (
-    <section className="relative py-28 overflow-hidden bg-gray-950">
-      <div className="absolute top-1/4 left-0 w-[600px] h-[600px] bg-violet-500/5 rounded-full blur-[150px]" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-pink-500/5 rounded-full blur-[120px]" />
+    <section className="relative py-16 sm:py-20 overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div
+          className="relative rounded-3xl shadow-2xl overflow-hidden px-6 py-14 sm:px-10 sm:py-16 lg:px-16 lg:py-20"
+          style={{ backgroundImage: 'url(/images/hero/close-1.webp)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}
+        >
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-gray-950/85 rounded-3xl" />
+          <div className="absolute top-1/4 left-0 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[150px]" />
+          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[120px]" />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="relative z-10 grid lg:grid-cols-2 gap-16 items-center">
 
           {/* Left */}
           <motion.div
@@ -98,13 +104,13 @@ export default function BeginnerCertification() {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400 text-sm font-medium mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4" />
               For Young Champions
             </span>
             <h2 className="text-4xl md:text-5xl font-headline font-bold text-white mb-6 tracking-tight leading-tight">
               Beginner{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-violet-400 to-cyan-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">
                 Certification
               </span>
               {' '}Program
@@ -122,7 +128,7 @@ export default function BeginnerCertification() {
                   transition={{ delay: 0.1 + i * 0.05 }}
                   className="flex items-start gap-2.5"
                 >
-                  <CheckCircle2 className="w-5 h-5 text-pink-400 flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                   <span className="text-white/60 text-sm">{b}</span>
                 </motion.div>
               ))}
@@ -130,7 +136,7 @@ export default function BeginnerCertification() {
             <div className="flex flex-wrap gap-4">
               <Link
                 href="/beginner-certification"
-                className="group inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 hover:scale-105 transition-all duration-300"
+                className="group inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-105 transition-all duration-300"
               >
                 View All Programs <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Link>
@@ -151,22 +157,22 @@ export default function BeginnerCertification() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="relative"
           >
-            <div className="absolute -inset-4 bg-gradient-to-br from-pink-500/10 via-transparent to-violet-500/10 rounded-3xl blur-2xl" />
+            <div className="absolute -inset-4 bg-gradient-to-br from-emerald-500/10 via-transparent to-teal-500/10 rounded-3xl blur-2xl" />
             <div className="relative rounded-2xl bg-white/[0.05] backdrop-blur-xl border border-white/[0.1] overflow-hidden">
-              <div className="bg-gradient-to-r from-pink-500/20 to-violet-500/20 px-8 py-5 border-b border-white/10">
+              <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-8 py-5 border-b border-white/10">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center">
-                      <Medal className="w-5 h-5 text-pink-400" />
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+                      <Medal className="w-5 h-5 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-xs text-pink-400 font-medium uppercase tracking-wider">
+                      <p className="text-xs text-emerald-400 font-medium uppercase tracking-wider">
                         {batch.id ? 'Upcoming Batch' : 'Coming Soon'}
                       </p>
                       <h3 className="text-white font-headline font-bold">{batch.title}</h3>
                     </div>
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-pink-500/20 text-pink-400 text-xs font-bold border border-pink-500/30">
+                  <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">
                     {batch.spotsLeft > 0 ? 'OPEN' : 'COMING SOON'}
                   </span>
                 </div>
@@ -174,15 +180,15 @@ export default function BeginnerCertification() {
               <div className="p-8 space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-white/60">
-                    <Calendar className="w-5 h-5 text-pink-400" />
+                    <Calendar className="w-5 h-5 text-emerald-400" />
                     <span className="text-sm">{batch.date}</span>
                   </div>
                   <div className="flex items-center gap-3 text-white/60">
-                    <MapPin className="w-5 h-5 text-pink-400" />
+                    <MapPin className="w-5 h-5 text-emerald-400" />
                     <span className="text-sm">{batch.location}</span>
                   </div>
                   <div className="flex items-center gap-3 text-white/60">
-                    <Clock className="w-5 h-5 text-amber-400" />
+                    <Clock className="w-5 h-5 text-teal-400" />
                     <span className="text-sm">Deadline: {batch.deadline}</span>
                   </div>
                 </div>
@@ -199,11 +205,11 @@ export default function BeginnerCertification() {
                       whileInView={{ width: `${pct}%` }}
                       viewport={{ once: true }}
                       transition={{ duration: 1.2 }}
-                      className="h-full rounded-full bg-gradient-to-r from-pink-500 to-violet-400"
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
                     />
                   </div>
                   {batch.spotsLeft > 0 && (
-                    <p className="text-amber-400 text-xs font-medium mt-2">
+                    <p className="text-teal-400 text-xs font-medium mt-2">
                       Only {batch.spotsLeft} spots remaining!
                     </p>
                   )}
@@ -236,7 +242,7 @@ export default function BeginnerCertification() {
 
                 <Link
                   href={registerHref}
-                  className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 transition-all duration-300"
+                  className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-300"
                 >
                   {batch.id ? 'Enroll Your Child' : 'View Programs'}
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -244,6 +250,7 @@ export default function BeginnerCertification() {
               </div>
             </div>
           </motion.div>
+          </div>
         </div>
       </div>
     </section>

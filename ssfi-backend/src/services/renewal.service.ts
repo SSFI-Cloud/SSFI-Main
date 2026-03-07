@@ -1,5 +1,6 @@
 import { PrismaClient, AccountStatus, UserRole } from '@prisma/client';
 import { AppError } from '../utils/errors';
+import { emailService } from './email.service';
 
 import prisma from '../config/prisma';
 // ==========================================
@@ -242,28 +243,83 @@ export const lockExpiredAccounts = async () => {
 
 /**
  * Send renewal notifications to users expiring soon
- * This should be run daily
+ * Sends emails at 30-day, 7-day, and on-expiry milestones.
+ * This should be run daily.
  */
 export const sendRenewalNotifications = async () => {
-    const users = await getUsersNearingExpiry(30);
+    // Fetch users expiring within 30 days (active accounts)
+    const usersNearExpiry = await getUsersNearingExpiry(30);
 
-    // Filter users who haven't been notified yet
-    const usersToNotify = users.filter(u => !u.renewalNotificationSent);
+    // Also fetch recently expired users (expired in the last 7 days) to send "expired" emails
+    const recentlyExpired = await prisma.user.findMany({
+        where: {
+            role: { not: UserRole.GLOBAL_ADMIN },
+            expiryDate: {
+                lt: new Date(),
+                gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // last 7 days
+            },
+            accountStatus: { in: [AccountStatus.ACTIVE, AccountStatus.EXPIRED] },
+        },
+        select: {
+            id: true, uid: true, email: true, role: true, expiryDate: true,
+            renewalNotificationSent: true,
+            statePerson: { select: { name: true } },
+            districtPerson: { select: { name: true } },
+            clubOwner: { select: { name: true } },
+            student: { select: { name: true } },
+        },
+    });
 
-    // Mark as notified
+    const expiredUsers = recentlyExpired.map(u => ({
+        id: u.id,
+        uid: u.uid,
+        name: u.statePerson?.name || u.districtPerson?.name || u.clubOwner?.name || u.student?.name || 'Member',
+        email: u.email,
+        role: u.role,
+        expiryDate: u.expiryDate,
+        daysUntilExpiry: u.expiryDate
+            ? Math.ceil((u.expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+            : 0,
+        renewalNotificationSent: u.renewalNotificationSent,
+    }));
+
+    // Combine near-expiry + expired users
+    const allUsers = [...usersNearExpiry, ...expiredUsers];
+
+    // Filter: only send to users with email who haven't been notified yet
+    const usersToNotify = allUsers.filter(u => u.email && !u.renewalNotificationSent);
+
+    let sentCount = 0;
+
     for (const user of usersToNotify) {
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { renewalNotificationSent: true }
-        });
+        try {
+            // Send the renewal reminder email
+            await emailService.sendRenewalReminder(user.email!, {
+                name: user.name,
+                uid: user.uid || 'N/A',
+                role: user.role,
+                daysUntilExpiry: user.daysUntilExpiry || 0,
+                expiryDate: user.expiryDate || new Date(),
+            });
+
+            // Mark as notified
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { renewalNotificationSent: true },
+            });
+
+            sentCount++;
+        } catch (err) {
+            console.error(`Failed to send renewal reminder to ${user.email}:`, err);
+            // Continue with other users even if one fails
+        }
     }
 
-    // TODO: Send actual email/SMS notifications
-    console.log(`Sent renewal notifications to ${usersToNotify.length} users`);
+    console.log(`Sent renewal notifications to ${sentCount} users`);
 
     return {
-        notified: usersToNotify.length,
-        users: usersToNotify
+        notified: sentCount,
+        users: usersToNotify,
     };
 };
 

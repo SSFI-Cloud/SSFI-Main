@@ -169,7 +169,7 @@ export const getStatusConfig = (status: EventStatus) => {
         case 'REGISTRATION_CLOSED':
             return { label: 'Registration Closed', color: 'text-red-400', bgColor: 'bg-red-500/20' };
         case 'ONGOING':
-            return { label: 'Ongoing', color: 'text-blue-400', bgColor: 'bg-blue-500/20' };
+            return { label: 'Ongoing', color: 'text-emerald-400', bgColor: 'bg-emerald-500/20' };
         case 'COMPLETED':
             return { label: 'Completed', color: 'text-slate-400', bgColor: 'bg-slate-500/20' };
         case 'CANCELLED':

@@ -222,7 +222,7 @@ export const createDistrict = async (data: { name: string; code: string; stateId
     });
 };
 
-export const updateDistrict = async (id: number, data: { name?: string; code?: string; stateId?: number }) => {
+export const updateDistrict = async (id: number, data: { name?: string; code?: string; stateId?: number; logo?: string }) => {
     const district = await prisma.district.findUnique({ where: { id } });
     if (!district) throw new AppError('District not found', 404);
 

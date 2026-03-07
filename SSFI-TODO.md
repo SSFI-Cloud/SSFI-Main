@@ -1,7 +1,7 @@
 # SSFI Digital Platform — Development Todo List
 
-> **Last updated:** February 25, 2026  
-> **Overall status:** ~93% Complete  
+> **Last updated:** March 3, 2026 (Session 2)
+> **Overall status:** ~97% Complete
 > ✅ = Done | 🔄 = Partial | ❌ = Not started
 
 ---
@@ -27,6 +27,9 @@
 - ✅ Sharp image processing pipeline (WebP conversion)
 - ✅ JWT access + refresh token system
 - ✅ Prisma schema with all models
+- ✅ In-memory caching (node-cache) for auth tokens (2-min TTL) and dashboard data (5-min TTL)
+- ✅ Performance middleware: request timer (slow endpoint profiling), request timeout (30s), HTTP cache headers for public routes
+- ✅ PM2 ecosystem config optimized for Hostinger Cloud Startup (2 instances, 512MB each, max 200 processes)
 
 ---
 
@@ -34,7 +37,7 @@
 
 - ✅ Login endpoint (phone + password)
 - ✅ Register endpoint (multi-role)
-- ✅ OTP generation + Twilio SMS delivery
+- ✅ OTP generation + email-based delivery
 - ✅ OTP verification endpoint
 - ✅ Refresh token endpoint
 - ✅ Logout endpoint
@@ -42,8 +45,8 @@
 - ✅ Auth middleware (`authenticate`)
 - ✅ Role-based access control (`requireRole`)
 - ✅ Expiry date checking middleware (renewal lockout)
-- ✅ Frontend: Login page — phone number OR SSFI UID toggle (updated Feb 25)
-- ✅ Frontend: Forgot Password page — 3-step flow: phone → OTP → new password (built Feb 25)
+- ✅ Frontend: Login page — phone number OR SSFI UID toggle
+- ✅ Frontend: Forgot Password page — 3-step flow: phone → OTP → new password
 - ✅ Backend: Login now accepts phone OR UID (`identifier` field, auto-detects format)
 - ✅ Frontend: Register page with validation
 - 🔄 Frontend: Verify OTP page (not yet built — auth flow skips it in dev)
@@ -63,15 +66,18 @@
 - ✅ Renewal system (renewal windows, session renewals)
 - ✅ Registration window management routes
 
-### Frontend ❌ PENDING
-- ❌ Student multi-step registration form (5 steps: Personal → Family/School → Nominee → Coaching → Documents)
-- ❌ Secretary registration forms (State + District)
-- ❌ Club registration form
-- 🔄 Approval dashboard UI (backend done, no admin UI yet)
+### Frontend ✅
+- ✅ Student multi-step registration form (6 steps: Personal → Family/School → Nominee → Club/Coach → Address → Documents)
+- ✅ Secretary registration forms (State + District)
+- ✅ Club registration form
+- ✅ Club edit page (`dashboard/clubs/[id]/edit/page.tsx`)
+- ✅ Approval dashboard UI (all 5 approval pages built)
+- ✅ Registration windows: Fixed type mismatch — frontend sends lowercase role strings (`state_secretary`) but backend expects uppercase Prisma enums (`STATE_SECRETARY`). Added `.toUpperCase()` normalization in `registrationWindow.service.ts`
+- ✅ Registration windows: All 6 entity types now create windows correctly (State Secretary, District Secretary, Club, Student, Beginner Certification, Coach Certification)
 
 ---
 
-## MODULE 4: Events System ✅ BACKEND COMPLETE / FRONTEND PARTIAL
+## MODULE 4: Events System ✅ COMPLETE
 
 ### Backend ✅
 - ✅ Event creation, update, delete, list endpoints
@@ -81,26 +87,30 @@
 - ✅ Certificate generation (backend + PDFKit)
 - ✅ Registration windows (open/close registration periods)
 
-### Frontend
+### Frontend ✅
 - ✅ Public events listing page (filter, search, status badges)
-- ✅ Public event detail page (view only)
-- ❌ Event registration flow (Register button → eligibility check → payment → confirmation)
-- ❌ Certificate download page
-- ❌ Event creation wizard in admin (UI not built)
+- ✅ Public event detail page
+- ✅ Event registration flow (UID lookup → category → races → Razorpay payment)
+- ✅ Event creation/edit in admin dashboard
+- ✅ Event registrations management page
+- ✅ Event results management page
+- ✅ Student my-events page with event detail view
 
 ---
 
-## MODULE 5: Payment Integration 🔄 PARTIAL
+## MODULE 5: Payment Integration ✅ COMPLETE
 
 - ✅ Razorpay SDK installed and configured
 - ✅ `POST /api/v1/payments/create-order` endpoint
 - ✅ `POST /api/v1/payments/verify` endpoint
 - ✅ Payment model in Prisma
-- ❌ Frontend: Razorpay checkout modal integration
-- ❌ Frontend: Payment success/failure pages
-- ❌ Frontend: Transaction history component
-- ❌ Renewal payment UI (Club/Student)
-- ❌ Update `expiry_date` on successful payment (backend handler)
+- ✅ Frontend: Razorpay checkout modal integration (`PaymentButton.tsx`, `PaymentModal.tsx`)
+- ✅ Frontend: Payment success/failure pages
+- ✅ Frontend: Transaction history (`PaymentHistory.tsx`)
+- ✅ Frontend: Payments dashboard page with table + filters
+- ✅ Razorpay config uses production URLs (no localhost fallbacks)
+- 🔄 Payment stats in dashboard are hardcoded placeholders (need real API)
+- 🔄 "View Receipt" button in payments page has no handler
 
 ---
 
@@ -121,9 +131,9 @@
 - ✅ `Milestone` (timeline entries with icon, year, displayOrder)
 - ✅ `ContactMessage` (contact form inbox)
 
-**CMS Service** (`cms.service.ts`) — full CRUD for all models ✅  
-**CMS Controller** (`cms.controller.ts`) — all handlers ✅  
-**CMS Routes** (`cms.routes.ts`) — all public + admin routes ✅  
+**CMS Service** (`cms.service.ts`) — full CRUD for all models ✅
+**CMS Controller** (`cms.controller.ts`) — all handlers ✅
+**CMS Routes** (`cms.routes.ts`) — all public + admin routes ✅
 **CMS Validator** (`cms.validator.ts`) — Zod schemas for all models including SiteSettings.metadata ✅
 
 **Additional routes:**
@@ -134,199 +144,272 @@
 
 ### 6.2 Admin CMS Dashboard ✅ COMPLETE
 
-All pages under `ssfi-frontend/src/app/dashboard/cms/`:
-
-- ✅ `banners/` — list page with status badges + sorting
-- ✅ `banners/new/` — create form: title, subtitle, image upload, CTA, position, gradient metadata
-- ✅ `banners/[id]/` — edit form, loads via `GET /cms/admin/banners/:id`
-- ✅ `news/` — list with search + status filter
-- ✅ `news/new/` — create: title, auto-slug, excerpt, content, category picker, cover image
-- ✅ `news/[id]/` — edit, loads via `GET /cms/admin/news/:id`; uses `featuredImage` field (not `coverImage`)
-- ✅ `pages/` — static pages list
-- ✅ `pages/new/` — create: title, slug, content (markdown), template, status, sortOrder
-- ✅ `pages/[id]/` — edit, loads via `GET /cms/admin/pages/:id`
-- ✅ `gallery/` — albums list with photo count
-- ✅ `gallery/new/` — create album: title, slug, description, cover image, event link
-- ✅ `gallery/[id]/` — edit album metadata + add/delete photos inline; loads via `GET /cms/admin/gallery/albums/:id`
-- ✅ `menus/` — navigation menus per location
-- ✅ `menus/new/` — create menu with location + initial items
-- ✅ `menus/[id]/` — menu item builder, loads via `GET /cms/admin/menus/:id`
-- ✅ `team/` — team member manager: photo upload, role, bio, displayOrder, showOnHome toggle
-- ✅ `milestones/` — timeline manager: year, title, description, icon picker, displayOrder
-- ✅ `settings/` — full settings: logo, tagline, contact info, social links, departments list, office hours, map embed URL, secondary phone
-- ✅ `contact-messages/` — inbox: view messages, mark as read
-
-**Support component:**
-- ✅ `components/admin/ImageUpload.tsx` — upload to `/upload/image` → Sharp WebP → preview + remove
+All pages under `ssfi-frontend/src/app/dashboard/cms/` — banners, news, pages, gallery, menus, team, milestones, settings, contact-messages.
 
 ### 6.3 Public Frontend — CMS Connected ✅ COMPLETE
 
-- ✅ `HeroSection.tsx` — fetches `GET /cms/banners?position=HOME_HERO&status=PUBLISHED`, 6s auto-rotate, fallback to 4 hardcoded slides
-- ✅ `OurTeam.tsx` — fetches `GET /team-members/public?showOnHome=true`, fallback to 2 founders
-- ✅ `about/page.tsx` — milestones section fetches `GET /milestones/public`, dynamic icon mapping, 6-item fallback
-- ✅ `contact/page.tsx` — fetches `GET /cms/settings` for dynamic departments, office hours, map embed; submits to `POST /contact/submit`
-- ✅ `news/page.tsx` — fetches `GET /cms/news` with pagination, search, category filter
-- ✅ `news/[slug]/page.tsx` — fetches `GET /cms/news/slug/:slug`, hero image, markdown renderer, related articles
-- ✅ `gallery/page.tsx` — fetches `GET /cms/gallery?status=PUBLISHED`, 3D carousel + album grid, all links use `album.slug`
-- ✅ `gallery/[slug]/page.tsx` — fetches `GET /cms/gallery/slug/:slug`, masonry grid, full-screen lightbox
+All public pages fetch data from CMS API with proper fallbacks.
 
 ### 6.4 CMS Hooks ✅ COMPLETE (`src/lib/hooks/useCMS.ts`)
-- ✅ `usePublicGalleryAlbums()` — `GET /cms/gallery?status=PUBLISHED`
-- ✅ `usePublicGalleryAlbum()` — `GET /cms/gallery/slug/:slug` (slug-based)
-- ✅ `useTeamMembers()`, `useMilestones()`, `useContactMessages()`
-
 ### 6.5 CMS Types ✅ COMPLETE (`src/types/cms.ts`)
-- ✅ `Banner`, `News`, `Page`, `GalleryAlbum`, `GalleryItem`, `Menu`, `MenuItem`
-- ✅ `SiteSettings` with `SiteSettingsMetadata` (departments, officeHours, mapEmbedUrl, phone2)
-- ✅ `PAGE_TEMPLATES`, `MENU_LOCATIONS`, `BANNER_POSITIONS` constants
+
+### 6.6 CMS Audit Fixes (March 3, 2026 — Session 2)
+- ✅ CMS Hub page (`/dashboard/cms`): Added missing Banners & Sliders and Navigation Menus module cards
+- ✅ ImageUpload component: Fixed dark theme colors (slate-*) appearing on light CMS dashboard — rewrote all colors to gray-* equivalents
+- ✅ Pages create (`/dashboard/cms/pages/new`): Added `ImageUpload` for `featuredImage` field (was missing UI despite type support)
+- ✅ Pages edit (`/dashboard/cms/pages/[id]`): Added `ImageUpload` for `featuredImage` in sidebar
+- ✅ Site Settings (`/dashboard/cms/settings`): Added Branding section with logo and favicon `ImageUpload` fields
+- ✅ ScrollNavigation component: Removed scroll-to-top arrow, kept only scroll-to-bottom
 
 ---
 
-## MODULE 7: Role-Specific Management Dashboards ❌ PENDING (NEXT PRIORITY)
+## MODULE 7: Role-Specific Management Dashboards ✅ COMPLETE
 
-> The CMS dashboard under `dashboard/cms/` is 100% done. The **federation management** dashboards below are pending.
+### 7.1 Global Admin Dashboard ✅
+- ✅ Dashboard overview with stats, charts, pending approvals widget
+- ✅ Members management (approve/reject State Secretaries, District Secretaries, Students, Clubs)
+- ✅ Registration window manager
+- ✅ Reports page (stats + charts)
+- ✅ Payments management page
 
-### 7.1 Global Admin Dashboard ❌
-- 🔄 Dashboard shell (sidebar + overview cards — basic structure exists)
-- ❌ **Members management**: View/approve/reject State Secretaries, District Secretaries
-- ❌ **Fee structure editor**: Set registration/renewal fees per entity type
-- ❌ **Registration window manager**: Open/close registration periods
-- ❌ **Reports page**: Registration counts, revenue, exports (CSV/PDF)
-- ❌ **Bulk actions**: Mass approve, mass export
+### 7.2 State Secretary Dashboard ✅
+- ✅ State profile overview with stats
+- ✅ Districts list, pending approvals, upcoming events, recent activity
+- ✅ Renewal banner integration
 
-### 7.2 State Secretary Dashboard ❌
-- ❌ State profile overview with stats
-- ❌ Districts list within state + approval workflow
-- ❌ Clubs list within state (view only)
-- ❌ Students count aggregation
-- ❌ State-level event management
+### 7.3 District Secretary Dashboard ✅
+- ✅ District profile overview
+- ✅ Club list, stats, pending approvals, upcoming events
+- ✅ Renewal banner integration
 
-### 7.3 District Secretary Dashboard ❌
-- ❌ District profile overview
-- ❌ Clubs list within district + approval workflow
-- ❌ Students within district
-- ❌ District-level event management
+### 7.4 Club Owner Dashboard ✅
+- ✅ Club profile with student stats
+- ✅ Gender/age-category charts
+- ✅ Recent students, upcoming events
+- ✅ Renewal banner integration
 
-### 7.4 Club Owner Dashboard ❌
-- ❌ Club profile editor
-- ❌ Students list registered to club + verification workflow
-- ❌ Club renewal payment integration
-- ❌ Affiliation certificate download
-
-### 7.5 Student Dashboard ❌
-- ❌ Profile view with Unique ID card display
-- ❌ Edit personal details (address, photo)
-- ❌ Event registration history
-- ❌ Certificate downloads
-- ❌ Membership renewal payment (Razorpay)
+### 7.5 Student Dashboard ✅
+- ✅ Profile card with UID, membership status
+- ✅ Event registrations, certificates section
+- ✅ Club info, renewal CTA
 
 ---
 
-## MODULE 8: Advanced Features ❌ PENDING
+## MODULE 8: Advanced Features ✅ MOSTLY COMPLETE
 
-### 8.1 Student Registration (Public Multi-Step Form) ❌
-- ❌ Step 1: Personal info (name, DOB, gender, blood group)
-- ❌ Step 2: Family & School (father name, school, academic board)
-- ❌ Step 3: Insurance nominee (name, age, relation)
-- ❌ Step 4: Coaching details (coach name, coach phone, select club)
-- ❌ Step 5: Documents (Aadhaar upload — private dir, profile photo with cropper)
-- ❌ Zod validation per step
-- ❌ Progress stepper with green checkmarks
-- ❌ Fee payment via Razorpay at final step
-- ❌ Confirmation page with Unique ID display
+### 8.1 Student Registration (Public Multi-Step Form) ✅
+- ✅ 6-step wizard: Personal → Family/School → Nominee → Club/Coach → Address → Documents
+- ✅ Zod validation per step
+- ✅ Progress stepper
+- ✅ Razorpay payment at final step
+- ✅ Confirmation page with UID display
 
-### 8.2 Event Registration Frontend ❌
-- ❌ "Register for Event" button on event detail page
-- ❌ Eligibility display (age category, location check result)
-- ❌ Registration form (suit size, skate category, race selection)
-- ❌ Razorpay payment modal
-- ❌ Registration confirmation page
+### 8.2 Event Registration Frontend ✅
+- ✅ "Register for Event" button on event detail page
+- ✅ UID lookup → Category selection → Race selection → Payment → Confirmation
 
-### 8.3 Certificate Generation ❌
+### 8.3 Beginner Certification Dashboard ✅ (March 3, 2026 — Session 2)
+- ✅ Registration windows for Beginner Certification now integrate correctly
+- ✅ Fixed backend entity type validation to accept `BEGINNER_CERTIFICATION` in registration window creation
+
+### 8.4 Certificate Generation 🔄
 - ✅ Backend: PDFKit certificate service exists
-- ❌ Frontend: Certificate preview page
-- ❌ Frontend: Download PDF button wired to backend
-- ❌ Frontend: Student dashboard certificate list
+- ✅ Frontend: Certificates section in student dashboard
+- 🔄 Certificate download integration (partial)
 
 ---
 
-## MODULE 9: Infrastructure & Deployment ❌ PENDING
+## MODULE 9: Infrastructure & Deployment ✅ MOSTLY COMPLETE
 
-### 9.1 Database
-- ❌ Run `prisma migrate dev` or `prisma db push` against live MySQL
-- ❌ Create seed script: initial states + districts, admin user, fee structures
-- ❌ Aadhaar encryption utility (`src/utils/encryption.util.ts`) — **compliance critical**
+### 9.1 Database ✅
+- ✅ 4 Prisma migrations applied
+- ✅ Seed scripts available (admin, states, locations, events, test users)
+- ✅ Aadhaar encryption utility (`src/utils/encryption.util.ts`) — AES-256-CBC
 
-### 9.2 Email Service
-- ✅ Nodemailer installed
-- ❌ Welcome email template (HTML)
-- ❌ Approval notification email
-- ❌ Rejection notification email
-- ❌ Renewal reminder email
+### 9.2 Email Service ✅ COMPLETE (March 3, 2026)
+- ✅ Centralized `EmailService` class in `email.service.ts` (695 lines)
+- ✅ Shared master layout with SSFI branding (header, banner, footer)
+- ✅ 8 email templates — all complete:
+  1. ✅ `sendOTPEmail()` — Verification code with expiry timer
+  2. ✅ `sendCredentials()` — Welcome email with login details
+  3. ✅ `sendAffiliationConfirmation()` — Registration/renewal confirmation
+  4. ✅ `sendApprovalNotification()` — Application approved with credentials
+  5. ✅ `sendRejectionNotification()` — Rejection with reason and next steps
+  6. ✅ `sendEventRegistrationConfirmation()` — Event registration with race details
+  7. ✅ `sendBeginnerCertConfirmation()` — Beginner cert program enrollment
+  8. ✅ `sendContactFormNotification()` — Contact form submission to admin (with replyTo)
+- ✅ All 11 affiliation emails fire-and-forget (non-blocking)
+- ✅ OTP email fire-and-forget
+- ✅ Contact controller refactored to use centralized emailService (removed duplicate transporter)
+- ❌ Renewal reminder email (30 days, 7 days, expired) — not built
 
-### 9.3 Deployment (Hostinger VPS)
-- ❌ Provision VPS, install Node.js 20, MySQL 8, Nginx, PM2
-- ❌ Configure Nginx as reverse proxy
-- ❌ SSL via Let's Encrypt
-- ❌ PM2 ecosystem config
-- ❌ Production environment variables
-- ❌ Uploads directory permissions + backup strategy
-- ❌ UFW firewall + fail2ban
+### 9.3 Deployment (Hostinger Cloud Startup) ✅ MOSTLY DONE
+- ✅ PM2 ecosystem config (`ecosystem.config.js`) — 2 instances, 512MB max, cluster mode
+- ✅ Production URLs configured (no localhost fallbacks anywhere in source)
+- ✅ Razorpay callback URLs use `ssfiskate.com` / `api.ssfiskate.com`
+- ✅ Next.js rewrites proxy `/api/*` → `https://api.ssfiskate.com/api/v1/*`
+- ✅ Security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy)
+- ✅ Static asset cache headers (1 year immutable for images, _next/static, uploads)
+- ✅ HTTP cache headers on public API routes (news, locations, stats, results, team-members, milestones)
+- ❌ Full Nginx + SSL + firewall config (server-side setup)
 
-### 9.4 Testing & QA
+### 9.4 SEO & Performance ✅ COMPLETE (March 3, 2026)
+- ✅ `generateMetadata()` on all public pages with dynamic OG images
+- ✅ JSON-LD structured data (Organization, Website, Breadcrumb, Article, Event)
+- ✅ `robots.ts` — Disallow dashboard, auth, API routes
+- ✅ `sitemap.ts` — Dynamic: news, gallery albums, events + all static routes
+- ✅ `manifest.json` — PWA support with SSFI branding
+- ✅ Favicon configured (webp format)
+- ✅ OpenGraph images fixed (pointing to existing slide-1.webp)
+- ✅ DNS prefetch + preconnect for `api.ssfiskate.com`
+- ✅ Font weight optimization (7 weights → essential subset)
+- ✅ `optimizePackageImports` for lucide-react, framer-motion, react-hot-toast
+- ✅ Image optimization: AVIF/WebP formats, 30-day cache TTL
+
+### 9.5 Mobile Responsiveness ✅ COMPLETE (March 3, 2026)
+- ✅ GlobeStats SVG overflow fixed (removed `min-w-[1200px]`, added `overflow-x-hidden`)
+- ✅ Touch targets increased to 44px minimum (Header mobile button, PaymentModal close button)
+- ✅ Responsive gap spacing (EventHighlightCards: `gap-6 md:gap-10`)
+- ✅ Section overflow containment (`overflow-x-hidden overflow-y-visible`) on GlobeStats, EventHighlightCards, EventCategories
+- ✅ Small text sizes bumped on public pages (WhyJoinSSFI, AffiliatedCoachesClient badges)
+- ✅ Dashboard sidebar responsive with hamburger mobile nav
+- ✅ All modals, forms, and navigation properly responsive
+
+### 9.6 Code Quality ✅ COMPLETE (March 3, 2026)
+- ✅ Zero TypeScript errors — both `tsc --noEmit` and `npm run build` pass clean
+- ✅ Zero localhost references in source code (all use production URLs with env fallbacks)
+- ✅ CSS duplicate rules removed from `globals.css` (~180 lines of duplicates cleaned)
+- ✅ Debug `console.log` statements removed (club.controller.ts, districts/page.tsx)
+- ✅ Empty alt attributes fixed with meaningful text
+- ✅ Empty `clubs/[id]/edit/page.tsx` fixed (was causing build failure)
+
+### 9.7 Testing & QA
 - ❌ Unit tests (zero coverage)
 - ❌ Integration tests for key flows
-- ❌ Mobile responsiveness testing
+- ✅ Manual mobile responsiveness audit completed
 - ❌ Payment flow end-to-end testing
 
 ---
 
-## QUICK REFERENCE: What To Build Next
+## QUICK REFERENCE: What Remains
 
 ```
-PRIORITY 1 (Immediate):
-  → Federation Management Dashboards (Module 7)
-    Start with Global Admin: member approvals, fee structures, registration windows
-    Then: State → District → Club → Student dashboards
+PRIORITY 1 (Before Launch):
+  → Wire approvals pages to real API (replace mock data in 5 approval pages)
+  → Wire reports page to real stats API (hardcoded stats)
+  → Wire payment dashboard stats to real API (hardcoded revenue)
+  → Fix hardcoded profile names in State/District dashboards
 
-PRIORITY 2:
-  → Student multi-step registration form (Module 8.1)
-  → Event registration frontend flow (Module 8.2)
+PRIORITY 2 (Nice to Have):
+  → Build /auth/verify-otp page (OTP verification after registration)
+  → Add renewal reminder emails (30 days, 7 days, expired)
+  → "Export Data" button in reports (CSV/PDF)
+  → "View Receipt" button in payments
+  → Certificate download wiring (backend exists, frontend partial)
 
-PRIORITY 3:
-  → Certificate download page (Module 8.3)
-  → Payment frontend flows (Razorpay modal in registration)
-  → OTP verification page
-
-PRIORITY 4 (Before launch):
-  → Database migration + seed data
-  → Aadhaar encryption utility
-  → Email templates
-  → Deployment
+PRIORITY 3 (Tech Debt):
+  → Clean up duplicate files: registration-window.service.ts + registrationWindow.service.ts
+  → Remove legacy gallery.routes.ts (replaced by cms gallery routes)
+  → Move 25+ loose scripts from backend root to scripts/ directory
+  → Remove _LEGACY_ and .bak files
+  → Add .env.example files for both projects
+  → Remove dist/ from git (add to .gitignore)
+  → Add unit/integration tests
 
 DO NOT TOUCH (Already working, don't break):
   → Everything under dashboard/cms/
-  → All public pages (home, about, contact, news, gallery, events)
+  → All public pages (home, about, contact, news, gallery, events, results)
   → All CMS hooks in useCMS.ts
   → CMS routes in cms.routes.ts, team.routes.ts, milestone.routes.ts
+  → Email service (email.service.ts) — all 8 templates working
   → ImageUpload component
+  → Performance middleware (caching, timers, HTTP cache headers)
+  → SEO configuration (metadata, sitemap, robots, structured data)
 ```
 
 ---
 
 ## Bug Fixes Applied (Feb 25, 2026)
 
-- ✅ Student modal — `ssfi_id` now correctly reads `membershipId` from `students` table (was showing hash-based `user.uid`; all 5615+ students have `SSFI/BS/TN/25/S0001` format)
-- ✅ Student modal — Blood group display fixed: `A_POSITIVE` → `A+`, `B_NEGATIVE` → `B-` (was broken as `A++`)
-- ✅ Club view modal — Removed duplicate club identity card in body (club name was showing twice)
-- ✅ Club view modal — Owner card now shows "Club Owner" title instead of repeating club/org name
+- ✅ Student modal — `ssfi_id` now correctly reads `membershipId` from `students` table
+- ✅ Student modal — Blood group display fixed: `A_POSITIVE` → `A+`
+- ✅ Club view modal — Removed duplicate club identity card
+- ✅ Club view modal — Owner card now shows "Club Owner" title
+
+## Fixes Applied (March 2–3, 2026)
+
+### Backend Fixes
+- ✅ All `localhost:5001` / `localhost:5000` references replaced with production `api.ssfiskate.com`
+- ✅ Razorpay callback URLs fixed: `localhost:3001`/`localhost:5000` → `ssfiskate.com`/`api.ssfiskate.com`
+- ✅ Dashboard controller: added cache SET after data fetch (was only doing GET, never storing)
+- ✅ Affiliation service: 11 email calls made fire-and-forget (removed `await`)
+- ✅ OTP service: email call made fire-and-forget
+- ✅ HTTP cache headers middleware added to 6 public route prefixes in `app.ts`
+- ✅ Removed 4 debug `console.log` from `club.controller.ts`
+- ✅ Contact controller refactored: removed duplicate nodemailer transporter, now uses centralized `emailService`
+- ✅ Email service extended: `send()` supports `replyTo` and `text` options
+- ✅ Email service: added `sendContactFormNotification()` template (#8) with shared SSFI layout
+
+### Frontend Fixes
+- ✅ `renewal.service.ts`: `localhost:5000` fallback → `https://api.ssfiskate.com/api/v1`
+- ✅ `dashboard.service.ts`: `localhost:5000` fallback → `https://api.ssfiskate.com/api/v1`
+- ✅ `clubs/[id]/edit/page.tsx`: created full Club Edit page (was empty file causing build failure)
+- ✅ `globals.css`: removed ~180 lines of duplicate CSS (keyframes, scrollbar styles, utility classes)
+- ✅ Fixed 4 empty `alt=""` attributes with meaningful alt text
+- ✅ Removed 2 debug `console.log` from `districts/page.tsx`
+- ✅ Font weights reduced: body 4 weights, headline 3 weights (was 6+5)
+- ✅ Favicon and manifest.json configured in layout metadata
+- ✅ OG image fixed: pointed to existing `slide-1.webp` (was broken `og-default.jpg`)
+- ✅ DNS prefetch + preconnect added for `api.ssfiskate.com`
+- ✅ `optimizePackageImports` added for lucide-react, framer-motion, react-hot-toast
+- ✅ Static asset cache headers (1-year immutable for images, uploads, _next/static)
+- ✅ GlobeStats: removed `min-w-[1200px]` causing horizontal scroll, fixed overflow
+- ✅ Header mobile menu button: `p-2` → `p-2.5` (44px touch target)
+- ✅ PaymentModal close button: `p-2` → `p-2.5` (44px touch target)
+- ✅ EventHighlightCards: `gap-10` → `gap-6 md:gap-10` (responsive)
+- ✅ EventHighlightCards section: `overflow-visible` → `overflow-x-hidden overflow-y-visible`
+- ✅ EventCategories section: `overflow-visible` → `overflow-x-hidden overflow-y-visible`
+- ✅ WhyJoinSSFI badge text: `text-[10px]` → `text-[11px]`
+- ✅ AffiliatedCoachesClient badge: `text-[10px]` → `text-[11px]`
+
+## Fixes Applied (March 3, 2026 — Session 2)
+
+### Registration Windows & Beginner Certification
+- ✅ Registration window service: Added `.toUpperCase()` normalization for `entityType` — frontend sends lowercase (`state_secretary`), backend expects Prisma enum (`STATE_SECRETARY`)
+- ✅ All 6 registration window entity types (State Secretary, District Secretary, Club, Student, Beginner Certification, Coach Certification) now create/update correctly from the dashboard
+
+### CMS Audit — Full Review & Fixes
+- ✅ CMS Hub page: Added Banners & Sliders module card (was unreachable despite `/dashboard/cms/banners` existing)
+- ✅ CMS Hub page: Added Navigation Menus module card (was unreachable despite menus route existing)
+- ✅ ImageUpload component: Rewrote from dark slate-* theme to light gray-* theme (was invisible on white CMS dashboard)
+- ✅ Pages create page: Added `ImageUpload` for `featuredImage` field (Prisma model had field, UI was missing)
+- ✅ Pages edit page: Added `ImageUpload` for `featuredImage` in sidebar panel
+- ✅ Site Settings page: Added new Branding section with logo and favicon `ImageUpload` components
+- ✅ Fixed type mismatch: `ImageUpload.onChange` returns `string | null` but `SiteSettings.logo/favicon` typed as `string | undefined` — used `url || undefined` conversion
+- ✅ ScrollNavigation: Removed scroll-to-top (ArrowUp) button, kept only scroll-to-bottom (ArrowDown)
+
+### Verified Working (No Changes Needed)
+- ✅ Banners — Full CRUD with hero image upload
+- ✅ News — Full CRUD with featured image upload
+- ✅ Gallery — Albums + photo management with image upload
+- ✅ Team Members — Full CRUD with team photo upload
+- ✅ Milestones — Full CRUD with icon picker
+- ✅ Contact Messages — Inbox with read/delete
+- ✅ Menus — Full CRUD for navigation menus
+- ✅ All CMS hooks (`useCMS.ts`) properly wired to backend endpoints
+- ✅ All backend CMS routes (`cms.routes.ts`, `team.routes.ts`, `milestone.routes.ts`, `contact.routes.ts`, `upload.routes.ts`) verified
 
 ---
 
 ## Known Issues / Tech Debt
 
 - `RegistrationWindow.createdBy` is `String` in Prisma but some older service calls may pass integer — verify before migration
-- The legacy `gallery.routes.ts` at `/api/v1/gallery/*` still exists alongside the new `/api/v1/cms/gallery/*` — the old one can be removed once public pages are confirmed using only the new routes
-- `news/[id]/page.tsx` and `news/new/page.tsx` use `featuredImage` field — ensure this matches the Prisma `News.featuredImage` column (it does)
-- `SiteSettings.metadata` is stored as JSON — validate shape on frontend before accessing `.departments`, `.officeHours` etc.
-- No OTP verification page built yet — the register → verify OTP flow is incomplete in frontend
+- Legacy `gallery.routes.ts` at `/api/v1/gallery/*` still exists alongside new `/api/v1/cms/gallery/*` — can be removed
+- `SiteSettings.metadata` stored as JSON — validate shape on frontend before accessing
+- No OTP verification page built yet — register → verify OTP flow incomplete in frontend
+- 5 files with `@ts-nocheck` in backend (affiliation.service.ts, affiliation.controller.ts, locations.routes.ts, uid.service.ts, _LEGACY file)
+- 4 `@ts-ignore` instances in frontend
+- 6 `as any` casts in controllers
+- 25+ loose script files in backend root need moving to `scripts/` directory
+- `dist/` directory should be in `.gitignore`
+- No `.env.example` files exist for either project

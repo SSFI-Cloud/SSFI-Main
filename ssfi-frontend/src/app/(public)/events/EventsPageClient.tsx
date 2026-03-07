@@ -33,10 +33,10 @@ import {
 
 /* ── Level color map ── */
 const LEVEL_COLORS: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  NATIONAL: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' },
+  NATIONAL: { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200', dot: 'bg-teal-500' },
   STATE: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', dot: 'bg-sky-500' },
   DISTRICT: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500' },
-  CLUB: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', dot: 'bg-violet-500' },
+  CLUB: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500' },
   default: { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200', dot: 'bg-gray-500' },
 };
 const getLevelColor = (l?: string) => LEVEL_COLORS[l || ''] ?? LEVEL_COLORS.default;
@@ -85,7 +85,7 @@ function EventCardLight({ event, index }: { event: Event; index: number }) {
         </div>
         {daysUntil > 0 && daysUntil <= 30 && (
           <div className="absolute top-3 right-3">
-            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-orange-500 text-white flex items-center gap-1 shadow-lg shadow-orange-500/30">
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white flex items-center gap-1 shadow-lg shadow-emerald-500/30">
               <Flame className="w-3 h-3" />
               {daysUntil === 1 ? 'Tomorrow' : `${daysUntil}d left`}
             </span>
@@ -114,11 +114,11 @@ function EventCardLight({ event, index }: { event: Event; index: number }) {
             <span>{formatEventDate(event.eventDate, event.eventEndDate)}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <MapPin className="w-3.5 h-3.5 text-rose-400" />
+            <MapPin className="w-3.5 h-3.5 text-teal-400" />
             <span className="truncate">{event.venue}, {event.city}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Users className="w-3.5 h-3.5 text-violet-500" />
+            <Users className="w-3.5 h-3.5 text-emerald-500" />
             <span>{regCount} registered</span>
           </div>
         </div>

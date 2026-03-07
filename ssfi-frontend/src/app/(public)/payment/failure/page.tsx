@@ -80,19 +80,19 @@ export default function PaymentFailurePage() {
                             <h3 className="text-white font-medium">What can you do?</h3>
                             <ul className="space-y-2 text-sm text-slate-400">
                                 <li className="flex items-start gap-2">
-                                    <span className="text-blue-400">•</span>
+                                    <span className="text-emerald-400">•</span>
                                     Check if your card/bank has sufficient balance
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <span className="text-blue-400">•</span>
+                                    <span className="text-emerald-400">•</span>
                                     Ensure your card is enabled for online transactions
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <span className="text-blue-400">•</span>
+                                    <span className="text-emerald-400">•</span>
                                     Try using a different payment method
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <span className="text-blue-400">•</span>
+                                    <span className="text-emerald-400">•</span>
                                     Contact your bank if the issue persists
                                 </li>
                             </ul>
@@ -102,7 +102,7 @@ export default function PaymentFailurePage() {
                         <div className="space-y-3">
                             <Link
                                 href="/dashboard"
-                                className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 flex items-center justify-center gap-2 transition-all"
+                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 flex items-center justify-center gap-2 transition-all"
                             >
                                 <RefreshCw className="w-5 h-5" />
                                 Try Again

@@ -2,7 +2,7 @@
 const fetch = require('node-fetch'); // Ensure node-fetch is available or use native fetch in newer node
 
 async function testEndpoints() {
-    const baseUrl = 'http://localhost:5001/api/v1';
+    const baseUrl = 'https://api.ssfiskate.com/api/v1';
 
     console.log('--- Testing API Endpoints ---');
 

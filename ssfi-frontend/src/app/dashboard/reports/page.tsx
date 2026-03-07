@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -12,7 +12,7 @@ import { toast } from 'react-hot-toast';
 
 // ─── Mini chart components ────────────────────────────────────────────────────
 
-const BarChart = ({ data, color = 'bg-blue-500' }: { data: number[]; color?: string }) => {
+const BarChart = ({ data, color = 'bg-emerald-500' }: { data: number[]; color?: string }) => {
     const max = Math.max(...data, 1);
     return (
         <div className="flex items-end justify-between h-32 gap-1 pt-4">
@@ -29,7 +29,7 @@ const BarChart = ({ data, color = 'bg-blue-500' }: { data: number[]; color?: str
     );
 };
 
-const LineChart = ({ data, color = '#3b82f6' }: { data: number[]; color?: string }) => {
+const LineChart = ({ data, color = '#10b981' }: { data: number[]; color?: string }) => {
     const max = Math.max(...data, 1);
     const min = Math.min(...data);
     const range = max - min || 1;
@@ -63,7 +63,16 @@ interface ReportData {
         monthlyRevenue: number[];
     };
     analytics: {
-        topStates: { name: string; students: number; clubs: number }[];
+        topItems: { name: string; students: number; clubs: number }[];
+        tableLabel: string;
+        tableSubLabel: string;
+    };
+    roleLabels: {
+        title: string;
+        subtitle: string;
+        tableLabel: string;
+        tableSubLabel: string;
+        col1: string;
     };
 }
 
@@ -75,6 +84,25 @@ export default function ReportsPage() {
     const [data, setData]       = useState<ReportData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError]     = useState<string | null>(null);
+    const [exporting, setExporting] = useState(false);
+
+    const handleExport = async () => {
+        setExporting(true);
+        try {
+            const res = await api.get('/reports/export', { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([res.data as unknown as BlobPart]));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `SSFI-Reports-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            toast.success('Report exported successfully');
+        } catch {
+            toast.error('Failed to export report');
+        } finally {
+            setExporting(false);
+        }
+    };
 
     const fetchStats = useCallback(async () => {
         setIsLoading(true);
@@ -105,7 +133,7 @@ export default function ReportsPage() {
 
     if (isLoading) return (
         <div className="flex items-center justify-center p-24">
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+            <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
         </div>
     );
 
@@ -121,22 +149,25 @@ export default function ReportsPage() {
 
     const ov = data?.overview;
     const trends = data?.trends;
-    const topStates = data?.analytics.topStates ?? [];
+    const topItems = data?.analytics?.topItems ?? [];
+    const labels = data?.roleLabels;
+    const showPendingApprovals = (ov?.pendingApprovals?.total ?? 0) > 0;
 
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
-                    <p className="text-gray-500 mt-1">Comprehensive overview of association performance</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{labels?.title || 'Reports & Analytics'}</h1>
+                    <p className="text-gray-500 mt-1">{labels?.subtitle || 'Comprehensive overview of performance'}</p>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={fetchStats} className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 flex items-center gap-2 border border-gray-200">
                         <RefreshCw className="w-4 h-4" /> Refresh
                     </button>
-                    <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2">
-                        <Download className="w-4 h-4" /> Export
+                    <button onClick={handleExport} disabled={exporting}
+                        className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2 disabled:opacity-50">
+                        {exporting ? <><Loader2 className="w-4 h-4 animate-spin" /> Exporting...</> : <><Download className="w-4 h-4" /> Export</>}
                     </button>
                 </div>
             </div>
@@ -146,8 +177,8 @@ export default function ReportsPage() {
                 {[
                     { label: 'Total Registrations', value: ov?.totalStudents ?? 0, icon: Users, color: 'blue', growth: ov?.registrationsGrowth ?? 0, fmt: (n:number)=>n.toLocaleString('en-IN') },
                     { label: 'Total Revenue', value: ov?.totalRevenue ?? 0, icon: IndianRupee, color: 'green', growth: ov?.revenueGrowth ?? 0, fmt },
-                    { label: 'Active Events', value: ov?.totalEvents ?? 0, icon: Calendar, color: 'amber', growth: null, sub: 'Live & upcoming' },
-                    { label: 'Active Clubs', value: ov?.totalClubs ?? 0, icon: Filter, color: 'purple', growth: null, sub: `${ov?.pendingApprovals.total ?? 0} pending approval` },
+                    { label: 'Active Events', value: ov?.totalEvents ?? 0, icon: Calendar, color: 'teal', growth: null, sub: 'Live & upcoming' },
+                    { label: 'Active Clubs', value: ov?.totalClubs ?? 0, icon: Filter, color: 'purple', growth: null, sub: showPendingApprovals ? `${ov?.pendingApprovals.total ?? 0} pending approval` : 'Registered clubs' },
                 ].map(({ label, value, icon: Icon, color, growth, fmt: fmtFn, sub }, idx) => (
                     <motion.div key={label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.07 }}
                         className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
@@ -173,7 +204,7 @@ export default function ReportsPage() {
                     className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                     <h3 className="text-lg font-bold text-gray-900 mb-2">Registration Trends</h3>
                     <p className="text-xs text-gray-600 mb-2">Monthly new students — {new Date().getFullYear()}</p>
-                    <BarChart data={trends?.monthlyRegistrations ?? new Array(12).fill(0)} color="bg-blue-500" />
+                    <BarChart data={trends?.monthlyRegistrations ?? new Array(12).fill(0)} color="bg-emerald-500" />
                     <div className="flex justify-between mt-2 text-xs text-gray-600">
                         {MONTHS.map(m => <span key={m}>{m}</span>)}
                     </div>
@@ -190,56 +221,56 @@ export default function ReportsPage() {
                 </motion.div>
             </div>
 
-            {/* State-wise table */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-lg font-bold text-gray-900">State-wise Performance</h3>
-                    <p className="text-sm text-gray-600 mt-1">Top states by registered students</p>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="bg-gray-500 text-xs text-gray-500 uppercase tracking-wider">
-                                <th className="px-6 py-4 text-left">#</th>
-                                <th className="px-6 py-4 text-left">State</th>
-                                <th className="px-6 py-4 text-left">Students</th>
-                                <th className="px-6 py-4 text-left">Clubs</th>
-                                <th className="px-6 py-4 text-right">Share</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200/30">
-                            {topStates.length === 0 ? (
-                                <tr><td colSpan={5} className="px-6 py-10 text-center text-gray-600">No data available</td></tr>
-                            ) : topStates.map((state, i) => {
-                                const totalSt = topStates.reduce((s, st) => s + st.students, 0) || 1;
-                                const share = Math.round((state.students / totalSt) * 100);
-                                return (
-                                    <tr key={state.name} className="hover:bg-gray-50/60">
-                                        <td className="px-6 py-4 text-gray-600 text-sm">{i + 1}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="w-4 h-4 text-gray-600" />
-                                                <span className="text-gray-900 font-medium">{state.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-700">{state.students.toLocaleString('en-IN')}</td>
-                                        <td className="px-6 py-4 text-gray-700">{state.clubs}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${share}%` }} />
+            {/* Table — role-specific breakdown */}
+            {labels?.tableLabel && topItems.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-100">
+                        <h3 className="text-lg font-bold text-gray-900">{labels.tableLabel}</h3>
+                        <p className="text-sm text-gray-600 mt-1">{labels.tableSubLabel}</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left">#</th>
+                                    <th className="px-6 py-4 text-left">{labels.col1}</th>
+                                    <th className="px-6 py-4 text-left">Students</th>
+                                    {topItems.some(i => i.clubs > 0) && <th className="px-6 py-4 text-left">Clubs</th>}
+                                    <th className="px-6 py-4 text-right">Share</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {topItems.map((item, i) => {
+                                    const totalSt = topItems.reduce((s, it) => s + it.students, 0) || 1;
+                                    const share = Math.round((item.students / totalSt) * 100);
+                                    return (
+                                        <tr key={item.name} className="hover:bg-gray-50/60">
+                                            <td className="px-6 py-4 text-gray-600 text-sm">{i + 1}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <MapPin className="w-4 h-4 text-gray-600" />
+                                                    <span className="text-gray-900 font-medium">{item.name}</span>
                                                 </div>
-                                                <span className="text-xs text-gray-500 w-8 text-right">{share}%</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </motion.div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-700">{item.students.toLocaleString('en-IN')}</td>
+                                            {topItems.some(it => it.clubs > 0) && <td className="px-6 py-4 text-gray-700">{item.clubs}</td>}
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${share}%` }} />
+                                                    </div>
+                                                    <span className="text-xs text-gray-500 w-8 text-right">{share}%</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </motion.div>
+            )}
         </div>
     );
 }

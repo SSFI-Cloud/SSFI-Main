@@ -31,7 +31,7 @@ const initialStats: Stat[] = [
     value: 0,
     suffix: '+',
     icon: Award,
-    variant: 'purple',
+    variant: 'emerald',
   },
   {
     id: 3,
@@ -151,15 +151,15 @@ const StatsCounter = () => {
           {stats.map((stat, index) => {
             // Map variant to glow color
             const glowColors: Record<string, string> = {
-              blue: '#6366f1',
-              purple: '#a855f7',
+              blue: '#14b8a6',
+              purple: '#10b981',
               cyan: '#22d3ee',
               orange: '#f97316',
-              pink: '#ec4899',
+              pink: '#14b8a6',
               amber: '#f59e0b',
               emerald: '#10b981',
             };
-            const glowColor = glowColors[stat.variant] || '#6366f1';
+            const glowColor = glowColors[stat.variant] || '#14b8a6';
 
             return (
               <motion.div

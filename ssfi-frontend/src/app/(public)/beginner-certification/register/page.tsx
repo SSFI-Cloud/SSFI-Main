@@ -63,9 +63,9 @@ const BLOOD_GROUP_LABELS: Record<string, string> = {
 
 const CAT_CFG: Record<string, { label: string; gradient: string; emoji: string }> = {
   SPEED_SKATING: { label: 'Speed Skating', gradient: 'from-sky-500 to-cyan-500', emoji: '⚡' },
-  ARTISTIC: { label: 'Artistic Skating', gradient: 'from-pink-500 to-rose-500', emoji: '🎨' },
-  INLINE_HOCKEY: { label: 'Inline Hockey', gradient: 'from-amber-500 to-orange-500', emoji: '🏒' },
-  GENERAL: { label: 'General', gradient: 'from-violet-500 to-purple-500', emoji: '⛸️' },
+  ARTISTIC: { label: 'Artistic Skating', gradient: 'from-emerald-500 to-teal-500', emoji: '🎨' },
+  INLINE_HOCKEY: { label: 'Inline Hockey', gradient: 'from-teal-500 to-emerald-500', emoji: '🏒' },
+  GENERAL: { label: 'General', gradient: 'from-teal-500 to-cyan-500', emoji: '⛸️' },
 };
 
 // Step indicator
@@ -81,17 +81,17 @@ function StepIndicator({ step }: { step: number }) {
           <div key={i} className="flex items-center">
             <div className="flex flex-col items-center">
               <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all
-                ${done ? 'bg-gradient-to-br from-pink-500 to-violet-500 text-white shadow-lg shadow-pink-500/25'
-                  : active ? 'bg-gradient-to-br from-pink-500 to-violet-500 text-white shadow-lg shadow-pink-500/25 ring-4 ring-pink-500/20'
+                ${done ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+                  : active ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 ring-4 ring-emerald-500/20'
                   : 'bg-gray-100 text-gray-400'}`}>
                 {done ? <CheckCircle2 className="w-5 h-5" /> : idx}
               </div>
-              <span className={`text-xs mt-1.5 font-medium hidden sm:block ${active ? 'text-pink-600' : done ? 'text-gray-500' : 'text-gray-300'}`}>
+              <span className={`text-xs mt-1.5 font-medium hidden sm:block ${active ? 'text-emerald-600' : done ? 'text-gray-500' : 'text-gray-300'}`}>
                 {label}
               </span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`w-16 md:w-24 h-0.5 mx-1 mb-4 transition-all ${done ? 'bg-gradient-to-r from-pink-500 to-violet-500' : 'bg-gray-200'}`} />
+              <div className={`w-16 md:w-24 h-0.5 mx-1 mb-4 transition-all ${done ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 'bg-gray-200'}`} />
             )}
           </div>
         );
@@ -199,6 +199,29 @@ function BeginnerRegForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // ── Razorpay checkout helper ──
+  const openRazorpay = (order: any, onVerify: (r: any) => Promise<void>) => {
+    // Mock-payment shortcut (development / no Razorpay keys)
+    if (order.key === 'rzp_test_mock') {
+      toast.success('Mock payment — simulating success…');
+      setTimeout(() => onVerify({
+        razorpay_order_id: order.razorpayOrderId,
+        razorpay_payment_id: `pay_mock_${Date.now()}`,
+        razorpay_signature: 'mock_signature',
+      }), 1500);
+      return;
+    }
+    const rzp = new (window as any).Razorpay({
+      key: order.key, amount: order.amount, currency: order.currency,
+      name: 'SSFI', description: 'Beginner Certification Registration',
+      order_id: order.razorpayOrderId, prefill: order.userDetails,
+      theme: { color: '#10b981' },
+      handler: onVerify,
+    });
+    rzp.on('payment.failed', (r: any) => toast.error(r.error?.description || 'Payment failed'));
+    rzp.open();
+  };
+
   const handleSubmit = async () => {
     if (!decl1 || !decl2 || !decl3) {
       toast.error('Please accept all declarations to proceed');
@@ -238,20 +261,34 @@ function BeginnerRegForm() {
         declaration3: true,
       };
 
-      const res = await api.post('/beginner-cert/register', payload);
-      const regNo = res.data?.data?.registrationNumber || 'N/A';
-      setRegSuccess({ regNo });
-      toast.success('Registration successful!');
-      setStep(3);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Step 1: Initiate registration + create Razorpay order
+      const res = await api.post('/beginner-cert/initiate', payload);
+      const order = res.data?.data;
+      if (!order?.razorpayOrderId) throw new Error('Failed to create payment order');
+
+      // Step 2: Open Razorpay checkout
+      openRazorpay(order, async (response: any) => {
+        try {
+          // Step 3: Verify payment
+          await api.post('/beginner-cert/verify-payment', {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+          toast.success('Registration & payment successful!');
+          router.push(`/payment/success?order_id=${encodeURIComponent(response.razorpay_order_id)}&payment_id=${encodeURIComponent(response.razorpay_payment_id)}`);
+        } catch (verifyErr: any) {
+          toast.error(verifyErr?.response?.data?.message || 'Payment verification failed');
+          setSubmitting(false);
+        }
+      });
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Registration failed. Please try again.');
-    } finally {
       setSubmitting(false);
     }
   };
 
-  const inputCls = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-400 shadow-sm";
+  const inputCls = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 shadow-sm";
   const labelCls = "block text-sm font-semibold text-gray-700 mb-1.5";
 
   const eligibility = getEligibility();
@@ -261,7 +298,7 @@ function BeginnerRegForm() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f5f6f8]">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 text-pink-500 animate-spin mx-auto mb-3" />
+          <Loader2 className="w-10 h-10 text-emerald-500 animate-spin mx-auto mb-3" />
           <p className="text-gray-500 text-sm">Loading programs...</p>
         </div>
       </div>
@@ -273,7 +310,7 @@ function BeginnerRegForm() {
       {/* Hero */}
       <section className="bg-gradient-to-br from-[#0a1628] via-[#0c2340] to-[#162d50] py-14">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400 text-sm font-bold mb-4">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold mb-4">
             <Sparkles className="w-4 h-4" /> Registration Form
           </span>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2">Beginner Certification Registration</h1>
@@ -293,13 +330,13 @@ function BeginnerRegForm() {
               {/* Program Selection */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-pink-500" /> Select Program
+                  <Sparkles className="w-5 h-5 text-emerald-500" /> Select Program
                 </h2>
                 {programs.length === 0 ? (
                   <div className="text-center py-8 text-gray-400">
                     <Clock className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                     <p className="text-sm">No active programs available right now.</p>
-                    <Link href="/beginner-certification" className="text-pink-500 text-sm underline mt-1 inline-block">View all programs</Link>
+                    <Link href="/beginner-certification" className="text-emerald-500 text-sm underline mt-1 inline-block">View all programs</Link>
                   </div>
                 ) : (
                   <>
@@ -318,17 +355,17 @@ function BeginnerRegForm() {
                     </select>
 
                     {selectedProgram && (
-                      <div className="mt-3 p-4 rounded-xl bg-gradient-to-r from-pink-50 to-violet-50 border border-pink-100">
+                      <div className="mt-3 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100">
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-pink-500" />
+                          <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-emerald-500" />
                             {new Date(selectedProgram.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} — {new Date(selectedProgram.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </span>
-                          <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-rose-400" />{selectedProgram.venue}, {selectedProgram.city}</span>
-                          <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-violet-400" />{spotsLeft} seats left</span>
-                          <span className="font-bold text-pink-700">₹{Number(selectedProgram.price).toLocaleString()}</span>
+                          <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-teal-400" />{selectedProgram.venue}, {selectedProgram.city}</span>
+                          <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-emerald-400" />{spotsLeft} seats left</span>
+                          <span className="font-bold text-emerald-700">₹{Number(selectedProgram.price).toLocaleString()}</span>
                         </div>
                         {selectedProgram.ageGroup && (
-                          <p className="text-xs text-violet-600 mt-2 font-medium">Age Group: {selectedProgram.ageGroup}</p>
+                          <p className="text-xs text-emerald-600 mt-2 font-medium">Age Group: {selectedProgram.ageGroup}</p>
                         )}
                       </div>
                     )}
@@ -341,7 +378,7 @@ function BeginnerRegForm() {
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                    <Fingerprint className="w-5 h-5 text-blue-500" /> Enter Your SSFI UID
+                    <Fingerprint className="w-5 h-5 text-emerald-500" /> Enter Your SSFI UID
                   </h2>
                   <p className="text-sm text-gray-500 mb-4">Your details will be automatically fetched from our records.</p>
 
@@ -352,12 +389,12 @@ function BeginnerRegForm() {
                       onChange={e => { setUid(e.target.value); setLookupError(''); setStudent(null); }}
                       onKeyDown={e => e.key === 'Enter' && handleLookup()}
                       placeholder="e.g. SSFI/BS/TN/25/S0001"
-                      className={`flex-1 px-4 py-3 bg-gray-50 border ${lookupError ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-pink-400'} rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/20 shadow-sm font-mono`}
+                      className={`flex-1 px-4 py-3 bg-gray-50 border ${lookupError ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'} rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm font-mono`}
                     />
                     <button
                       onClick={handleLookup}
                       disabled={lookupLoading || !uid.trim()}
-                      className="px-5 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold text-sm shadow-lg shadow-pink-500/20 hover:shadow-pink-500/35 transition-all disabled:opacity-50 flex items-center gap-2"
+                      className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all disabled:opacity-50 flex items-center gap-2"
                     >
                       {lookupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                       Fetch
@@ -419,7 +456,7 @@ function BeginnerRegForm() {
                 <button
                   onClick={handleProceedToReview}
                   disabled={!student || !eligibility?.eligible}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold text-sm shadow-lg shadow-pink-500/20 hover:shadow-pink-500/35 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Review Details <ChevronRight className="w-4 h-4" />
                 </button>
@@ -433,7 +470,7 @@ function BeginnerRegForm() {
 
               {/* Program Summary Card */}
               <div className={`rounded-2xl overflow-hidden shadow-sm`}>
-                <div className={`h-1.5 bg-gradient-to-r ${CAT_CFG[selectedProgram.category]?.gradient || 'from-pink-500 to-violet-500'}`} />
+                <div className={`h-1.5 bg-gradient-to-r ${CAT_CFG[selectedProgram.category]?.gradient || 'from-emerald-500 to-teal-500'}`} />
                 <div className="bg-white p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -443,8 +480,8 @@ function BeginnerRegForm() {
                       </div>
                       <h3 className="font-bold text-gray-900 text-lg">{selectedProgram.title}</h3>
                       <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-500">
-                        <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-pink-500" />{new Date(selectedProgram.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} — {new Date(selectedProgram.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                        <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-rose-400" />{selectedProgram.venue}, {selectedProgram.city}</span>
+                        <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-emerald-500" />{new Date(selectedProgram.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} — {new Date(selectedProgram.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-teal-400" />{selectedProgram.venue}, {selectedProgram.city}</span>
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -459,14 +496,14 @@ function BeginnerRegForm() {
               <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <User className="w-5 h-5 text-blue-500" /> Your Details
+                    <User className="w-5 h-5 text-emerald-500" /> Your Details
                   </h2>
-                  <button onClick={() => setStep(1)} className="text-xs text-pink-500 font-semibold flex items-center gap-1 hover:text-pink-700">
+                  <button onClick={() => setStep(1)} className="text-xs text-emerald-500 font-semibold flex items-center gap-1 hover:text-emerald-700">
                     <RefreshCw className="w-3 h-3" /> Change UID
                   </button>
                 </div>
 
-                <div className="p-3 mb-4 rounded-xl bg-blue-50 border border-blue-100 text-xs text-blue-600 flex items-center gap-2">
+                <div className="p-3 mb-4 rounded-xl bg-emerald-50 border border-emerald-100 text-xs text-emerald-600 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 flex-shrink-0" />
                   Details fetched from SSFI database for UID: <strong>{student.ssfiUid}</strong>
                 </div>
@@ -480,7 +517,7 @@ function BeginnerRegForm() {
                     { label: 'Date of Birth', value: new Date(student.dateOfBirth).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) },
                     { label: 'Blood Group', value: student.bloodGroup ? (BLOOD_GROUP_LABELS[student.bloodGroup] || student.bloodGroup) : '—' },
                     { label: 'Phone', value: student.phone, icon: <Phone className="w-3.5 h-3.5 text-green-500" /> },
-                    { label: 'Email', value: student.email || '—', icon: <Mail className="w-3.5 h-3.5 text-blue-500" /> },
+                    { label: 'Email', value: student.email || '—', icon: <Mail className="w-3.5 h-3.5 text-emerald-500" /> },
                     { label: 'City', value: student.city },
                     { label: 'State', value: student.state },
                     { label: 'Club', value: student.clubName || '—' },
@@ -516,7 +553,7 @@ function BeginnerRegForm() {
               {/* Extra Fields */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-amber-500" /> Additional Details
+                  <Award className="w-5 h-5 text-teal-500" /> Additional Details
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -555,7 +592,7 @@ function BeginnerRegForm() {
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
                 <button onClick={() => { setStep(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold text-sm shadow-lg shadow-pink-500/20 hover:shadow-pink-500/35 transition-all">
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all">
                   Proceed to Register <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -570,18 +607,18 @@ function BeginnerRegForm() {
                 /* Success State */
                 <div className="text-center py-8">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }}
-                    className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-violet-500 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-pink-500/30">
+                    className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-emerald-500/30">
                     <CheckCircle2 className="w-10 h-10 text-white" />
                   </motion.div>
                   <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Registration Successful! 🎉</h2>
                   <p className="text-gray-500 mb-6 text-sm">Your registration has been submitted. A confirmation email has been sent to your registered email address.</p>
 
-                  <div className="inline-block bg-gradient-to-r from-pink-50 to-violet-50 border border-pink-200 rounded-2xl px-8 py-5 mb-6">
+                  <div className="inline-block bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl px-8 py-5 mb-6">
                     <p className="text-xs text-gray-400 mb-1 uppercase tracking-widest">Registration Number</p>
-                    <p className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-violet-600 tracking-wider">{regSuccess.regNo}</p>
+                    <p className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 tracking-wider">{regSuccess.regNo}</p>
                   </div>
 
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 mb-6 max-w-md mx-auto">
+                  <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 text-sm text-teal-700 mb-6 max-w-md mx-auto">
                     <p className="font-semibold mb-1">📋 What's next?</p>
                     <p>Please save your registration number. Payment confirmation and further instructions will be sent to your registered email. Present this number at the venue on the event day.</p>
                   </div>
@@ -592,7 +629,7 @@ function BeginnerRegForm() {
                       View Programs
                     </Link>
                     <Link href="/"
-                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-semibold text-sm shadow-lg shadow-pink-500/20 hover:shadow-pink-500/35 transition-all">
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all">
                       Go to Home
                     </Link>
                   </div>
@@ -611,7 +648,7 @@ function BeginnerRegForm() {
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-gray-900">{selectedProgram.title}</p>
-                          <p className="text-sm text-pink-600 font-semibold">₹{Number(selectedProgram.price).toLocaleString()}</p>
+                          <p className="text-sm text-emerald-600 font-semibold">₹{Number(selectedProgram.price).toLocaleString()}</p>
                         </div>
                       </div>
                     </div>
@@ -644,7 +681,7 @@ function BeginnerRegForm() {
 
                   {/* Email notice */}
                   {student?.email && (
-                    <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100 text-sm text-blue-700">
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-sm text-emerald-700">
                       <Mail className="w-5 h-5 flex-shrink-0" />
                       <span>A confirmation email with program details will be sent to <strong>{student.email}</strong> after registration.</span>
                     </div>
@@ -658,10 +695,10 @@ function BeginnerRegForm() {
                     <button
                       onClick={handleSubmit}
                       disabled={submitting || !decl1 || !decl2 || !decl3}
-                      className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold text-sm shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                      {submitting ? 'Submitting...' : 'Complete Registration'}
+                      {submitting ? 'Processing...' : 'Pay & Register'}
                     </button>
                   </div>
                 </>
@@ -680,7 +717,7 @@ export default function BeginnerCertRegisterPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-[#f5f6f8]">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-10 h-10 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-gray-400 text-sm">Loading...</p>
         </div>
       </div>

@@ -9,13 +9,13 @@ import { getStatusColor } from '@/lib/utils/status';
 // COLOR SYSTEM
 // ==========================================
 const colorMap = {
-  blue:   { bg: 'from-blue-500 to-indigo-600',   soft: 'bg-blue-50',   text: 'text-blue-600',   border: 'border-blue-100', badge: 'bg-blue-100 text-blue-700' },
+  blue:   { bg: 'from-emerald-500 to-teal-600',   soft: 'bg-emerald-50',   text: 'text-emerald-600',   border: 'border-emerald-100', badge: 'bg-emerald-100 text-emerald-700' },
   green:  { bg: 'from-green-500 to-emerald-600',  soft: 'bg-green-50',  text: 'text-green-600',  border: 'border-green-100', badge: 'bg-green-100 text-green-700' },
-  purple: { bg: 'from-purple-500 to-violet-600',  soft: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-100', badge: 'bg-purple-100 text-purple-700' },
-  amber:  { bg: 'from-amber-400 to-orange-500',   soft: 'bg-amber-50',  text: 'text-amber-600',  border: 'border-amber-100', badge: 'bg-amber-100 text-amber-700' },
-  red:    { bg: 'from-red-500 to-rose-600',       soft: 'bg-red-50',    text: 'text-red-600',    border: 'border-red-100',   badge: 'bg-red-100 text-red-700' },
+  purple: { bg: 'from-teal-500 to-emerald-600',  soft: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-100', badge: 'bg-teal-100 text-teal-700' },
+  amber:  { bg: 'from-emerald-400 to-teal-500',   soft: 'bg-emerald-50',  text: 'text-emerald-600',  border: 'border-emerald-100', badge: 'bg-emerald-100 text-emerald-700' },
+  red:    { bg: 'from-red-500 to-teal-600',       soft: 'bg-red-50',    text: 'text-red-600',    border: 'border-red-100',   badge: 'bg-red-100 text-red-700' },
   slate:  { bg: 'from-slate-500 to-slate-700',    soft: 'bg-slate-50',  text: 'text-gray-500',  border: 'border-slate-200', badge: 'bg-slate-100 text-gray-700' },
-  pink:   { bg: 'from-pink-500 to-rose-500',      soft: 'bg-pink-50',   text: 'text-pink-600',   border: 'border-pink-100',  badge: 'bg-pink-100 text-pink-700' },
+  pink:   { bg: 'from-teal-500 to-teal-500',      soft: 'bg-teal-50',   text: 'text-teal-600',   border: 'border-teal-100',  badge: 'bg-teal-100 text-teal-700' },
   teal:   { bg: 'from-teal-500 to-cyan-600',      soft: 'bg-teal-50',   text: 'text-teal-600',   border: 'border-teal-100',  badge: 'bg-teal-100 text-teal-700' },
 };
 export type ColorKey = keyof typeof colorMap;
@@ -201,7 +201,7 @@ export function ChartCard({ title, children, delay = 0, subtitle }: ChartCardPro
 interface SimpleBarChartProps { data: { label: string; value: number; color?: string }[]; maxValue?: number; }
 export function SimpleBarChart({ data, maxValue }: SimpleBarChartProps) {
   const max = maxValue || Math.max(...data.map(d => d.value), 1);
-  const cols = ['bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 'bg-pink-500', 'bg-rose-500'];
+  const cols = ['bg-emerald-500', 'bg-teal-500', 'bg-teal-500', 'bg-teal-500', 'bg-teal-500'];
   return (
     <div className="space-y-3.5">
       {data.map((item, i) => (
@@ -274,6 +274,79 @@ export function QuickAction({ title, description, icon: Icon, href, color }: Qui
         </div>
       </div>
     </Link>
+  );
+}
+
+// ==========================================
+// RENEWAL COUNTDOWN BADGE
+// ==========================================
+interface RenewalCountdownBadgeProps {
+  daysUntilExpiry: number | null | undefined;
+  expiryDate: string | Date | null | undefined;
+  accountStatus?: string;
+}
+
+export function RenewalCountdownBadge({ daysUntilExpiry, expiryDate, accountStatus }: RenewalCountdownBadgeProps) {
+  if (daysUntilExpiry === null || daysUntilExpiry === undefined) return null;
+
+  const isExpired = daysUntilExpiry <= 0;
+  const isUrgent = daysUntilExpiry > 0 && daysUntilExpiry <= 7;
+  const isWarning = daysUntilExpiry > 7 && daysUntilExpiry <= 30;
+
+  const colors = isExpired
+    ? { ring: 'border-red-400', bg: 'bg-red-50', text: 'text-red-600', sub: 'text-red-500', pulse: 'bg-red-400' }
+    : isUrgent
+    ? { ring: 'border-amber-400', bg: 'bg-amber-50', text: 'text-amber-600', sub: 'text-amber-500', pulse: 'bg-amber-400' }
+    : isWarning
+    ? { ring: 'border-yellow-400', bg: 'bg-yellow-50', text: 'text-amber-600', sub: 'text-amber-500', pulse: '' }
+    : { ring: 'border-green-400', bg: 'bg-green-50', text: 'text-green-600', sub: 'text-green-500', pulse: '' };
+
+  const displayDays = isExpired ? Math.abs(daysUntilExpiry) : daysUntilExpiry;
+  const fmtDate = expiryDate ? new Date(expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className={`flex items-center gap-4 p-4 rounded-2xl border-2 ${colors.ring} ${colors.bg} shadow-sm`}
+    >
+      {/* Countdown circle */}
+      <div className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] ${colors.ring} flex flex-col items-center justify-center flex-shrink-0 bg-white`}>
+        <span className={`text-xl sm:text-2xl font-extrabold ${colors.text} leading-none`}>
+          {isExpired ? '!' : displayDays}
+        </span>
+        <span className={`text-[8px] sm:text-[9px] font-bold ${colors.sub} uppercase leading-tight tracking-wide`}>
+          {isExpired ? 'Expired' : 'Days'}
+        </span>
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-bold ${colors.text}`}>
+          {isExpired ? 'Registration Expired' : isUrgent ? 'Renewal Urgent!' : isWarning ? 'Renewal Due Soon' : 'Registration Active'}
+        </p>
+        <p className="text-xs text-gray-600 mt-0.5">
+          {isExpired
+            ? `Expired ${displayDays} day${displayDays !== 1 ? 's' : ''} ago`
+            : `${displayDays} day${displayDays !== 1 ? 's' : ''} remaining to renew`}
+        </p>
+        {fmtDate && (
+          <p className="text-[11px] text-gray-400 mt-0.5">
+            {isExpired ? 'Expired on' : 'Expires'}: {fmtDate}
+          </p>
+        )}
+      </div>
+
+      {/* Animated pulse for urgent/expired */}
+      {(isExpired || isUrgent) && (
+        <div className="flex-shrink-0">
+          <span className="relative flex h-3 w-3">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${colors.pulse} opacity-75`} />
+            <span className={`relative inline-flex rounded-full h-3 w-3 ${colors.pulse}`} />
+          </span>
+        </div>
+      )}
+    </motion.div>
   );
 }
 

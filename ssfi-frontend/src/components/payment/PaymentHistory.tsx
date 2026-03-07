@@ -93,7 +93,7 @@ export default function PaymentHistory({
             captured: { color: 'bg-green-500/20 text-green-400', icon: CheckCircle, label: 'Success' },
             failed: { color: 'bg-red-500/20 text-red-400', icon: XCircle, label: 'Failed' },
             pending: { color: 'bg-amber-500/20 text-amber-400', icon: Clock, label: 'Pending' },
-            refunded: { color: 'bg-purple-500/20 text-purple-400', icon: RefreshCw, label: 'Refunded' },
+            refunded: { color: 'bg-teal-500/20 text-teal-400', icon: RefreshCw, label: 'Refunded' },
         };
         const badge = badges[statusLower] || badges.pending;
         const Icon = badge.icon;
@@ -107,11 +107,11 @@ export default function PaymentHistory({
 
     const getTypeBadge = (type: string) => {
         const types: Record<string, { color: string; label: string }> = {
-            STUDENT_REGISTRATION: { color: 'bg-blue-500/20 text-blue-400', label: 'Student' },
-            CLUB_AFFILIATION: { color: 'bg-purple-500/20 text-purple-400', label: 'Club' },
+            STUDENT_REGISTRATION: { color: 'bg-emerald-500/20 text-emerald-400', label: 'Student' },
+            CLUB_AFFILIATION: { color: 'bg-teal-500/20 text-teal-400', label: 'Club' },
             EVENT_REGISTRATION: { color: 'bg-amber-500/20 text-amber-400', label: 'Event' },
             MEMBERSHIP_RENEWAL: { color: 'bg-green-500/20 text-green-400', label: 'Renewal' },
-            REGISTRATION: { color: 'bg-blue-500/20 text-blue-400', label: 'Registration' },
+            REGISTRATION: { color: 'bg-emerald-500/20 text-emerald-400', label: 'Registration' },
         };
         const typeConfig = types[type] || { color: 'bg-slate-500/20 text-slate-400', label: type };
         return <span className={`px-2 py-0.5 ${typeConfig.color} text-xs font-medium rounded`}>{typeConfig.label}</span>;
@@ -128,7 +128,7 @@ export default function PaymentHistory({
             <div className="p-4 border-b border-slate-700/50">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <CreditCard className="w-5 h-5 text-blue-400" />
+                        <CreditCard className="w-5 h-5 text-emerald-400" />
                         {title}
                     </h2>
                     <button className="px-3 py-1.5 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm flex items-center gap-2">
@@ -147,7 +147,7 @@ export default function PaymentHistory({
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search by order ID..."
-                                className="w-full pl-9 pr-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full pl-9 pr-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <select
@@ -192,7 +192,7 @@ export default function PaymentHistory({
                         {isLoading ? (
                             <tr>
                                 <td colSpan={6} className="px-4 py-12 text-center">
-                                    <Loader2 className="w-8 h-8 text-blue-400 animate-spin mx-auto" />
+                                    <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
                                 </td>
                             </tr>
                         ) : filteredPayments.length === 0 ? (
@@ -222,7 +222,7 @@ export default function PaymentHistory({
                                         </p>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <p className="font-mono text-sm text-blue-400">{payment.razorpayOrderId}</p>
+                                        <p className="font-mono text-sm text-emerald-400">{payment.razorpayOrderId}</p>
                                         {payment.razorpayPaymentId && (
                                             <p className="font-mono text-xs text-slate-500 mt-0.5">{payment.razorpayPaymentId}</p>
                                         )}

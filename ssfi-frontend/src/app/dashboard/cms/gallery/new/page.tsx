@@ -45,7 +45,7 @@ export default function CreateGalleryPage() {
     } finally { setSaving(false); }
   };
 
-  const inputClass = "w-full px-3 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 text-sm";
+  const inputClass = "w-full px-3 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 text-sm";
   const labelClass = "text-sm font-medium text-gray-700";
 
   return (
@@ -92,7 +92,7 @@ export default function CreateGalleryPage() {
 
         <div className="flex justify-end pt-2">
           <button type="submit" disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium">
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Create Album
           </button>

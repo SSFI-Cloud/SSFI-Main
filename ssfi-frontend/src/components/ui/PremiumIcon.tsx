@@ -12,31 +12,31 @@ interface PremiumIconProps {
 
 const variantStyles = {
     blue: {
-        bg: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
-        shadow: 'shadow-lg shadow-blue-500/20',
-        icon: 'text-blue-400',
-        ring: 'ring-1 ring-blue-500/30',
+        bg: 'bg-gradient-to-br from-emerald-500/20 to-cyan-500/20',
+        shadow: 'shadow-lg shadow-emerald-500/20',
+        icon: 'text-emerald-400',
+        ring: 'ring-1 ring-emerald-500/30',
     },
     purple: {
-        bg: 'bg-gradient-to-br from-purple-500/20 to-pink-500/20',
-        shadow: 'shadow-lg shadow-purple-500/20',
-        icon: 'text-purple-400',
-        ring: 'ring-1 ring-purple-500/30',
+        bg: 'bg-gradient-to-br from-teal-500/20 to-teal-500/20',
+        shadow: 'shadow-lg shadow-teal-500/20',
+        icon: 'text-teal-400',
+        ring: 'ring-1 ring-teal-500/30',
     },
     orange: {
-        bg: 'bg-gradient-to-br from-orange-500/20 to-red-500/20',
-        shadow: 'shadow-lg shadow-orange-500/20',
-        icon: 'text-orange-400',
-        ring: 'ring-1 ring-orange-500/30',
+        bg: 'bg-gradient-to-br from-emerald-500/20 to-green-500/20',
+        shadow: 'shadow-lg shadow-emerald-500/20',
+        icon: 'text-emerald-400',
+        ring: 'ring-1 ring-emerald-500/30',
     },
     pink: {
-        bg: 'bg-gradient-to-br from-pink-500/20 to-rose-500/20',
-        shadow: 'shadow-lg shadow-pink-500/20',
-        icon: 'text-pink-400',
-        ring: 'ring-1 ring-pink-500/30',
+        bg: 'bg-gradient-to-br from-teal-500/20 to-teal-500/20',
+        shadow: 'shadow-lg shadow-teal-500/20',
+        icon: 'text-teal-400',
+        ring: 'ring-1 ring-teal-500/30',
     },
     cyan: {
-        bg: 'bg-gradient-to-br from-cyan-500/20 to-blue-500/20',
+        bg: 'bg-gradient-to-br from-cyan-500/20 to-emerald-500/20',
         shadow: 'shadow-lg shadow-cyan-500/20',
         icon: 'text-cyan-400',
         ring: 'ring-1 ring-cyan-500/30',
@@ -48,10 +48,10 @@ const variantStyles = {
         ring: 'ring-1 ring-emerald-500/30',
     },
     amber: {
-        bg: 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20',
-        shadow: 'shadow-lg shadow-amber-500/20',
-        icon: 'text-amber-400',
-        ring: 'ring-1 ring-amber-500/30',
+        bg: 'bg-gradient-to-br from-teal-500/20 to-cyan-500/20',
+        shadow: 'shadow-lg shadow-teal-500/20',
+        icon: 'text-teal-400',
+        ring: 'ring-1 ring-teal-500/30',
     },
 };
 

@@ -36,7 +36,7 @@ type FormData = z.infer<typeof formSchema>;
 type Mode = 'choose' | 'renew' | 'new';
 
 const inputCls = (err?: boolean) =>
-  `w-full px-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:border-blue-500 text-sm transition-all ${err ? 'border-red-400 focus:ring-red-400/20' : 'border-gray-200 focus:ring-blue-500/20'}`;
+  `w-full px-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:border-emerald-500 text-sm transition-all ${err ? 'border-red-400 focus:ring-red-400/20' : 'border-gray-200 focus:ring-emerald-500/20'}`;
 
 export default function DistrictSecretaryRegistrationForm() {
   const router = useRouter();
@@ -89,7 +89,7 @@ export default function DistrictSecretaryRegistrationForm() {
       name: 'SSFI', description: 'District Secretary Registration',
       order_id: order.razorpayOrderId,
       prefill: order.userDetails,
-      theme: { color: '#3b82f6' },
+      theme: { color: '#10b981' },
       handler: onVerify,
     });
     rzp.on('payment.failed', (r: any) => toast.error(r.error.description || 'Payment failed'));
@@ -141,12 +141,12 @@ export default function DistrictSecretaryRegistrationForm() {
             <ChevronLeft className="w-4 h-4" /> Back to Registration
           </button>
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-purple-500/20 border border-purple-500/30 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-7 h-7 text-purple-400" />
+            <div className="w-14 h-14 bg-teal-500/20 border border-teal-500/30 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-7 h-7 text-teal-400" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-400 text-xs font-medium mb-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400" /> SSFI Affiliation
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-500/10 border border-teal-500/20 rounded-full text-teal-400 text-xs font-medium mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" /> SSFI Affiliation
               </div>
               <h1 className="text-2xl font-bold">District Secretary Registration</h1>
               <p className="text-white/50 text-sm mt-1">Register or renew your District Secretary affiliation with SSFI</p>
@@ -188,7 +188,7 @@ export default function DistrictSecretaryRegistrationForm() {
                 <button onClick={() => { setMode('choose'); setRenewMember(null); }} className="text-sm text-gray-400 hover:text-gray-600">Change</button>
               </div>
               <div className="p-6 space-y-4">
-                <div className="p-4 bg-purple-50 border border-purple-100 rounded-xl space-y-2">
+                <div className="p-4 bg-teal-50 border border-teal-100 rounded-xl space-y-2">
                   <div className="flex justify-between text-sm"><span className="text-gray-500">Name</span><span className="font-medium text-gray-900">{renewMember.name}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-gray-500">UID</span><span className="font-mono text-gray-900">{renewMember.uid}</span></div>
                   {renewMember.stateName && <div className="flex justify-between text-sm"><span className="text-gray-500">State</span><span className="text-gray-900">{renewMember.stateName}</span></div>}
@@ -199,7 +199,7 @@ export default function DistrictSecretaryRegistrationForm() {
                   <p className="text-sm text-amber-700">Renewing will extend your membership by 1 year from the current expiry date.</p>
                 </div>
                 <button type="button" onClick={handleRenew} disabled={renewLoading}
-                  className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2">
+                  className="w-full py-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2">
                   {renewLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
                   Proceed to Payment
                 </button>
@@ -221,7 +221,7 @@ export default function DistrictSecretaryRegistrationForm() {
                 {/* Personal Details */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <User className="w-4 h-4 text-purple-500" />
+                    <User className="w-4 h-4 text-teal-500" />
                     <h2 className="font-semibold text-gray-900">Personal Details</h2>
                   </div>
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -235,7 +235,7 @@ export default function DistrictSecretaryRegistrationForm() {
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Gender <span className="text-red-400">*</span></label>
                       <div className="flex gap-2">
                         {GENDERS.map((g) => (
-                          <label key={g.value} className={`flex-1 flex items-center justify-center px-3 py-2.5 rounded-xl border cursor-pointer text-sm font-medium transition-all ${watch('gender') === g.value ? 'bg-purple-50 border-purple-400 text-purple-600' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>
+                          <label key={g.value} className={`flex-1 flex items-center justify-center px-3 py-2.5 rounded-xl border cursor-pointer text-sm font-medium transition-all ${watch('gender') === g.value ? 'bg-teal-50 border-teal-400 text-teal-600' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>
                             <input {...register('gender')} type="radio" value={g.value} className="sr-only" />
                             {g.label}
                           </label>
@@ -303,7 +303,7 @@ export default function DistrictSecretaryRegistrationForm() {
                 {/* Documents */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-indigo-500" />
+                    <FileText className="w-4 h-4 text-teal-500" />
                     <h2 className="font-semibold text-gray-900">Documents</h2>
                   </div>
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -318,7 +318,7 @@ export default function DistrictSecretaryRegistrationForm() {
                           </button>
                         </div>
                       ) : (
-                        <div onClick={() => identityRef.current?.click()} className={`aspect-video rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.identityProof ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-purple-300 hover:bg-purple-50'}`}>
+                        <div onClick={() => identityRef.current?.click()} className={`aspect-video rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.identityProof ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
                           <Upload className="w-7 h-7 text-gray-400" />
                           <span className="text-sm text-gray-500">Aadhaar / Voter ID</span>
                           <span className="text-xs text-gray-400">JPG, PNG up to 5MB</span>
@@ -339,7 +339,7 @@ export default function DistrictSecretaryRegistrationForm() {
                           </button>
                         </div>
                       ) : (
-                        <div onClick={() => photoRef.current?.click()} className={`aspect-video rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.profilePhoto ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-purple-300 hover:bg-purple-50'}`}>
+                        <div onClick={() => photoRef.current?.click()} className={`aspect-video rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.profilePhoto ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
                           <Camera className="w-7 h-7 text-gray-400" />
                           <span className="text-sm text-gray-500">Passport-size photo</span>
                           <span className="text-xs text-gray-400">JPG, PNG up to 5MB</span>
@@ -354,17 +354,17 @@ export default function DistrictSecretaryRegistrationForm() {
                 {/* Terms & Submit */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <label className="flex items-start gap-3 cursor-pointer mb-5">
-                    <input type="checkbox" {...register('termsAccepted')} className="mt-0.5 w-4 h-4 rounded border-gray-300 text-purple-500 focus:ring-purple-500/20" />
+                    <input type="checkbox" {...register('termsAccepted')} className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500/20" />
                     <span className="text-sm text-gray-600">
                       I declare that all information provided is accurate. I agree to SSFI&apos;s{' '}
-                      <a href="/terms" className="text-purple-500 hover:underline">Terms &amp; Conditions</a> and{' '}
-                      <a href="/privacy" className="text-purple-500 hover:underline">Privacy Policy</a>.
+                      <a href="/terms" className="text-teal-500 hover:underline">Terms &amp; Conditions</a> and{' '}
+                      <a href="/privacy" className="text-teal-500 hover:underline">Privacy Policy</a>.
                     </span>
                   </label>
                   {errors.termsAccepted && <p className="mb-4 text-xs text-red-500">{errors.termsAccepted.message}</p>}
 
                   <button type="submit" disabled={isLoading}
-                    className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25">
+                    className="w-full py-4 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-teal-500/25">
                     {isLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : <><Check className="w-5 h-5" /> Submit &amp; Pay Registration Fee</>}
                   </button>
                 </div>

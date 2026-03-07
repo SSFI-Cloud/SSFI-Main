@@ -81,8 +81,8 @@ export default function RegistrationSuccessPage() {
                     )}
 
                     {/* Info Box */}
-                    <div className="bg-blue-500/10 rounded-lg p-4 mb-8 border border-blue-500/20 text-left">
-                        <h3 className="text-sm font-semibold text-blue-400 mb-2">What happens next?</h3>
+                    <div className="bg-emerald-500/10 rounded-lg p-4 mb-8 border border-emerald-500/20 text-left">
+                        <h3 className="text-sm font-semibold text-emerald-400 mb-2">What happens next?</h3>
                         <ul className="text-sm text-gray-300 space-y-2">
                             <li>• Your registration will be reviewed by your club admin</li>
                             <li>• You will receive a confirmation email once approved</li>
