@@ -11,7 +11,7 @@ export function RecentActivitySection({ recentActivity }: { recentActivity: Admi
         items={recentActivity?.students || []}
         renderItem={(s: any) => (
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
               {s.name?.charAt(0) || '?'}
             </div>
             <div className="flex-1 min-w-0">
@@ -28,7 +28,7 @@ export function RecentActivitySection({ recentActivity }: { recentActivity: Admi
         items={recentActivity?.clubs || []}
         renderItem={(c: any) => (
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
               <Building2 className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
@@ -41,11 +41,11 @@ export function RecentActivitySection({ recentActivity }: { recentActivity: Admi
       />
       <RecentList
         title="Recent Events" href="/dashboard/events"
-        icon={Trophy} color="amber" delay={0.74}
+        icon={Trophy} color="teal" delay={0.74}
         items={recentActivity?.events || []}
         renderItem={(e: any) => (
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0">
               <Trophy className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">

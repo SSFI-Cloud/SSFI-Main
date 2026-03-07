@@ -32,7 +32,7 @@ export default function CertificatesSection() {
             case 1: return 'text-yellow-400 drop-shadow-lg'; // Gold
             case 2: return 'text-gray-700 drop-shadow-md';   // Silver
             case 3: return 'text-orange-600 drop-shadow-md';  // Bronze
-            default: return 'text-blue-600/50';               // Participation
+            default: return 'text-emerald-600/50';               // Participation
         }
     };
 
@@ -88,7 +88,7 @@ export default function CertificatesSection() {
                         <button
                             onClick={() => handleDownload(cert)}
                             title="Download Certificate"
-                            className="p-3 bg-white hover:bg-gray-100 text-blue-600 rounded-lg transition-colors border border-gray-100 shadow-sm"
+                            className="p-3 bg-white hover:bg-gray-100 text-emerald-600 rounded-lg transition-colors border border-gray-100 shadow-sm"
                         >
                             <Download className="w-5 h-5" />
                         </button>

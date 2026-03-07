@@ -41,7 +41,7 @@ export default function BannersPage() {
     finally { setDeleting(false); }
   };
 
-  const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1').replace('/api/v1', '');
+  const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1').replace('/api/v1', '');
 
   return (
     <div className="space-y-6">
@@ -51,7 +51,7 @@ export default function BannersPage() {
           <p className="text-gray-500 text-sm">Manage homepage hero slides and promotional banners</p>
         </div>
         <Link href="/dashboard/cms/banners/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium">
+          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
           <Plus className="w-4 h-4" /> Add Banner
         </Link>
       </div>
@@ -60,10 +60,10 @@ export default function BannersPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input type="text" placeholder="Search banners..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500 text-sm placeholder:text-gray-600" />
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500 text-sm placeholder:text-gray-600" />
         </div>
         <select value={positionFilter} onChange={e => setPositionFilter(e.target.value)}
-          className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500 text-sm">
+          className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500 text-sm">
           <option value="all">All Positions</option>
           {BANNER_POSITIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
         </select>
@@ -76,7 +76,7 @@ export default function BannersPage() {
           <ImageIcon className="w-12 h-12 text-gray-500 mx-auto mb-3" />
           <p className="text-gray-900 font-medium mb-1">No banners found</p>
           <p className="text-gray-500 text-sm mb-5">{searchQuery ? 'Try adjusting your search.' : 'Add your first banner or hero slide.'}</p>
-          {!searchQuery && <Link href="/dashboard/cms/banners/new" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"><Plus className="w-4 h-4" /> Add Banner</Link>}
+          {!searchQuery && <Link href="/dashboard/cms/banners/new" className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm"><Plus className="w-4 h-4" /> Add Banner</Link>}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -101,7 +101,7 @@ export default function BannersPage() {
                     <span className="text-xs text-gray-600">Order: {banner.sortOrder}</span>
                   </div>
                   {banner.linkUrl && (
-                    <div className="flex items-center gap-1 mt-2 text-xs text-blue-600 truncate">
+                    <div className="flex items-center gap-1 mt-2 text-xs text-emerald-600 truncate">
                       <ExternalLink className="w-3 h-3 shrink-0" />{banner.linkUrl}
                     </div>
                   )}

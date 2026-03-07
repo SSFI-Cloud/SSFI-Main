@@ -27,12 +27,12 @@ const cards = [
     description: 'Represent India on the world stage. Qualify through national selections and compete in World Skate international tournaments.',
     image: '/images/mascot/8.webp',
     href: '/events?level=international',
-    cardBg: 'from-emerald-50 to-teal-50',
-    iconBg: 'bg-emerald-100 border-emerald-200',
-    iconColor: 'text-emerald-600',
-    accent: 'text-emerald-600',
-    shadowColor: 'shadow-emerald-200/50',
-    borderAccent: 'border-emerald-100',
+    cardBg: 'from-orange-50 to-amber-50',
+    iconBg: 'bg-orange-100 border-orange-200',
+    iconColor: 'text-orange-600',
+    accent: 'text-orange-600',
+    shadowColor: 'shadow-orange-200/50',
+    borderAccent: 'border-orange-100',
   },
   {
     id: 'coach-cert',
@@ -41,21 +41,21 @@ const cards = [
     description: 'Get officially certified by SSFI. Our structured program covers technique, safety, competition rules, and athlete development.',
     image: '/images/mascot/coach.webp',
     href: '/coach-certification',
-    cardBg: 'from-violet-50 to-purple-50',
-    iconBg: 'bg-violet-100 border-violet-200',
-    iconColor: 'text-violet-600',
-    accent: 'text-violet-600',
-    shadowColor: 'shadow-violet-200/50',
-    borderAccent: 'border-violet-100',
+    cardBg: 'from-emerald-50 to-teal-50',
+    iconBg: 'bg-emerald-100 border-emerald-200',
+    iconColor: 'text-emerald-600',
+    accent: 'text-emerald-600',
+    shadowColor: 'shadow-emerald-200/50',
+    borderAccent: 'border-emerald-100',
   },
 ];
 
 export default function EventHighlightCards() {
   return (
-    <section className="relative py-28 overflow-visible bg-gradient-to-b from-white via-gray-50/60 to-white">
+    <section className="relative py-28 overflow-x-hidden overflow-y-visible bg-gradient-to-b from-white via-gray-50/60 to-white">
       {/* Soft ambient glows */}
       <div className="absolute top-20 left-0 w-[400px] h-[400px] bg-emerald-50/60 rounded-full blur-[120px] opacity-60" />
-      <div className="absolute bottom-20 right-0 w-[400px] h-[400px] bg-emerald-50/40 rounded-full blur-[120px] opacity-60" />
+      <div className="absolute bottom-20 right-0 w-[400px] h-[400px] bg-teal-50/40 rounded-full blur-[120px] opacity-60" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
@@ -74,7 +74,7 @@ export default function EventHighlightCards() {
         </motion.div>
 
         {/* 3D Perspective Cards */}
-        <div className="grid md:grid-cols-3 gap-10" style={{ perspective: '1200px' }}>
+        <div className="grid md:grid-cols-3 gap-6 md:gap-10" style={{ perspective: '1200px' }}>
           {cards.map((card, i) => {
             const Icon = card.icon;
             return (

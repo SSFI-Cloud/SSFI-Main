@@ -75,7 +75,7 @@ export default function MyEventRegistrationPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-[#f5f6f8] flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
@@ -139,16 +139,16 @@ export default function MyEventRegistrationPage() {
                     className="bg-white rounded-3xl overflow-hidden shadow-2xl relative"
                 >
                     {/* Top Section (Event Details) */}
-                    <div className="bg-blue-600 p-8 text-white relative overflow-hidden">
+                    <div className="bg-emerald-600 p-8 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-gray-100 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
                         <h1 className="text-2xl md:text-3xl font-bold mb-4 relative z-10">{event.name}</h1>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                             <div className="flex items-start gap-3">
-                                <Calendar className="w-5 h-5 text-blue-200 mt-1" />
+                                <Calendar className="w-5 h-5 text-emerald-200 mt-1" />
                                 <div>
-                                    <p className="text-blue-100 text-sm">Date & Time</p>
+                                    <p className="text-emerald-100 text-sm">Date & Time</p>
                                     <p className="font-semibold text-lg">
                                         {new Date(event.eventDate).toLocaleDateString('en-IN', {
                                             day: 'numeric',
@@ -156,7 +156,7 @@ export default function MyEventRegistrationPage() {
                                             year: 'numeric'
                                         })}
                                     </p>
-                                    <p className="text-blue-100">
+                                    <p className="text-emerald-100">
                                         {new Date(event.eventDate).toLocaleTimeString('en-IN', {
                                             hour: '2-digit',
                                             minute: '2-digit'
@@ -166,11 +166,11 @@ export default function MyEventRegistrationPage() {
                             </div>
 
                             <div className="flex items-start gap-3">
-                                <MapPin className="w-5 h-5 text-blue-200 mt-1" />
+                                <MapPin className="w-5 h-5 text-emerald-200 mt-1" />
                                 <div>
-                                    <p className="text-blue-100 text-sm">Venue</p>
+                                    <p className="text-emerald-100 text-sm">Venue</p>
                                     <p className="font-semibold text-lg">{event.venue}</p>
-                                    <p className="text-blue-100">{event.city}</p>
+                                    <p className="text-emerald-100">{event.city}</p>
                                 </div>
                             </div>
                         </div>

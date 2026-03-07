@@ -8,7 +8,7 @@ import {
     ChevronLeft, ChevronRight, ArrowUpDown, MapPin, Users,
     Loader2, CheckCircle, Clock, Phone, AlertCircle,
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import ClubViewModal from '@/components/dashboard/ClubViewModal';
 
@@ -63,10 +63,7 @@ export default function ClubsPage() {
             if (verificationFilter === 'verified') params.status = 'APPROVED';
             if (verificationFilter === 'pending') params.status = 'PENDING';
 
-            const response = await axios.get('http://localhost:5001/api/v1/clubs', {
-                headers: { Authorization: `Bearer ${token}` },
-                params
-            });
+            const response = await api.get('/clubs', { params });
 
             if (response.data.status === 'success') {
                 const { clubs: data, meta, stats: backendStats } = response.data.data;
@@ -93,9 +90,7 @@ export default function ClubsPage() {
         setViewingClub(null);
         setViewLoading(true);
         try {
-            const res = await axios.get(`http://localhost:5001/api/v1/clubs/${clubId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await api.get(`/clubs/${clubId}`);
             setViewingClub(res.data?.data?.club || null);
         } catch {
             setViewingClub(null);
@@ -106,10 +101,9 @@ export default function ClubsPage() {
 
     useEffect(() => {
         if (!token) return;
-        axios.get('http://localhost:5001/api/v1/states', {
-            headers: { Authorization: `Bearer ${token}` },
+        api.get('/states', {
             params: { limit: 100, sortField: 'name', sortOrder: 'asc' }
-        }).then(res => {
+        }).then((res: any) => {
             const data = res.data?.data?.states || [];
             setStateOptions(data.map((s: any) => ({ id: s.id, state_name: s.state_name || s.name, code: s.code })));
         }).catch(() => {});
@@ -148,7 +142,7 @@ export default function ClubsPage() {
                     <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
                         <Download className="w-4 h-4" /> Export
                     </button>
-                    <Link href="/dashboard/clubs/new" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2">
+                    <Link href="/dashboard/clubs/new" className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2">
                         <Plus className="w-4 h-4" /> Add Club
                     </Link>
                 </div>
@@ -163,10 +157,10 @@ export default function ClubsPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                    { label: 'Total Clubs',    value: stats.totalClubs,    Icon: Shield,       color: 'text-blue-600',   bg: 'bg-blue-100' },
+                    { label: 'Total Clubs',    value: stats.totalClubs,    Icon: Shield,       color: 'text-emerald-600',   bg: 'bg-emerald-100' },
                     { label: 'Verified',       value: stats.verifiedClubs, Icon: CheckCircle,  color: 'text-green-600',  bg: 'bg-green-100' },
                     { label: 'Pending',        value: stats.pendingClubs,  Icon: Clock,        color: 'text-amber-600',  bg: 'bg-amber-100' },
-                    { label: 'Total Skaters',  value: stats.totalSkaters,  Icon: Users,        color: 'text-purple-600', bg: 'bg-purple-100' },
+                    { label: 'Total Skaters',  value: stats.totalSkaters,  Icon: Users,        color: 'text-teal-600', bg: 'bg-teal-100' },
                 ].map(({ label, value, Icon, color, bg }, i) => (
                     <motion.div key={label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
                         className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
@@ -189,16 +183,16 @@ export default function ClubsPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
                     <input type="text" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                         placeholder="Search clubs by name, ID, or contact..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
                 </div>
                 <select value={stateFilter === 'all' ? 'all' : stateFilter}
                     onChange={e => { setStateFilter(e.target.value === 'all' ? 'all' : Number(e.target.value)); setCurrentPage(1); }}
-                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
                     <option value="all">All States</option>
                     {stateOptions.map(s => <option key={s.id} value={s.id}>{s.state_name}</option>)}
                 </select>
                 <select value={verificationFilter} onChange={e => setVerificationFilter(e.target.value as any)}
-                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
                     <option value="all">All Status</option>
                     <option value="verified">Verified</option>
                     <option value="pending">Pending</option>
@@ -212,7 +206,7 @@ export default function ClubsPage() {
                         <thead>
                             <tr className="border-b border-gray-100">
                                 <th className="px-4 py-3 text-left">
-                                    <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-blue-500" />
+                                    <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
                                 </th>
                                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('membership_id')}>
                                     <div className="flex items-center gap-2">Club ID <ArrowUpDown className="w-4 h-4" /></div>
@@ -230,7 +224,7 @@ export default function ClubsPage() {
                         <tbody>
                             {isLoading ? (
                                 <tr><td colSpan={8} className="px-4 py-12 text-center">
-                                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                                    <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                                 </td></tr>
                             ) : clubs.length === 0 ? (
                                 <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-500">No clubs found</td></tr>
@@ -239,14 +233,14 @@ export default function ClubsPage() {
                                     transition={{ delay: index * 0.04 }}
                                     className="border-b border-gray-200/30 hover:bg-gray-50/60">
                                     <td className="px-4 py-3">
-                                        <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-blue-500" />
+                                        <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className="font-mono text-sm text-blue-600">{club.membership_id}</span>
+                                        <span className="font-mono text-sm text-emerald-600">{club.membership_id}</span>
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-lg flex items-center justify-center">
                                                 <Shield className="w-5 h-5 text-white" />
                                             </div>
                                             <div>
@@ -271,7 +265,7 @@ export default function ClubsPage() {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className="inline-flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-600 text-sm font-medium rounded-lg">
+                                        <span className="inline-flex items-center justify-center w-8 h-8 bg-teal-100 text-teal-600 text-sm font-medium rounded-lg">
                                             {club.skatersCount}
                                         </span>
                                     </td>
@@ -283,7 +277,7 @@ export default function ClubsPage() {
                                                 <Eye className="w-4 h-4" />
                                             </button>
                                             <Link href={`/dashboard/clubs/${club.id}/edit`}
-                                                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-blue-600 transition-colors" title="Edit">
+                                                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-emerald-600 transition-colors" title="Edit">
                                                 <Edit2 className="w-4 h-4" />
                                             </Link>
                                             <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors" title="Delete">

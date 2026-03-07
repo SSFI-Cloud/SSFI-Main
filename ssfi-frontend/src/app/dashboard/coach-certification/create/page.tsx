@@ -90,7 +90,7 @@ export default function CreateProgramPage() {
 
   if (loadingEdit) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-gray-600 animate-spin" /></div>;
 
-  const inputCls = "w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50";
+  const inputCls = "w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50";
   const labelCls = "block text-sm font-medium text-gray-500 mb-1.5";
 
   return (
@@ -147,7 +147,7 @@ export default function CreateProgramPage() {
 
         {/* Schedule */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-          <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2"><Calendar className="w-4 h-4 text-blue-600" /> Schedule</h2>
+          <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2"><Calendar className="w-4 h-4 text-emerald-600" /> Schedule</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div><label className={labelCls}>Start Date *</label><input type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} className={inputCls} /></div>
             <div><label className={labelCls}>End Date *</label><input type="date" value={form.endDate} onChange={e => set('endDate', e.target.value)} className={inputCls} /></div>
@@ -157,7 +157,7 @@ export default function CreateProgramPage() {
 
         {/* Location */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-          <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2"><MapPin className="w-4 h-4 text-purple-600" /> Location</h2>
+          <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2"><MapPin className="w-4 h-4 text-teal-600" /> Location</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label className={labelCls}>Venue *</label><input type="text" value={form.venue} onChange={e => set('venue', e.target.value)} className={inputCls} placeholder="e.g. YMCA, Yeflagiri" /></div>
             <div><label className={labelCls}>Venue Address</label><input type="text" value={form.venueAddress} onChange={e => set('venueAddress', e.target.value)} className={inputCls} /></div>

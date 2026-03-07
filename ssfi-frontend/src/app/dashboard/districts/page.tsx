@@ -21,7 +21,7 @@ import {
     AlertCircle,
     X,
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import DistrictViewModal from '@/components/dashboard/DistrictViewModal';
 
@@ -100,9 +100,7 @@ export default function DistrictsPage() {
         setViewingDistrict(null);
         setViewLoading(true);
         try {
-            const response = await axios.get(`http://localhost:5001/api/v1/districts/${districtId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get(`/districts/${districtId}`);
             setViewingDistrict(response.data?.data?.district ?? null);
         } catch (err) {
             console.error('Failed to load district profile:', err);
@@ -120,10 +118,9 @@ export default function DistrictsPage() {
     // Fetch states for filter dropdown
     useEffect(() => {
         if (!token) return;
-        axios.get('http://localhost:5001/api/v1/states', {
-            headers: { Authorization: `Bearer ${token}` },
+        api.get('/states', {
             params: { limit: 100, sortField: 'name', sortOrder: 'asc' }
-        }).then(res => {
+        }).then((res: any) => {
             const data = res.data?.data?.states || res.data?.data || [];
             setStateOptions(data.map((s: any) => ({
                 id: s.id,
@@ -148,10 +145,7 @@ export default function DistrictsPage() {
             if (searchQuery) params.search = searchQuery;
             if (stateFilter !== 'all') params.stateId = stateFilter;
 
-            const response = await axios.get<ApiResponse>('http://localhost:5001/api/v1/districts', {
-                headers: { Authorization: `Bearer ${token}` },
-                params
-            });
+            const response = await api.get<ApiResponse>('/districts', { params });
 
             if (response.data.status === 'success') {
                 const { districts: data, meta, stats: backendStats } = response.data.data;
@@ -163,9 +157,9 @@ export default function DistrictsPage() {
                 } else {
                     const currentStats = {
                         totalDistricts: meta.total,
-                        totalClubs: data.reduce((acc, d) => acc + d.clubsCount, 0),
-                        totalSkaters: data.reduce((acc, d) => acc + d.skatersCount, 0),
-                        totalEvents: data.reduce((acc, d) => acc + d.eventsCount, 0),
+                        totalClubs: data.reduce((acc: number, d: any) => acc + d.clubsCount, 0),
+                        totalSkaters: data.reduce((acc: number, d: any) => acc + d.skatersCount, 0),
+                        totalEvents: data.reduce((acc: number, d: any) => acc + d.eventsCount, 0),
                     };
                     setStats(currentStats);
                 }
@@ -181,11 +175,9 @@ export default function DistrictsPage() {
     useEffect(() => {
         // Debounce search
         const timer = setTimeout(() => {
-            console.log('DistrictsPage: useEffect triggered', { token: !!token, searchQuery, stateFilter, currentPage });
             if (token) {
                 fetchDistricts();
             } else {
-                console.log('DistrictsPage: No token, skipping fetch');
                 setIsLoading(false); // Stop loading if no token (though ideally redirect)
             }
         }, 500);
@@ -242,7 +234,7 @@ export default function DistrictsPage() {
                     </button>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+                        className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2"
                     >
                         <Plus className="w-4 h-4" />
                         Add District
@@ -265,7 +257,7 @@ export default function DistrictsPage() {
                     className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
                             <Building2 className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -304,13 +296,13 @@ export default function DistrictsPage() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search by district or secretary..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                 </div>
                 <select
                     value={stateFilter === 'all' ? 'all' : stateFilter}
                     onChange={(e) => { setStateFilter(e.target.value === 'all' ? 'all' : Number(e.target.value)); setCurrentPage(1); }}
-                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 >
                     <option value="all">All States</option>
                     {stateOptions.map(state => (
@@ -330,7 +322,7 @@ export default function DistrictsPage() {
                                         type="checkbox"
                                         checked={selectedDistricts.length === districts.length && districts.length > 0}
                                         onChange={toggleSelectAll}
-                                        className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-blue-500 focus:ring-blue-500/50"
+                                        className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500 focus:ring-emerald-500/50"
                                     />
                                 </th>
                                 <th
@@ -391,7 +383,7 @@ export default function DistrictsPage() {
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={9} className="px-4 py-12 text-center">
-                                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                                        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                                     </td>
                                 </tr>
                             ) : districts.length === 0 ? (
@@ -414,12 +406,12 @@ export default function DistrictsPage() {
                                                 type="checkbox"
                                                 checked={selectedDistricts.includes(district.id)}
                                                 onChange={() => toggleSelect(district.id)}
-                                                className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-blue-500 focus:ring-blue-500/50"
+                                                className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500 focus:ring-emerald-500/50"
                                             />
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
+                                                <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center">
                                                     <Building2 className="w-4 h-4 text-gray-600" />
                                                 </div>
                                                 <span className="font-medium text-gray-900">{district.district_name}</span>
@@ -461,7 +453,7 @@ export default function DistrictsPage() {
                                                 </button>
                                                 <button
                                                     onClick={() => setEditingDistrict(district)}
-                                                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-blue-600 transition-colors"
+                                                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-emerald-600 transition-colors"
                                                     title="Edit"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
@@ -541,20 +533,17 @@ export default function DistrictsPage() {
                             onSubmit={async (e) => {
                                 e.preventDefault();
                                 const formData = new FormData(e.currentTarget);
-                                const data = {
+                                const data: any = {
                                     name: formData.get('name'),
                                     code: formData.get('code'),
                                     stateId: formData.get('stateId'),
+                                    logo: formData.get('logo') || undefined,
                                 };
                                 try {
                                     if (editingDistrict) {
-                                        await axios.put(`http://localhost:5001/api/v1/districts/${editingDistrict.id}`, data, {
-                                            headers: { Authorization: `Bearer ${token}` }
-                                        });
+                                        await api.put(`/districts/${editingDistrict.id}`, data);
                                     } else {
-                                        await axios.post('http://localhost:5001/api/v1/districts', data, {
-                                            headers: { Authorization: `Bearer ${token}` }
-                                        });
+                                        await api.post('/districts', data);
                                     }
                                     setShowAddModal(false);
                                     setEditingDistrict(null);
@@ -573,7 +562,7 @@ export default function DistrictsPage() {
                                     required
                                     defaultValue={editingDistrict?.district_name || ''}
                                     placeholder="e.g., Chennai"
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 />
                             </div>
 
@@ -585,7 +574,7 @@ export default function DistrictsPage() {
                                     required
                                     defaultValue={editingDistrict?.code || ''}
                                     placeholder="e.g., CHN"
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 />
                             </div>
 
@@ -595,13 +584,24 @@ export default function DistrictsPage() {
                                     name="stateId"
                                     required
                                     defaultValue={editingDistrict?.state_id || ''}
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 >
                                     <option value="">Select State</option>
                                     {stateOptions.map(state => (
                                         <option key={state.id} value={state.id}>{state.state_name}</option>
                                     ))}
                                 </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Logo URL (Optional)</label>
+                                <input
+                                    type="url"
+                                    name="logo"
+                                    defaultValue={''}
+                                    placeholder="https://example.com/logo.png"
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                />
                             </div>
 
                             <div className="flex gap-3 pt-4">
@@ -614,7 +614,7 @@ export default function DistrictsPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
+                                    className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium"
                                 >
                                     {editingDistrict ? 'Save Changes' : 'Add District'}
                                 </button>

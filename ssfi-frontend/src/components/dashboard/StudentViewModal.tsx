@@ -1,11 +1,19 @@
 ﻿'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import {
     X, User, Phone, Mail, MapPin, Calendar, Hash,
     Users, AlertCircle, CheckCircle2, Loader2,
     GraduationCap, Heart, Trophy, Shield
 } from 'lucide-react';
+
+/* Derive image‑serving base URL from the API URL (strip /api/v1 suffix) */
+const IMG_BASE = (() => {
+    const u = process.env.NEXT_PUBLIC_API_URL || '';
+    return u.replace(/\/api(\/v\d+)?\/?$/, '');
+})();
+const imgUrl = (path: string) => (path.startsWith('http') ? path : `${IMG_BASE}${path}`);
 
 interface StudentProfile {
     id: number;
@@ -59,7 +67,7 @@ const Field = ({ icon: Icon, label, value, mono = false }: { icon: any; label: s
         </div>
         <div>
             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
-            <p className={`text-sm text-gray-900 font-medium ${mono ? 'font-mono text-blue-600' : ''}`}>{value || '—'}</p>
+            <p className={`text-sm text-gray-900 font-medium ${mono ? 'font-mono text-emerald-600' : ''}`}>{value || '—'}</p>
         </div>
     </div>
 );
@@ -78,8 +86,17 @@ export default function StudentViewModal({ student, isLoading, onClose }: Studen
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                         <div className="flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${student?.gender === 'FEMALE' ? 'bg-pink-100' : 'bg-cyan-100'}`}>
-                                <User className={`w-5 h-5 ${student?.gender === 'FEMALE' ? 'text-pink-600' : 'text-cyan-600'}`} />
+                            <div className="relative w-9 h-9 rounded-full overflow-hidden shadow-md ring-2 ring-white flex-shrink-0">
+                                {student?.profile_image ? (
+                                    <>
+                                        <Image src={imgUrl(student.profile_image)} alt={student.name} width={36} height={36} className="object-cover w-full h-full" sizes="36px" />
+                                        <span className="absolute inset-0 rounded-full bg-gradient-to-b from-black/5 via-transparent to-black/25 pointer-events-none" />
+                                    </>
+                                ) : (
+                                    <span className={`flex items-center justify-center w-full h-full ${student?.gender === 'FEMALE' ? 'bg-teal-100' : 'bg-cyan-100'}`}>
+                                        <User className={`w-5 h-5 ${student?.gender === 'FEMALE' ? 'text-teal-600' : 'text-cyan-600'}`} />
+                                    </span>
+                                )}
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-gray-900 leading-tight">{student?.name || 'Loading...'}</h2>
@@ -108,10 +125,17 @@ export default function StudentViewModal({ student, isLoading, onClose }: Studen
                             <div className="p-6 space-y-6">
                                 {/* Profile header */}
                                 <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100">
-                                    <div className={`w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center ${student.gender === 'FEMALE' ? 'bg-pink-100' : 'bg-cyan-100'}`}>
-                                        {student.profile_image
-                                            ? <img src={`http://localhost:5001${student.profile_image}`} alt={student.name} className="object-cover w-full h-full" />
-                                            : <User className={`w-8 h-8 ${student.gender === 'FEMALE' ? 'text-pink-600' : 'text-cyan-600'}`} />}
+                                    <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 shadow-lg ring-2 ring-white">
+                                        {student.profile_image ? (
+                                            <>
+                                                <Image src={imgUrl(student.profile_image)} alt={student.name} width={64} height={64} className="object-cover w-full h-full" sizes="64px" />
+                                                <span className="absolute inset-0 rounded-full bg-gradient-to-b from-black/5 via-transparent to-black/25 pointer-events-none" />
+                                            </>
+                                        ) : (
+                                            <span className={`flex items-center justify-center w-full h-full ${student.gender === 'FEMALE' ? 'bg-teal-100' : 'bg-cyan-100'}`}>
+                                                <User className={`w-8 h-8 ${student.gender === 'FEMALE' ? 'text-teal-600' : 'text-cyan-600'}`} />
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
@@ -124,10 +148,10 @@ export default function StudentViewModal({ student, isLoading, onClose }: Studen
                                         <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                                             <div className="flex items-center gap-1">
                                                 <Hash className="w-3 h-3 text-gray-500" />
-                                                <span className="text-xs font-mono text-blue-600">{student.ssfi_id}</span>
+                                                <span className="text-xs font-mono text-emerald-600">{student.ssfi_id}</span>
                                             </div>
                                             {student.category_name && (
-                                                <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full">{student.category_name}</span>
+                                                <span className="text-xs px-2 py-0.5 bg-teal-100 text-teal-600 rounded-full">{student.category_name}</span>
                                             )}
                                             {student.blood_group && (
                                                 <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full">{student.blood_group.replace('_POSITIVE','+').replace('_NEGATIVE','-')}</span>
@@ -139,9 +163,9 @@ export default function StudentViewModal({ student, isLoading, onClose }: Studen
                                 {/* Stats */}
                                 <div className="grid grid-cols-3 gap-3">
                                     {[
-                                        { label: 'Club',     value: student.club_name,     Icon: Shield,  color: 'text-blue-600',   bg: 'bg-blue-50' },
+                                        { label: 'Club',     value: student.club_name,     Icon: Shield,  color: 'text-emerald-600',   bg: 'bg-emerald-50' },
                                         { label: 'District', value: student.district_name, Icon: MapPin,  color: 'text-green-600',  bg: 'bg-green-50' },
-                                        { label: 'State',    value: student.state_name,    Icon: Trophy,  color: 'text-purple-600', bg: 'bg-purple-50' },
+                                        { label: 'State',    value: student.state_name,    Icon: Trophy,  color: 'text-teal-600', bg: 'bg-teal-50' },
                                     ].map(({ label, value, Icon, color, bg }) => (
                                         <div key={label} className={`${bg} rounded-xl p-3 text-center border border-gray-100`}>
                                             <Icon className={`w-4 h-4 ${color} mx-auto mb-1`} />
@@ -153,7 +177,7 @@ export default function StudentViewModal({ student, isLoading, onClose }: Studen
 
                                 {/* Personal Details */}
                                 <div>
-                                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-blue-500">Personal Details</p>
+                                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-emerald-500">Personal Details</p>
                                     <div className="bg-white rounded-xl border border-gray-200 px-4">
                                         <Field icon={User}     label="Father's Name"  value={student.father_name} />
                                         {student.mother_name && <Field icon={User} label="Mother's Name" value={student.mother_name} />}
@@ -166,7 +190,7 @@ export default function StudentViewModal({ student, isLoading, onClose }: Studen
 
                                 {/* Academic & Coaching */}
                                 <div>
-                                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-blue-500">Academic & Coaching</p>
+                                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-emerald-500">Academic & Coaching</p>
                                     <div className="bg-white rounded-xl border border-gray-200 px-4">
                                         {student.school_name && <Field icon={GraduationCap} label="School" value={student.school_name} />}
                                         <Field icon={Users} label="Coach" value={student.coach_name} />
@@ -176,7 +200,7 @@ export default function StudentViewModal({ student, isLoading, onClose }: Studen
                                 {/* Nominee */}
                                 {(student.nominee_name || student.nominee_relation) && (
                                     <div>
-                                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-blue-500">Nominee / Insurance</p>
+                                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-emerald-500">Nominee / Insurance</p>
                                         <div className="bg-white rounded-xl border border-gray-200 px-4">
                                             {student.nominee_name && <Field icon={Heart} label="Nominee Name" value={student.nominee_name} />}
                                             {student.nominee_relation && <Field icon={User} label="Relation" value={student.nominee_relation} />}

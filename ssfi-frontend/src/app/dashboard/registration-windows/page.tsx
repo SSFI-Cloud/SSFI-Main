@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,7 +23,7 @@ import {
     Settings,
     AlertTriangle
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 // Backend Type
@@ -38,7 +38,8 @@ interface RegistrationWindow {
     instructions?: string;
     isActive: boolean;
     isPaused: boolean;
-
+    registrationsCount: number;
+    maxRegistrations: number | null;
     createdAt: string;
 }
 
@@ -55,11 +56,12 @@ interface ApiResponse {
     };
 }
 
+// DB stores uppercase types; frontend uses lowercase for form values
 const windowTypes = [
-    { value: 'state', label: 'State Secretary', icon: Users, color: 'bg-blue-100 text-blue-600' },
-    { value: 'district', label: 'District Secretary', icon: Users, color: 'bg-indigo-100 text-indigo-600' },
-    { value: 'club', label: 'Club Alliliation', icon: Shield, color: 'bg-purple-100 text-purple-600' },
-    { value: 'student', label: 'Student Registration', icon: Trophy, color: 'bg-amber-100 text-amber-600' },
+    { value: 'state', dbType: 'STATE_SECRETARY', label: 'State Secretary', icon: Users, color: 'bg-emerald-100 text-emerald-600' },
+    { value: 'district', dbType: 'DISTRICT_SECRETARY', label: 'District Secretary', icon: Users, color: 'bg-teal-100 text-teal-600' },
+    { value: 'club', dbType: 'CLUB', label: 'Club Affiliation', icon: Shield, color: 'bg-teal-100 text-teal-600' },
+    { value: 'student', dbType: 'STUDENT', label: 'Student Registration', icon: Trophy, color: 'bg-amber-100 text-amber-600' },
 ];
 
 export default function RegistrationWindowsPage() {
@@ -74,7 +76,7 @@ export default function RegistrationWindowsPage() {
     // Modal State
     const [showModal, setShowModal] = useState(false);
     const [editingWindow, setEditingWindow] = useState<RegistrationWindow | null>(null);
-    const [lormData, setFormData] = useState({
+    const [formData, setFormData] = useState({
         name: '',
         type: 'club',
         startDate: '',
@@ -93,10 +95,7 @@ export default function RegistrationWindowsPage() {
             if (searchQuery) params.search = searchQuery;
             if (filterType !== 'all') params.type = filterType;
 
-            const response = await axios.get<ApiResponse>(`${process.env.NEXT_PUBLIC_API_URL}/registration-windows`, {
-                headers: { Authorization: `Bearer ${token}` },
-                params
-            });
+            const response = await api.get<ApiResponse>('/registration-windows', { params });
 
             if (response.data.status === 'success') {
                 setWindows(response.data.data.windows);
@@ -130,11 +129,11 @@ export default function RegistrationWindowsPage() {
     const getStatusBadge = (status: string) => {
         const badges = {
             active: { color: 'bg-green-100 text-green-600', icon: CheckCircle, label: 'Active' },
-            scheduled: { color: 'bg-blue-100 text-blue-600', icon: Clock, label: 'Scheduled' },
+            scheduled: { color: 'bg-emerald-100 text-emerald-600', icon: Clock, label: 'Scheduled' },
             closed: { color: 'bg-gray-100 text-gray-500', icon: XCircle, label: 'Closed' },
             paused: { color: 'bg-amber-100 text-amber-600', icon: Pause, label: 'Paused' },
         };
-        const badge = badges[status as keyol typeol badges] || badges.closed;
+        const badge = badges[status as keyof typeof badges] || badges.closed;
         const Icon = badge.icon;
         return (
             <span className={`inline-flex items-center gap-1 px-2 py-1 ${badge.color} text-xs font-medium rounded-full`}>
@@ -145,13 +144,14 @@ export default function RegistrationWindowsPage() {
     };
 
     const getTypeBadge = (type: string) => {
-        const typeConlig = windowTypes.find(t => t.value === type);
-        if (!typeConlig) return <span className="text-xs">{type}</span>;
-        const Icon = typeConlig.icon;
+        // Match against both lowercase value and uppercase dbType
+        const typeConfig = windowTypes.find(t => t.value === type || t.dbType === type);
+        if (!typeConfig) return <span className="text-xs">{type}</span>;
+        const Icon = typeConfig.icon;
         return (
-            <span className={`inline-flex items-center gap-1 px-2 py-1 ${typeConlig.color} text-xs font-medium rounded-full`}>
+            <span className={`inline-flex items-center gap-1 px-2 py-1 ${typeConfig.color} text-xs font-medium rounded-full`}>
                 <Icon className="w-3 h-3" />
-                {typeConlig.label}
+                {typeConfig.label}
             </span>
         );
     };
@@ -177,19 +177,20 @@ export default function RegistrationWindowsPage() {
         return filterStatus === 'all' || status === filterStatus;
     });
 
-    // Stats
+    // Stats — compute from actual data
     const activeWindowsCount = windows.filter(w => getStatus(w) === 'active').length;
     const scheduledWindowsCount = windows.filter(w => getStatus(w) === 'scheduled').length;
-    // Mock registration count since backend doesn't provide it yet
-    const totalRegistrations = windows.length * 15;
+    const totalRegistrations = windows.reduce((sum, w) => sum + (w.registrationsCount || 0), 0);
 
     // Actions
     const handleOpenModal = (window?: RegistrationWindow) => {
         if (window) {
             setEditingWindow(window);
+            // Map DB uppercase type back to lowercase form value
+            const typeConfig = windowTypes.find(t => t.dbType === window.type || t.value === window.type);
             setFormData({
                 name: window.title,
-                type: window.type.toLowerCase(),
+                type: typeConfig?.value || window.type.toLowerCase(),
                 startDate: new Date(window.startDate).toISOString().split('T')[0],
                 endDate: new Date(window.endDate).toISOString().split('T')[0],
                 baseFee: window.baseFee,
@@ -215,39 +216,33 @@ export default function RegistrationWindowsPage() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const url = editingWindow
-                ? `http://localhost:5001/api/v1/registration-windows/${editingWindow.id}`
-                : 'http://localhost:5001/api/v1/registration-windows';
-            const method = editingWindow ? 'put' : 'post';
-            await axios[method](url, lormData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            if (editingWindow) {
+                await api.put(`/registration-windows/${editingWindow.id}`, formData);
+            } else {
+                await api.post('/registration-windows', formData);
+            }
             setShowModal(false);
             fetchWindows();
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Operation lailed');
+            alert(err.response?.data?.message || 'Operation failed');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!conlirm('Are you sure you want to delete this registration window?')) return;
+        if (!confirm('Are you sure you want to delete this registration window?')) return;
         try {
-            await axios.delete(`http://localhost:5001/api/v1/registration-windows/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/registration-windows/${id}`);
             fetchWindows();
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Delete lailed');
+            alert(err.response?.data?.message || 'Delete failed');
         }
     };
 
     const toggleStatus = async (window: RegistrationWindow) => {
         try {
-            await axios.post(`http://localhost:5001/api/v1/registration-windows/${window.id}/toggle-pause`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.post(`/registration-windows/${window.id}/toggle-pause`, {});
             fetchWindows();
         } catch (err) {
             console.error('Failed to toggle status', err);
@@ -264,7 +259,7 @@ export default function RegistrationWindowsPage() {
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+                    className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2"
                 >
                     <Plus className="w-4 h-4" />
                     Create Window
@@ -287,7 +282,7 @@ export default function RegistrationWindowsPage() {
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
                             <Clock className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -299,7 +294,7 @@ export default function RegistrationWindowsPage() {
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center">
                             <Users className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -331,13 +326,13 @@ export default function RegistrationWindowsPage() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search windows..."
-                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                 </div>
                 <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 >
                     <option value="all">All Types</option>
                     {windowTypes.map(type => (
@@ -347,7 +342,7 @@ export default function RegistrationWindowsPage() {
                 <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 >
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
@@ -361,7 +356,7 @@ export default function RegistrationWindowsPage() {
             <div className="space-y-4">
                 {isLoading ? (
                     <div className="py-12 text-center">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                     </div>
                 ) : filteredWindows.length === 0 ? (
                     <div className="py-12 text-center text-gray-500">
@@ -382,8 +377,8 @@ export default function RegistrationWindowsPage() {
                                 <div className="p-6">
                                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                                         <div className="flex items-start gap-4">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center shrink-0">
-                                                <CalendarClock className="w-6 h-6 text-white" />
+                                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center shrink-0">
+                                                <CalendarClock className="w-6 h-6 text-emerald-600" />
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -397,7 +392,7 @@ export default function RegistrationWindowsPage() {
 
                                         <div className="flex items-center gap-6 lg:gap-8">
                                             <div className="text-center">
-                                                <p className="text-2xl font-bold text-gray-900">--</p>
+                                                <p className="text-2xl font-bold text-gray-900">{window.registrationsCount ?? 0}</p>
                                                 <p className="text-xs text-gray-500">Registrations</p>
                                             </div>
                                             <div className="text-center">
@@ -437,14 +432,14 @@ export default function RegistrationWindowsPage() {
                                             )}
                                             <button
                                                 onClick={() => handleOpenModal(window)}
-                                                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-100 text-sm font-medium flex items-center gap-1"
+                                                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-1"
                                             >
                                                 <Settings className="w-4 h-4" />
-                                                Conligure
+                                                Configure
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(window.id)}
-                                                className="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium flex items-center gap-1"
+                                                className="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 text-sm font-medium flex items-center gap-1"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
@@ -476,25 +471,25 @@ export default function RegistrationWindowsPage() {
                                 </button>
                             </div>
 
-                            <lorm onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <form onSubmit={handleSubmit} className="p-6 space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Window Title</label>
                                     <input
                                         type="text"
                                         required
-                                        value={lormData.name}
-                                        onChange={e => setFormData({ ...lormData, name: e.target.value })}
-                                        placeholder="e.g., Club Alliliation 2025-26"
-                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder="e.g., Club Affiliation 2025-26"
+                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                     />
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Type</label>
                                     <select
-                                        value={lormData.type}
-                                        onChange={e => setFormData({ ...lormData, type: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        value={formData.type}
+                                        onChange={e => setFormData({ ...formData, type: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                     >
                                         {windowTypes.map(type => (
                                             <option key={type.value} value={type.value}>{type.label}</option>
@@ -508,9 +503,9 @@ export default function RegistrationWindowsPage() {
                                         <input
                                             type="date"
                                             required
-                                            value={lormData.startDate}
-                                            onChange={e => setFormData({ ...lormData, startDate: e.target.value })}
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            value={formData.startDate}
+                                            onChange={e => setFormData({ ...formData, startDate: e.target.value })}
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -518,9 +513,9 @@ export default function RegistrationWindowsPage() {
                                         <input
                                             type="date"
                                             required
-                                            value={lormData.endDate}
-                                            onChange={e => setFormData({ ...lormData, endDate: e.target.value })}
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            value={formData.endDate}
+                                            onChange={e => setFormData({ ...formData, endDate: e.target.value })}
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                 </div>
@@ -531,20 +526,20 @@ export default function RegistrationWindowsPage() {
                                         type="number"
                                         required
                                         min="0"
-                                        value={lormData.baseFee}
-                                        onChange={e => setFormData({ ...lormData, baseFee: Number(e.target.value) })}
-                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        value={formData.baseFee}
+                                        onChange={e => setFormData({ ...formData, baseFee: Number(e.target.value) })}
+                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                     />
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-500 mb-2">Description</label>
                                     <textarea
-                                        value={lormData.description}
-                                        onChange={e => setFormData({ ...lormData, description: e.target.value })}
+                                        value={formData.description}
+                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
                                         rows={3}
-                                        placeholder="Briel description ol this window"
-                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        placeholder="Brief description of this window"
+                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                     />
                                 </div>
 
@@ -559,12 +554,12 @@ export default function RegistrationWindowsPage() {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="flex-1 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium disabled:opacity-50"
+                                        className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium disabled:opacity-50"
                                     >
                                         {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (editingWindow ? 'Save Changes' : 'Create Window')}
                                     </button>
                                 </div>
-                            </lorm>
+                            </form>
                         </motion.div>
                     </div>
                 )}

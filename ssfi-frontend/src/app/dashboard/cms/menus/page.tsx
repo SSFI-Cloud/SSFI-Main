@@ -41,7 +41,7 @@ export default function MenusPage() {
           <p className="text-gray-500 text-sm">Manage header, footer, and sidebar navigation</p>
         </div>
         <Link href="/dashboard/cms/menus/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium">
+          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
           <Plus className="w-4 h-4" /> Create Menu
         </Link>
       </div>
@@ -53,14 +53,14 @@ export default function MenusPage() {
           <MenuIcon className="w-12 h-12 text-gray-500 mx-auto mb-3" />
           <p className="text-gray-900 font-medium mb-1">No menus configured</p>
           <p className="text-gray-500 text-sm mb-5">Set up your website navigation menus.</p>
-          <Link href="/dashboard/cms/menus/new" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"><Plus className="w-4 h-4" /> Create Menu</Link>
+          <Link href="/dashboard/cms/menus/new" className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm"><Plus className="w-4 h-4" /> Create Menu</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {menus.map(menu => (
             <div key={menu.id} className="group bg-white rounded-2xl border border-gray-200 p-6 hover:border-gray-200 transition-colors">
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-blue-100 rounded-xl text-blue-600"><Layout className="w-5 h-5" /></div>
+                <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600"><Layout className="w-5 h-5" /></div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Link href={`/dashboard/cms/menus/${menu.id}`} className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"><Edit className="w-4 h-4" /></Link>
                   <button onClick={() => setDeleteId(menu.id)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>

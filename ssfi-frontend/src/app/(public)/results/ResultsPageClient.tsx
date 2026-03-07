@@ -52,8 +52,8 @@ const MEDAL_TEXT_CLS: Record<number, string> = {
 };
 
 const CAT_CFG: Record<string, { bg: string; text: string }> = {
-  NATIONAL: { bg: 'bg-blue-100',   text: 'text-blue-700'   },
-  STATE:    { bg: 'bg-violet-100', text: 'text-violet-700' },
+  NATIONAL: { bg: 'bg-emerald-100',   text: 'text-emerald-700'   },
+  STATE:    { bg: 'bg-emerald-100', text: 'text-emerald-700' },
   DISTRICT: { bg: 'bg-teal-100',   text: 'text-teal-700'   },
 };
 
@@ -145,7 +145,7 @@ function EventResultsTable({ eventId }: { eventId: number }) {
 
                 {/* Age Group */}
                 <td className="px-5 py-3.5">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold whitespace-nowrap">
+                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-semibold whitespace-nowrap">
                     {ageGroup}
                   </span>
                 </td>
@@ -209,7 +209,7 @@ export default function ResultsPageClient() {
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
           style={{ backgroundImage: 'radial-gradient(circle,#fff 1px,transparent 1px)', backgroundSize: '30px 30px' }} />
         <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle,rgba(251,191,36,0.1) 0%,transparent 70%)' }} />
+          style={{ background: 'radial-gradient(circle,rgba(16,185,129,0.1) 0%,transparent 70%)' }} />
 
         <div className="relative max-w-6xl mx-auto px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-end">
@@ -217,12 +217,12 @@ export default function ResultsPageClient() {
             {/* Left: Text */}
             <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }}
               className="flex-1 pt-28 pb-16 md:pt-36 md:pb-20">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-bold mb-6">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold mb-6">
                 <Trophy className="w-4 h-4" /> Official Championship Results
               </span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight tracking-tight mb-5">
                 Results &{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
                   Rankings
                 </span>
               </h1>
@@ -233,7 +233,7 @@ export default function ResultsPageClient() {
 
             {/* Right: Mascot */}
             <div className="hidden lg:block lg:w-[400px] xl:w-[460px] flex-shrink-0 self-end relative">
-              <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-amber-500/8 via-transparent to-transparent blur-3xl pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-emerald-500/8 via-transparent to-transparent blur-3xl pointer-events-none" />
               <motion.div
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -242,7 +242,7 @@ export default function ResultsPageClient() {
                 <motion.div
                   animate={{ y: [0, -20, 0], rotate: [-0.5, 1.5, -0.5] }}
                   transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ filter: 'drop-shadow(0 40px 55px rgba(0,0,0,0.55)) drop-shadow(0 12px 24px rgba(251,191,36,0.3))' }}
+                  style={{ filter: 'drop-shadow(0 40px 55px rgba(0,0,0,0.55)) drop-shadow(0 12px 24px rgba(16,185,129,0.3))' }}
                 >
                   <div className="relative w-full h-[420px] xl:h-[460px]">
                     <Image src="/images/mascot/result.webp" alt="SSFI Results Mascot" fill
@@ -250,14 +250,14 @@ export default function ResultsPageClient() {
                   </div>
                 </motion.div>
                 <div className="mx-auto w-36 h-4 rounded-full -mt-2"
-                  style={{ background: 'radial-gradient(ellipse, rgba(251,191,36,0.3) 0%, transparent 70%)' }} />
+                  style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,0.3) 0%, transparent 70%)' }} />
               </motion.div>
             </div>
 
           </div>
         </div>
         <div className="h-1 w-full"
-          style={{ background: 'linear-gradient(90deg,transparent,rgba(251,191,36,0.5),transparent)' }} />
+          style={{ background: 'linear-gradient(90deg,transparent,rgba(16,185,129,0.5),transparent)' }} />
       </section>
 
       {/* â”€â”€ Sticky filter bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
@@ -272,7 +272,7 @@ export default function ResultsPageClient() {
               placeholder="Search event name or cityâ€¦"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400/20 focus:border-amber-400 bg-gray-50"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400/20 focus:border-emerald-400 bg-gray-50"
             />
           </div>
 
@@ -366,7 +366,7 @@ export default function ResultsPageClient() {
                             </span>
                           )}
                         </div>
-                        <h3 className="text-base md:text-lg font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-amber-700 transition-colors">
+                        <h3 className="text-base md:text-lg font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors">
                           {event.name}
                         </h3>
                       </div>
@@ -380,7 +380,7 @@ export default function ResultsPageClient() {
                           <p className="text-xs text-gray-400 leading-none">results</p>
                         </div>
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-                          isOpen ? 'bg-amber-50 text-amber-600' : 'bg-gray-100 text-gray-500 group-hover:bg-amber-50 group-hover:text-amber-600'
+                          isOpen ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500 group-hover:bg-emerald-50 group-hover:text-emerald-600'
                         }`}>
                           {isOpen
                             ? <ChevronUp className="w-5 h-5" />

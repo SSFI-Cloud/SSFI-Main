@@ -188,6 +188,46 @@ export const createClub = async (data: any) => {
     });
 };
 
+export const updateClub = async (id: number, data: {
+    name?: string;
+    contactPerson?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    city?: string;
+    pincode?: string;
+    establishedYear?: number;
+    website?: string;
+    logo?: string;
+    registrationNumber?: string;
+}) => {
+    const club = await prisma.club.findFirst({ where: { id, isActive: true } });
+    if (!club) throw new AppError('Club not found', 404);
+
+    // Build update payload — only include fields that were sent
+    const updateData: any = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.contactPerson !== undefined) updateData.contactPerson = data.contactPerson;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.city !== undefined) updateData.city = data.city;
+    if (data.pincode !== undefined) updateData.pincode = data.pincode;
+    if (data.establishedYear !== undefined) updateData.establishedYear = Number(data.establishedYear) || null;
+    if (data.website !== undefined) updateData.website = data.website;
+    if (data.logo !== undefined) updateData.logo = data.logo;
+    if (data.registrationNumber !== undefined) updateData.registrationNumber = data.registrationNumber;
+
+    return prisma.club.update({
+        where: { id },
+        data: updateData,
+        include: {
+            state: { select: { id: true, name: true, code: true } },
+            district: { select: { id: true, name: true, code: true } },
+        },
+    });
+};
+
 export const updateClubStatus = async (id: number, status: string, remarks?: string) => {
     // Validate status if needed (APPROVED, REJECTED)
     const club = await prisma.club.update({

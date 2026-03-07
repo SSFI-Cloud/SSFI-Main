@@ -21,8 +21,8 @@ interface Program {
 
 const LEVEL_CFG: Record<number, { label: string; gradient: string; border: string; iconBg: string }> = {
   1: { label: 'Level 1 — Certified Coach', gradient: 'from-sky-500 to-cyan-500', border: 'border-sky-200', iconBg: 'bg-sky-100 text-sky-600' },
-  2: { label: 'Level 2 — Advanced Coach', gradient: 'from-violet-500 to-purple-500', border: 'border-violet-200', iconBg: 'bg-violet-100 text-violet-600' },
-  3: { label: 'Level 3 — Master Coach', gradient: 'from-amber-500 to-orange-500', border: 'border-amber-200', iconBg: 'bg-amber-100 text-amber-600' },
+  2: { label: 'Level 2 — Advanced Coach', gradient: 'from-emerald-500 to-teal-500', border: 'border-emerald-200', iconBg: 'bg-emerald-100 text-emerald-600' },
+  3: { label: 'Level 3 — Master Coach', gradient: 'from-teal-500 to-emerald-500', border: 'border-teal-200', iconBg: 'bg-teal-100 text-teal-600' },
 };
 
 export default function CoachCertClient() {
@@ -160,9 +160,9 @@ export default function CoachCertClient() {
                               <h3 className="text-lg font-bold text-gray-900 mb-3">{p.title}</h3>
                               <div className="space-y-2.5 mb-5 text-sm text-gray-500">
                                 <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-emerald-500" />{new Date(p.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} &mdash; {new Date(p.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                                <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-rose-400" />{p.venue}, {p.city}, {p.state}</div>
-                                <div className="flex items-center gap-2"><IndianRupee className="w-4 h-4 text-amber-500" />&#8377;{Number(p.price).toLocaleString()}{p.includesText && <span className="text-xs text-gray-400">({p.includesText})</span>}</div>
-                                <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-violet-400" />Apply by: {new Date(p.lastDateToApply).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-teal-400" />{p.venue}, {p.city}, {p.state}</div>
+                                <div className="flex items-center gap-2"><IndianRupee className="w-4 h-4 text-teal-500" />&#8377;{Number(p.price).toLocaleString()}{p.includesText && <span className="text-xs text-gray-400">({p.includesText})</span>}</div>
+                                <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-emerald-400" />Apply by: {new Date(p.lastDateToApply).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                               </div>
                               <div className="mb-5">
                                 <div className="flex justify-between text-xs mb-1.5">
@@ -172,7 +172,7 @@ export default function CoachCertClient() {
                                 <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                                   <div className={`h-full rounded-full bg-gradient-to-r ${lc.gradient}`} style={{ width: `${Math.min(pct, 100)}%` }} />
                                 </div>
-                                {spotsLeft > 0 && spotsLeft <= 10 && <p className="text-amber-600 text-xs font-medium mt-1.5">Only {spotsLeft} spots left!</p>}
+                                {spotsLeft > 0 && spotsLeft <= 10 && <p className="text-teal-600 text-xs font-medium mt-1.5">Only {spotsLeft} spots left!</p>}
                               </div>
                               {!deadlinePassed && spotsLeft > 0 ? (
                                 <Link href={`/coach-certification/register?programId=${p.id}`}

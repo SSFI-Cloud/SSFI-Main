@@ -1,11 +1,4 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-
-const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
-    return { Authorization: `Bearer ${token}` };
-};
+import { api } from '@/lib/api/client';
 
 export interface RenewalStatus {
     expiryDate: Date | null;
@@ -46,10 +39,7 @@ export interface ExpiringAccount {
  * Get current user's renewal status
  */
 export const getRenewalStatus = async (): Promise<RenewalStatus> => {
-    const response = await axios.get<{ success: boolean; data: RenewalStatus }>(
-        `${API_URL}/renewal/status`,
-        { headers: getAuthHeaders() }
-    );
+    const response = await api.get<RenewalStatus>('/renewal/status');
     return response.data.data;
 };
 
@@ -57,10 +47,7 @@ export const getRenewalStatus = async (): Promise<RenewalStatus> => {
  * Get current user's renewal history
  */
 export const getRenewalHistory = async (): Promise<RenewalHistory> => {
-    const response = await axios.get<{ success: boolean; data: RenewalHistory }>(
-        `${API_URL}/renewal/history`,
-        { headers: getAuthHeaders() }
-    );
+    const response = await api.get<RenewalHistory>('/renewal/history');
     return response.data.data;
 };
 
@@ -75,14 +62,10 @@ export const getExpiringAccounts = async (
     role?: string,
     days: number = 30
 ): Promise<ExpiringAccount[]> => {
-    const params = new URLSearchParams();
-    if (role) params.append('role', role);
-    params.append('days', days.toString());
+    const params: Record<string, string> = { days: days.toString() };
+    if (role) params.role = role;
 
-    const response = await axios.get<{ success: boolean; data: ExpiringAccount[]; count: number }>(
-        `${API_URL}/renewal/expiring?${params.toString()}`,
-        { headers: getAuthHeaders() }
-    );
+    const response = await api.get<ExpiringAccount[]>('/renewal/expiring', { params });
     return response.data.data;
 };
 
@@ -91,11 +74,10 @@ export const getExpiringAccounts = async (
  * @param role Optional role filter
  */
 export const getExpiredAccounts = async (role?: string): Promise<ExpiringAccount[]> => {
-    const params = role ? `?role=${role}` : '';
-    const response = await axios.get<{ success: boolean; data: ExpiringAccount[]; count: number }>(
-        `${API_URL}/renewal/expired${params}`,
-        { headers: getAuthHeaders() }
-    );
+    const params: Record<string, string> = {};
+    if (role) params.role = role;
+
+    const response = await api.get<ExpiringAccount[]>('/renewal/expired', { params });
     return response.data.data;
 };
 
@@ -110,11 +92,10 @@ export const renewAccount = async (
     paymentConfirmed: boolean,
     renewalMonths?: number
 ): Promise<{ uid: string; expiryDate: Date; accountStatus: string }> => {
-    const response = await axios.post<{ success: boolean; message: string; data: any }>(
-        `${API_URL}/renewal/${userId}/renew`,
-        { renewalMonths, paymentConfirmed },
-        { headers: getAuthHeaders() }
-    );
+    const response = await api.post(`/renewal/${userId}/renew`, {
+        renewalMonths,
+        paymentConfirmed,
+    });
     return response.data.data;
 };
 
@@ -127,11 +108,7 @@ export const unlockAccount = async (
     userId: number,
     reason: string
 ): Promise<{ uid: string; accountStatus: string }> => {
-    const response = await axios.post<{ success: boolean; message: string; data: any }>(
-        `${API_URL}/renewal/${userId}/unlock`,
-        { reason },
-        { headers: getAuthHeaders() }
-    );
+    const response = await api.post(`/renewal/${userId}/unlock`, { reason });
     return response.data.data;
 };
 
@@ -144,11 +121,7 @@ export const setExpiryDate = async (
     userId: number,
     expiryDate: Date | string
 ): Promise<{ uid: string; expiryDate: Date; accountStatus: string }> => {
-    const response = await axios.post<{ success: boolean; message: string; data: any }>(
-        `${API_URL}/renewal/${userId}/set-expiry`,
-        { expiryDate },
-        { headers: getAuthHeaders() }
-    );
+    const response = await api.post(`/renewal/${userId}/set-expiry`, { expiryDate });
     return response.data.data;
 };
 
@@ -156,12 +129,8 @@ export const setExpiryDate = async (
  * Manually trigger locking of expired accounts (Admin only)
  */
 export const lockExpiredAccounts = async (): Promise<number> => {
-    const response = await axios.post<{ success: boolean; message: string; count: number }>(
-        `${API_URL}/renewal/lock-expired`,
-        {},
-        { headers: getAuthHeaders() }
-    );
-    return response.data.count;
+    const response = await api.post<any>('/renewal/lock-expired', {});
+    return (response.data as any).count;
 };
 
 export const renewalService = {

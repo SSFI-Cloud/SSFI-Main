@@ -13,7 +13,7 @@ interface MagneticCardProps {
 export function MagneticCard({
     children,
     className,
-    glowColor = "#6366f1",
+    glowColor = "#14b8a6",
 }: MagneticCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
     const [rotateX, setRotateX] = useState(0);

@@ -3,14 +3,21 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     Users, Plus, Search, Edit2, Trash2, Eye, Download,
     ChevronLeft, ChevronRight, ArrowUpDown, Loader2,
     CheckCircle, Clock, User, AlertCircle, Trophy,
 } from 'lucide-react';
-import axios from 'axios';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { api } from '@/lib/api/client';
 import StudentViewModal from '@/components/dashboard/StudentViewModal';
+
+/* Derive the image-serving base URL from the API URL (strip /api/v1 suffix) */
+const IMG_BASE = (() => {
+    const u = process.env.NEXT_PUBLIC_API_URL || '';
+    return u.replace(/\/api(\/v\d+)?\/?$/, '');
+})();
+const imgUrl = (path: string) => (path.startsWith('http') ? path : `${IMG_BASE}${path}`);
 
 interface Student {
     id: number;
@@ -50,16 +57,15 @@ const SKATE_CATEGORIES = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-    'Speed Quad':    'bg-blue-100 text-blue-600',
+    'Speed Quad':    'bg-emerald-100 text-emerald-600',
     'Speed Inline':  'bg-green-100 text-green-600',
     'Recreational':  'bg-teal-100 text-teal-600',
-    'Artistic':      'bg-pink-100 text-pink-600',
-    'Inline Hockey': 'bg-orange-100 text-orange-600',
+    'Artistic':      'bg-teal-100 text-teal-600',
+    'Inline Hockey': 'bg-emerald-100 text-emerald-600',
     'Beginner':      'bg-gray-100 text-gray-500',
 };
 
 export default function StudentsPage() {
-    const { token } = useAuth();
     const [students, setStudents] = useState<Student[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -88,13 +94,11 @@ export default function StudentsPage() {
             if (verificationFilter === 'verified') params.status = 'APPROVED';
             if (verificationFilter === 'pending') params.status = 'PENDING';
 
-            const response = await axios.get('http://localhost:5001/api/v1/students', {
-                headers: { Authorization: `Bearer ${token}` },
-                params
-            });
+            const response = await api.get('/students', { params });
 
-            if (response.data.status === 'success') {
-                const { students: data, meta, stats: backendStats } = response.data.data;
+            const resData = (response.data as any)?.data ?? response.data;
+            if (resData) {
+                const { students: data, meta, stats: backendStats } = resData;
                 setStudents(data);
                 setTotalPages(meta.totalPages);
                 if (backendStats) {
@@ -115,9 +119,9 @@ export default function StudentsPage() {
     };
 
     useEffect(() => {
-        const timer = setTimeout(() => { if (token) fetchStudents(); }, 400);
+        const timer = setTimeout(() => { fetchStudents(); }, 400);
         return () => clearTimeout(timer);
-    }, [token, currentPage, searchQuery, categoryFilter, verificationFilter, sortField, sortOrder]);
+    }, [currentPage, searchQuery, categoryFilter, verificationFilter, sortField, sortOrder]);
 
     const calculateAge = (dob: string) => {
         if (!dob) return '—';
@@ -145,7 +149,7 @@ export default function StudentsPage() {
                     <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
                         <Download className="w-4 h-4" /> Export
                     </button>
-                    <Link href="/dashboard/students/new" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2">
+                    <Link href="/dashboard/students/new" className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2">
                         <Plus className="w-4 h-4" /> Add Student
                     </Link>
                 </div>
@@ -160,11 +164,11 @@ export default function StudentsPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {[
-                    { label: 'Total',    value: stats.totalStudents,    Icon: Users,       color: 'text-blue-600',   bg: 'bg-blue-100' },
+                    { label: 'Total',    value: stats.totalStudents,    Icon: Users,       color: 'text-emerald-600',   bg: 'bg-emerald-100' },
                     { label: 'Verified', value: stats.verifiedStudents, Icon: CheckCircle, color: 'text-green-600',  bg: 'bg-green-100' },
                     { label: 'Pending',  value: stats.pendingStudents,  Icon: Clock,       color: 'text-amber-600',  bg: 'bg-amber-100' },
                     { label: 'Male',     value: stats.maleStudents,     Icon: User,        color: 'text-cyan-600',   bg: 'bg-cyan-100' },
-                    { label: 'Female',   value: stats.femaleStudents,   Icon: Trophy,      color: 'text-pink-600',   bg: 'bg-pink-100' },
+                    { label: 'Female',   value: stats.femaleStudents,   Icon: Trophy,      color: 'text-teal-600',   bg: 'bg-teal-100' },
                 ].map(({ label, value, Icon, color, bg }, i) => (
                     <motion.div key={label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                         className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
@@ -188,15 +192,15 @@ export default function StudentsPage() {
                     <input type="text" value={searchQuery}
                         onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                         placeholder="Search by name, UID, or mobile..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
                 </div>
                 <select value={categoryFilter} onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
-                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
                     <option value="all">All Categories</option>
                     {SKATE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
                 <select value={verificationFilter} onChange={e => setVerificationFilter(e.target.value as any)}
-                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                    className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
                     <option value="all">All Status</option>
                     <option value="verified">Verified</option>
                     <option value="pending">Pending</option>
@@ -210,7 +214,7 @@ export default function StudentsPage() {
                         <thead>
                             <tr className="border-b border-gray-100">
                                 <th className="px-4 py-3 text-left w-10">
-                                    <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-blue-500" />
+                                    <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
                                 </th>
                                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('uid')}>
                                     <div className="flex items-center gap-2">UID <ArrowUpDown className="w-4 h-4" /></div>
@@ -228,7 +232,7 @@ export default function StudentsPage() {
                         <tbody>
                             {isLoading ? (
                                 <tr><td colSpan={8} className="px-4 py-12 text-center">
-                                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                                    <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                                 </td></tr>
                             ) : students.length === 0 ? (
                                 <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-500">No students found</td></tr>
@@ -237,17 +241,35 @@ export default function StudentsPage() {
                                     transition={{ delay: index * 0.04 }}
                                     className="border-b border-gray-200/30 hover:bg-gray-50/60">
                                     <td className="px-4 py-3">
-                                        <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-blue-500" />
+                                        <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
                                     </td>
                                     {/* UID column */}
                                     <td className="px-4 py-3">
-                                        <span className="font-mono text-xs text-blue-600">{student.ssfi_id || '—'}</span>
+                                        <span className="font-mono text-xs text-emerald-600">{student.ssfi_id || '—'}</span>
                                     </td>
-                                    {/* Student name + gender */}
+                                    {/* Student name + photo */}
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${student.gender === 'FEMALE' ? 'bg-pink-100' : 'bg-cyan-100'}`}>
-                                                <User className={`w-5 h-5 ${student.gender === 'FEMALE' ? 'text-pink-600' : 'text-cyan-600'}`} />
+                                            {/* Rounded profile thumbnail with shadow & dark overlay */}
+                                            <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 shadow-md ring-2 ring-white">
+                                                {student.profile_image ? (
+                                                    <>
+                                                        <Image
+                                                            src={imgUrl(student.profile_image)}
+                                                            alt={student.name}
+                                                            width={40}
+                                                            height={40}
+                                                            className="object-cover w-full h-full"
+                                                            sizes="40px"
+                                                        />
+                                                        {/* Subtle dark gradient overlay for professional look */}
+                                                        <span className="absolute inset-0 rounded-full bg-gradient-to-b from-black/5 via-transparent to-black/25 pointer-events-none" />
+                                                    </>
+                                                ) : (
+                                                    <span className={`flex items-center justify-center w-full h-full ${student.gender === 'FEMALE' ? 'bg-teal-100' : 'bg-cyan-100'}`}>
+                                                        <User className={`w-5 h-5 ${student.gender === 'FEMALE' ? 'text-teal-600' : 'text-cyan-600'}`} />
+                                                    </span>
+                                                )}
                                             </div>
                                             <div>
                                                 <p className="font-medium text-gray-900">{student.name}</p>
@@ -294,7 +316,7 @@ export default function StudentsPage() {
                                                 <Eye className="w-4 h-4" />
                                             </button>
                                             <Link href={`/dashboard/students/${student.id}/edit`}
-                                                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-blue-600 transition-colors" title="Edit">
+                                                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-emerald-600 transition-colors" title="Edit">
                                                 <Edit2 className="w-4 h-4" />
                                             </Link>
                                             <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors" title="Delete">

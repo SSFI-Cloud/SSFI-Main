@@ -36,9 +36,9 @@ import toast from 'react-hot-toast';
 const LEVEL_THEMES: Record<string, { gradient: string; accent: string; badge: string; glow: string }> = {
     NATIONAL: {
         gradient: 'from-[#0a1628] via-[#0c2340] to-[#162d50]',
-        accent: '#f59e0b',
-        badge: 'bg-amber-500 text-gray-900',
-        glow: 'shadow-amber-500/20',
+        accent: '#14b8a6',
+        badge: 'bg-teal-500 text-gray-900',
+        glow: 'shadow-teal-500/20',
     },
     STATE: {
         gradient: 'from-[#0a1628] via-[#0b2a3c] to-[#0c3547]',
@@ -54,9 +54,9 @@ const LEVEL_THEMES: Record<string, { gradient: string; accent: string; badge: st
     },
     default: {
         gradient: 'from-[#0a1628] via-[#131b2e] to-[#1a2744]',
-        accent: '#3b82f6',
-        badge: 'bg-blue-500 text-white',
-        glow: 'shadow-blue-500/20',
+        accent: '#10b981',
+        badge: 'bg-emerald-500 text-white',
+        glow: 'shadow-emerald-500/20',
     },
 };
 
@@ -157,7 +157,7 @@ export default function EventDetailClient() {
                 <div className="flex flex-col items-center gap-4">
                     <div className="relative w-16 h-16">
                         <div className="absolute inset-0 rounded-full border-[3px] border-white/10" />
-                        <div className="absolute inset-0 rounded-full border-[3px] border-t-amber-400 animate-spin" />
+                        <div className="absolute inset-0 rounded-full border-[3px] border-t-teal-400 animate-spin" />
                     </div>
                     <p className="text-white/40 text-sm tracking-widest uppercase">Loading event…</p>
                 </div>
@@ -206,7 +206,7 @@ export default function EventDetailClient() {
                 {/* Banner image (if any) */}
                 {event.bannerImage && (
                     <div className="absolute inset-0">
-                        <img src={event.bannerImage} alt="" className="w-full h-full object-cover opacity-20" />
+                        <img src={event.bannerImage} alt={event.name || 'Event banner'} className="w-full h-full object-cover opacity-20" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/80 to-transparent" />
                     </div>
                 )}
@@ -226,7 +226,7 @@ export default function EventDetailClient() {
                             {statusCfg.label}
                         </span>
                         {daysUntil > 0 && daysUntil <= 60 && (
-                            <span className="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-500/20 text-orange-300 border border-orange-500/30 flex items-center gap-1.5">
+                            <span className="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
                                 <Flame className="w-3.5 h-3.5" />
                                 {daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days left`}
                             </span>
@@ -294,8 +294,8 @@ export default function EventDetailClient() {
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
                             className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                                    <Trophy className="w-5 h-5 text-amber-500" />
+                                <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+                                    <Trophy className="w-5 h-5 text-teal-500" />
                                 </div>
                                 <h2 className="text-xl font-bold text-gray-900">Disciplines</h2>
                             </div>

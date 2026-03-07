@@ -588,7 +588,7 @@ export const verifyStateSecretaryPayment = async (data: {
   const userForEmail = await prisma.user.findFirst({ where: { uid: secretary.uid } });
   if (userForEmail) {
     const state = await prisma.state.findUnique({ where: { id: secretary.stateId }, select: { name: true } });
-    await emailService.sendAffiliationConfirmation(secretary.email, {
+    emailService.sendAffiliationConfirmation(secretary.email, {
       type: 'STATE_SECRETARY',
       name: secretary.name,
       uid: secretary.uid,
@@ -1034,7 +1034,7 @@ export const verifyDistrictSecretaryPayment = async (
   // 6. Send Credentials
   // We need the password. We created it in `initiate` but didn't save it plain text.
   // Default password is phone number.
-  await emailService.sendCredentials(user.email!, secretary.name, {
+  emailService.sendCredentials(user.email!, secretary.name, {
     uid: user.uid,
     password: user.phone, // Default password
     role: 'DISTRICT_SECRETARY',
@@ -1429,7 +1429,7 @@ export const verifyClubPayment = async (data: {
     const state = await prisma.state.findUnique({ where: { id: club.stateId }, select: { name: true } });
     const district = await prisma.district.findUnique({ where: { id: club.districtId }, select: { name: true } });
     const ownerUser = await prisma.user.findFirst({ where: { uid: club.uid } });
-    await emailService.sendAffiliationConfirmation(emailTo, {
+    emailService.sendAffiliationConfirmation(emailTo, {
       type: 'CLUB',
       name: club.name,
       uid: club.uid,
@@ -1541,21 +1541,21 @@ export const updateStateSecretaryStatus = async (
       stateId: updated.stateId,
       referenceId: updated.id,
     });
-    await emailService.sendApprovalNotification(updated.email, {
+    emailService.sendApprovalNotification(updated.email, {
       type: 'STATE_SECRETARY',
       name: updated.name,
       uid: updated.uid,
       loginPassword: updated.phone,
       stateName: updated.state?.name,
       expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-    }).catch(() => {});
+    });
   } else {
-    await emailService.sendRejectionNotification(updated.email, {
+    emailService.sendRejectionNotification(updated.email, {
       type: 'STATE_SECRETARY',
       name: updated.name,
       uid: updated.uid,
       reason: remarks,
-    }).catch(() => {});
+    });
   }
 
   logger.info(`State Secretary ${status}: ${secretary.uid}`, { approvedBy });
@@ -1606,7 +1606,7 @@ export const updateDistrictSecretaryStatus = async (
       districtId: updated.districtId,
       referenceId: updated.id,
     });
-    await emailService.sendApprovalNotification(updated.email, {
+    emailService.sendApprovalNotification(updated.email, {
       type: 'DISTRICT_SECRETARY',
       name: updated.name,
       uid: updated.uid,
@@ -1614,14 +1614,14 @@ export const updateDistrictSecretaryStatus = async (
       stateName: updated.state?.name,
       districtName: updated.district?.name,
       expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-    }).catch(() => {});
+    });
   } else {
-    await emailService.sendRejectionNotification(updated.email, {
+    emailService.sendRejectionNotification(updated.email, {
       type: 'DISTRICT_SECRETARY',
       name: updated.name,
       uid: updated.uid,
       reason: remarks,
-    }).catch(() => {});
+    });
   }
 
   logger.info(`District Secretary ${status}: ${secretary.uid}`, { approvedBy });
@@ -1674,7 +1674,7 @@ export const updateClubStatus = async (
       referenceId: updated.id,
     });
     if (updated.email) {
-      await emailService.sendApprovalNotification(updated.email, {
+      emailService.sendApprovalNotification(updated.email, {
         type: 'CLUB',
         name: updated.name,
         uid: updated.uid,
@@ -1683,15 +1683,15 @@ export const updateClubStatus = async (
         districtName: updated.district?.name,
         clubName: updated.name,
         expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-      }).catch(() => {});
+      });
     }
   } else if (updated.email) {
-    await emailService.sendRejectionNotification(updated.email, {
+    emailService.sendRejectionNotification(updated.email, {
       type: 'CLUB',
       name: updated.name,
       uid: updated.uid,
       reason: remarks,
-    }).catch(() => {});
+    });
   }
 
   logger.info(`Club ${status}: ${club.uid}`, { approvedBy });
@@ -1857,7 +1857,7 @@ export const registerStudent = async (
     // Send confirmation email
     if (data.email) {
       const club = await prisma.club.findUnique({ where: { id: Number(data.clubId) }, select: { name: true } });
-      await emailService.sendAffiliationConfirmation(data.email, {
+      emailService.sendAffiliationConfirmation(data.email, {
         type: 'STUDENT',
         name: `${data.firstName} ${data.lastName}`,
         uid,
@@ -1871,6 +1871,116 @@ export const registerStudent = async (
     // Return result with UID
     return { ...student, uid };
   });
+};
+
+/**
+ * Initiate Student Registration with Payment (Step 1: Register + Create Order)
+ */
+export const initiateStudentRegistration = async (
+  data: StudentRegistration,
+  windowId: number
+) => {
+  // 1. Create student using existing logic
+  const student = await registerStudent(data, windowId);
+
+  // 2. Get registration window for fee
+  const window = await prisma.registrationWindow.findUnique({ where: { id: windowId } });
+  if (!window) throw new AppError('Registration window not found', 404);
+
+  // 3. Find user created for this student
+  const user = await prisma.user.findFirst({ where: { uid: student.uid } });
+
+  // 4. Create Razorpay order
+  const order = await paymentService.createOrder({
+    amount: Number(window.baseFee) * 100, // convert rupees to paise
+    currency: 'INR',
+    payment_type: 'STUDENT_REGISTRATION',
+    entity_id: student.id,
+    entity_type: 'student',
+    user_id: user?.id || 1,
+    notes: {
+      student_uid: student.uid,
+      name: student.name,
+      type: 'STUDENT_REGISTRATION',
+    },
+  });
+
+  const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+
+  return {
+    uid: student.uid,
+    name: student.name,
+    razorpayOrderId: order.id,
+    amount: Number(window.baseFee) * 100,
+    currency: 'INR',
+    key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+    userDetails: {
+      name: student.name,
+      email: data.email || '',
+      phone: data.phone,
+    },
+  };
+};
+
+/**
+ * Verify Student Registration Payment (Step 2)
+ */
+export const verifyStudentPayment = async (data: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}) => {
+  const isValid = paymentService.verifyPaymentSignature(data);
+  if (!isValid) throw new AppError('Invalid payment signature', 400);
+
+  const payment = await prisma.payment.findFirst({
+    where: { razorpayOrderId: data.razorpay_order_id },
+  });
+  if (!payment) throw new AppError('Payment not found', 404);
+
+  if (payment.status === 'COMPLETED') {
+    // Extract UID even if already completed
+    const descParts = payment.description?.split('#') || [];
+    const studentId = descParts[1]?.trim();
+    let uid = '';
+    if (studentId) {
+      const student = await prisma.student.findUnique({
+        where: { id: Number(studentId) },
+        include: { user: { select: { uid: true } } },
+      });
+      uid = student?.user?.uid || '';
+    }
+    return { success: true, uid, message: 'Payment already verified.' };
+  }
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      status: 'COMPLETED',
+      razorpayPaymentId: data.razorpay_payment_id,
+      razorpaySignature: data.razorpay_signature,
+    },
+  });
+
+  // Get student UID from payment description format: "STUDENT_REGISTRATION - student #123"
+  const descParts = payment.description?.split('#') || [];
+  const studentId = descParts[1]?.trim();
+  let uid = '';
+  if (studentId) {
+    const student = await prisma.student.findUnique({
+      where: { id: Number(studentId) },
+      include: { user: { select: { uid: true } } },
+    });
+    uid = student?.user?.uid || '';
+  }
+
+  logger.info(`Student registration payment verified: ${uid}`);
+
+  return {
+    success: true,
+    uid,
+    message: 'Payment verified successfully. Your registration is under review.',
+  };
 };
 
 // ==========================================
@@ -2105,7 +2215,7 @@ export const verifyRenewal = async (data: {
   if (user.email) {
     const stateName = user.statePerson?.state?.name ||
       await prisma.state.findFirst({ where: { secretaries: { some: { user: { id: user.id } } } }, select: { name: true } }).then(s => s?.name);
-    await emailService.sendAffiliationConfirmation(user.email, {
+    emailService.sendAffiliationConfirmation(user.email, {
       type: entityType,
       name: user.uid,
       uid: user.uid,
@@ -2153,6 +2263,8 @@ export default {
 
   // Student
   registerStudent,
+  initiateStudentRegistration,
+  verifyStudentPayment,
 
   // Lookup & Renewal
   lookupMember,

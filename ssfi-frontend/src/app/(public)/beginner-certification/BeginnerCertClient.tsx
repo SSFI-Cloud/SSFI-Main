@@ -38,8 +38,8 @@ interface Program {
 
 const CATEGORY_CFG: Record<string, { label: string; gradient: string; border: string; iconBg: string; icon: typeof Zap }> = {
   SPEED_SKATING:  { label: 'Speed Skating',  gradient: 'from-sky-500 to-cyan-500',      border: 'border-sky-200',     iconBg: 'bg-sky-100 text-sky-600',     icon: Zap },
-  ARTISTIC:       { label: 'Artistic Skating', gradient: 'from-violet-500 to-purple-500', border: 'border-violet-200', iconBg: 'bg-violet-100 text-violet-600', icon: Star },
-  INLINE_HOCKEY:  { label: 'Inline Hockey',   gradient: 'from-amber-500 to-orange-500',  border: 'border-amber-200',  iconBg: 'bg-amber-100 text-amber-600',  icon: Award },
+  ARTISTIC:       { label: 'Artistic Skating', gradient: 'from-teal-500 to-cyan-500',      border: 'border-teal-200',    iconBg: 'bg-teal-100 text-teal-600',    icon: Star },
+  INLINE_HOCKEY:  { label: 'Inline Hockey',   gradient: 'from-teal-500 to-emerald-500',  border: 'border-teal-200',  iconBg: 'bg-teal-100 text-teal-600',  icon: Award },
   GENERAL:        { label: 'General Skating',  gradient: 'from-emerald-500 to-teal-500',  border: 'border-emerald-200', iconBg: 'bg-emerald-100 text-emerald-600', icon: Heart },
 };
 const DEFAULT_CFG = { label: 'Program', gradient: 'from-gray-500 to-slate-500', border: 'border-gray-200', iconBg: 'bg-gray-100 text-gray-600', icon: GraduationCap };
@@ -63,7 +63,7 @@ export default function BeginnerCertClient() {
   }, []);
 
   // Group by category
-  const categories = [...new Set(programs.map(p => p.category))];
+  const categories = Array.from(new Set(programs.map(p => p.category)));
 
   return (
     <div className="min-h-screen bg-[#f5f6f8]">
@@ -72,7 +72,7 @@ export default function BeginnerCertClient() {
         <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none' stroke='white' stroke-width='0.5'/%3E%3C/svg%3E\")" }} />
         <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)' }} />
+          style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)' }} />
 
         <div className="relative max-w-6xl mx-auto px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-end gap-0">
@@ -82,12 +82,12 @@ export default function BeginnerCertClient() {
               animate={{ opacity: 1, y: 0 }}
               className="flex-1 pt-28 pb-16 md:pt-36 md:pb-20"
             >
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm font-bold mb-6">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold mb-6">
                 <Sparkles className="w-4 h-4" /> SSFI Beginner Certification
               </span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5">
                 Beginner{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-sky-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
                   Certification
                 </span>
               </h1>
@@ -107,7 +107,7 @@ export default function BeginnerCertClient() {
 
             {/* Right: Mascot */}
             <div className="hidden lg:block lg:w-[400px] xl:w-[460px] flex-shrink-0 self-end relative">
-              <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-violet-500/8 via-transparent to-transparent rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-emerald-500/8 via-transparent to-transparent rounded-full blur-3xl pointer-events-none" />
               <motion.div
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -116,7 +116,7 @@ export default function BeginnerCertClient() {
                 <motion.div
                   animate={{ y: [0, -20, 0], rotate: [-0.5, 1.5, -0.5] }}
                   transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                  style={{ filter: 'drop-shadow(0 40px 55px rgba(0,0,0,0.55)) drop-shadow(0 12px 24px rgba(139,92,246,0.25))' }}
+                  style={{ filter: 'drop-shadow(0 40px 55px rgba(0,0,0,0.55)) drop-shadow(0 12px 24px rgba(16,185,129,0.25))' }}
                 >
                   <div className="relative w-full h-[420px] xl:h-[460px]">
                     <Image
@@ -131,13 +131,13 @@ export default function BeginnerCertClient() {
                 </motion.div>
                 <div
                   className="mx-auto w-36 h-4 rounded-full -mt-2"
-                  style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.3) 0%, transparent 70%)' }}
+                  style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,0.3) 0%, transparent 70%)' }}
                 />
               </motion.div>
             </div>
           </div>
         </div>
-        <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4), transparent)' }} />
+        <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.4), transparent)' }} />
       </section>
 
       {/* ─── WHY CERTIFY ─── */}
@@ -164,10 +164,10 @@ export default function BeginnerCertClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="flex flex-col items-center text-center p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:border-violet-200 hover:shadow-lg hover:shadow-gray-200/50 transition-all"
+                className="flex flex-col items-center text-center p-6 rounded-2xl bg-gray-50 border border-gray-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-gray-200/50 transition-all"
               >
-                <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center mb-4">
-                  <b.icon className="w-6 h-6 text-violet-600" />
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
+                  <b.icon className="w-6 h-6 text-emerald-600" />
                 </div>
                 <h3 className="font-bold text-gray-900 text-sm mb-2">{b.title}</h3>
                 <p className="text-gray-500 text-xs leading-relaxed">{b.desc}</p>
@@ -196,7 +196,7 @@ export default function BeginnerCertClient() {
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <Loader2 className="w-10 h-10 animate-spin text-violet-500" />
+              <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
               <p className="text-gray-400">Loading programs...</p>
             </div>
           ) : programs.length === 0 ? (
@@ -211,7 +211,7 @@ export default function BeginnerCertClient() {
               </p>
               <Link
                 href="/contact"
-                className="inline-flex items-center gap-2 text-violet-600 font-semibold hover:underline"
+                className="inline-flex items-center gap-2 text-emerald-600 font-semibold hover:underline"
               >
                 Contact us for enquiries <ArrowRight className="w-4 h-4" />
               </Link>
@@ -262,15 +262,15 @@ export default function BeginnerCertClient() {
 
                               <div className="space-y-2.5 mb-5 text-sm text-gray-500">
                                 <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4 text-violet-400 flex-shrink-0" />
+                                  <Calendar className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                                   {formatDate(p.startDate)} &mdash; {formatDate(p.endDate)}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <MapPin className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                                  <MapPin className="w-4 h-4 text-teal-400 flex-shrink-0" />
                                   {p.venue}, {p.city}, {p.state}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <IndianRupee className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                                  <IndianRupee className="w-4 h-4 text-teal-500 flex-shrink-0" />
                                   &#8377;{Number(p.price).toLocaleString()}
                                   {p.includesText && (
                                     <span className="text-xs text-gray-400">({p.includesText})</span>
@@ -301,7 +301,7 @@ export default function BeginnerCertClient() {
                                   />
                                 </div>
                                 {spotsLeft > 0 && spotsLeft <= 10 && (
-                                  <p className="text-amber-600 text-xs font-medium mt-1.5">
+                                  <p className="text-teal-600 text-xs font-medium mt-1.5">
                                     Only {spotsLeft} spot{spotsLeft > 1 ? 's' : ''} left!
                                   </p>
                                 )}
@@ -311,7 +311,7 @@ export default function BeginnerCertClient() {
                               {!deadlinePassed && spotsLeft > 0 ? (
                                 <Link
                                   href={`/beginner-certification/register?programId=${p.id}`}
-                                  className="group w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-sky-500 text-white font-bold text-sm shadow-lg shadow-violet-500/15 hover:shadow-violet-500/30 hover:scale-[1.02] transition-all"
+                                  className="group w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/15 hover:shadow-emerald-500/30 hover:scale-[1.02] transition-all"
                                 >
                                   Register Now <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                                 </Link>
@@ -358,7 +358,7 @@ export default function BeginnerCertClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
-                className="group bg-gray-50 rounded-xl border border-gray-100 hover:border-violet-200 transition-colors"
+                className="group bg-gray-50 rounded-xl border border-gray-100 hover:border-emerald-200 transition-colors"
               >
                 <summary className="flex items-center justify-between cursor-pointer p-5 text-gray-900 font-semibold text-[15px] select-none">
                   {faq.q}
@@ -384,9 +384,9 @@ export default function BeginnerCertClient() {
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#162d50] to-[#0f1d35]" />
             <div className="absolute -top-20 -right-20 w-[300px] h-[300px] rounded-full"
-              style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)' }} />
+              style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)' }} />
             <div className="relative p-10 md:p-14 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-sky-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-violet-500/20">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20">
                 <GraduationCap className="w-7 h-7 text-white" />
               </div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-4">
@@ -398,7 +398,7 @@ export default function BeginnerCertClient() {
               <div className="flex flex-wrap justify-center gap-4">
                 <Link
                   href="/contact"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-violet-500 to-sky-500 text-white rounded-xl font-bold hover:scale-[1.03] transition-all shadow-lg shadow-violet-500/25"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:scale-[1.03] transition-all shadow-lg shadow-emerald-500/25"
                 >
                   Contact Us <ArrowRight className="w-5 h-5" />
                 </Link>

@@ -4,6 +4,9 @@ import { successResponse } from '../utils/response.util';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../utils/errors';
 import { AuthRequest } from '../types';
+import { getCache, setCache } from '../utils/cache.util';
+
+const DASHBOARD_CACHE_TTL = 300; // 5 minutes
 
 /**
  * @desc    Get dashboard data based on user role
@@ -13,7 +16,18 @@ import { AuthRequest } from '../types';
 export const getDashboard = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { role, stateId, districtId, clubId, studentId } = req.user!;
 
-  let dashboardData;
+  // Cache key scoped to role + entity ID
+  const entityId = stateId || districtId || clubId || studentId || 'admin';
+  const cacheKey = `dashboard_${role}_${entityId}`;
+
+  // Check cache first
+  let dashboardData = getCache<any>(cacheKey);
+  if (dashboardData) {
+    return successResponse(res, {
+      message: 'Dashboard data retrieved successfully',
+      data: { role, ...dashboardData },
+    });
+  }
 
   switch (role) {
     case 'GLOBAL_ADMIN':
@@ -51,6 +65,9 @@ export const getDashboard = asyncHandler(async (req: AuthRequest, res: Response)
     default:
       throw new AppError('Invalid user role', 400);
   }
+
+  // Cache the freshly-fetched data
+  setCache(cacheKey, dashboardData, DASHBOARD_CACHE_TTL);
 
   return successResponse(res, {
     message: 'Dashboard data retrieved successfully',

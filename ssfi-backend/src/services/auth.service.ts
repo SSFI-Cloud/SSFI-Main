@@ -512,41 +512,162 @@ class AuthService {
     });
   }
   /**
-   * Update Profile
+   * Get full profile (user + role-specific fields)
    */
-  async updateProfile(userId: number, data: { phone?: string; email?: string }): Promise<any> {
-    // Check if phone/email is already taken by another user
-    if (data.phone) {
-      const existing = await prisma.user.findFirst({
-        where: { phone: data.phone, id: { not: userId } }
-      });
-      if (existing) throw new AppError('Phone number already in use', 400);
-    }
-
-    if (data.email) {
-      const existing = await prisma.user.findFirst({
-        where: { email: data.email, id: { not: userId } }
-      });
-      if (existing) throw new AppError('Email already in use', 400);
-    }
-
-    const updatedUser = await prisma.user.update({
+  async getFullProfile(userId: number): Promise<any> {
+    const user = await prisma.user.findUnique({
       where: { id: userId },
-      data: {
-        phone: data.phone,
-        email: data.email
-      },
       select: {
         id: true,
         uid: true,
         phone: true,
         email: true,
         role: true,
-        isActive: true
-      }
+        isActive: true,
+        accountStatus: true,
+        registrationDate: true,
+        expiryDate: true,
+        statePerson: {
+          select: {
+            name: true,
+            gender: true,
+            aadhaarNumber: true,
+            addressLine1: true,
+            addressLine2: true,
+            city: true,
+            pincode: true,
+            profilePhoto: true,
+            state: { select: { id: true, name: true } },
+          },
+        },
+        districtPerson: {
+          select: {
+            name: true,
+            gender: true,
+            aadhaarNumber: true,
+            addressLine1: true,
+            addressLine2: true,
+            city: true,
+            pincode: true,
+            profilePhoto: true,
+            district: { select: { id: true, name: true, state: { select: { id: true, name: true } } } },
+          },
+        },
+        clubOwner: {
+          select: {
+            name: true,
+            gender: true,
+            aadhaarNumber: true,
+            addressLine1: true,
+            addressLine2: true,
+            city: true,
+            pincode: true,
+            profilePhoto: true,
+            club: { select: { id: true, name: true } },
+          },
+        },
+        student: {
+          select: {
+            name: true,
+            dateOfBirth: true,
+            gender: true,
+            bloodGroup: true,
+            aadhaarNumber: true,
+            fatherName: true,
+            motherName: true,
+            schoolName: true,
+            academicBoard: true,
+            nomineeName: true,
+            nomineeAge: true,
+            nomineeRelation: true,
+            coachName: true,
+            coachPhone: true,
+            addressLine1: true,
+            addressLine2: true,
+            city: true,
+            pincode: true,
+            profilePhoto: true,
+            state: { select: { id: true, name: true } },
+            district: { select: { id: true, name: true } },
+            club: { select: { id: true, name: true } },
+          },
+        },
+      },
     });
 
-    return updatedUser;
+    if (!user) throw new AppError('User not found', 404);
+
+    // Flatten role-specific profile into a clean object
+    const profile = user.statePerson || user.districtPerson || user.clubOwner || user.student;
+    return {
+      id: user.id,
+      uid: user.uid,
+      phone: user.phone,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      accountStatus: user.accountStatus,
+      registrationDate: user.registrationDate,
+      expiryDate: user.expiryDate,
+      profile: profile || null,
+    };
+  }
+
+  /**
+   * Update Profile — role-specific fields only (NOT phone, email, aadhaar)
+   */
+  async updateProfile(userId: number, data: Record<string, any>): Promise<any> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    if (!user) throw new AppError('User not found', 404);
+
+    // Fields that are NEVER editable via this endpoint
+    delete data.phone;
+    delete data.email;
+    delete data.aadhaarNumber;
+    delete data.aadhaarCard;
+    delete data.identityProof;
+
+    // Allowed fields per role
+    const commonFields = ['name', 'gender', 'addressLine1', 'addressLine2', 'city', 'pincode'];
+    const studentFields = [...commonFields, 'dateOfBirth', 'bloodGroup', 'fatherName', 'motherName', 'schoolName', 'academicBoard', 'nomineeName', 'nomineeAge', 'nomineeRelation', 'coachName', 'coachPhone'];
+
+    const allowedFields = user.role === 'STUDENT' ? studentFields : commonFields;
+
+    const updateData: Record<string, any> = {};
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) {
+        if (key === 'dateOfBirth' && data[key]) {
+          updateData[key] = new Date(data[key]);
+        } else if (key === 'nomineeAge' && data[key]) {
+          updateData[key] = Number(data[key]);
+        } else {
+          updateData[key] = data[key];
+        }
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      throw new AppError('No valid fields to update', 400);
+    }
+
+    // Update the right profile table based on role
+    if (user.role === 'STATE_SECRETARY') {
+      await prisma.statePerson.update({ where: { userId }, data: updateData });
+    } else if (user.role === 'DISTRICT_SECRETARY') {
+      await prisma.districtPerson.update({ where: { userId }, data: updateData });
+    } else if (user.role === 'CLUB_OWNER') {
+      await prisma.clubOwner.update({ where: { userId }, data: updateData });
+    } else if (user.role === 'STUDENT') {
+      await prisma.student.update({ where: { userId }, data: updateData });
+    } else {
+      throw new AppError('Profile update not available for this role', 400);
+    }
+
+    // Return updated full profile
+    return this.getFullProfile(userId);
   }
 }
 

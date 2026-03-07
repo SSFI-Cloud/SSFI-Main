@@ -92,7 +92,7 @@ export default function TeamManagerPage() {
     } catch { toast.error('Update failed'); }
   };
 
-  const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api/v1').replace('/api/v1', '');
+  const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1').replace('/api/v1', '');
 
   return (
     <div className="space-y-6">
@@ -102,14 +102,14 @@ export default function TeamManagerPage() {
           <h2 className="text-2xl font-bold text-gray-900">Team Members</h2>
           <p className="text-gray-500 text-sm mt-1">Manage federation officials shown on the website</p>
         </div>
-        <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+        <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
           <Plus className="w-4 h-4" /> Add Member
         </button>
       </div>
 
       {/* List */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>
+        <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
       ) : members.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
           <Users className="w-12 h-12 text-gray-500 mx-auto mb-3" />
@@ -155,7 +155,7 @@ export default function TeamManagerPage() {
                   <Home className="w-4 h-4" />
                 </button>
                 <button onClick={() => toggleActive(m)} title={m.isActive ? 'Deactivate' : 'Activate'}
-                  className={`p-2 rounded-lg transition-colors ${m.isActive ? 'text-blue-600 hover:bg-blue-100' : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'}`}>
+                  className={`p-2 rounded-lg transition-colors ${m.isActive ? 'text-emerald-600 hover:bg-emerald-100' : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'}`}>
                   {m.isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                 </button>
                 <button onClick={() => openEdit(m)} className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
@@ -183,31 +183,31 @@ export default function TeamManagerPage() {
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-700">Name *</label>
                   <input value={form.name || ''} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500"
                     placeholder="e.g. Rajesh Kumar" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-700">Role / Title *</label>
                   <input value={form.role || ''} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500"
                     placeholder="e.g. President" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-700">Email</label>
                   <input type="email" value={form.email || ''} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500"
                     placeholder="member@ssfiskate.com" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-700">LinkedIn URL</label>
                   <input value={form.linkedinUrl || ''} onChange={e => setForm(f => ({ ...f, linkedinUrl: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500"
                     placeholder="https://linkedin.com/in/..." />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-gray-700">Display Order</label>
                   <input type="number" min={0} value={form.displayOrder ?? 0} onChange={e => setForm(f => ({ ...f, displayOrder: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500" />
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500" />
                 </div>
                 <div className="flex flex-col gap-3 pt-6">
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -215,7 +215,7 @@ export default function TeamManagerPage() {
                     <span className="text-sm text-gray-700">Show on Homepage</span>
                   </label>
                   <label className="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" checked={!!form.isActive} onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} className="w-4 h-4 accent-blue-500" />
+                    <input type="checkbox" checked={!!form.isActive} onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} className="w-4 h-4 accent-emerald-500" />
                     <span className="text-sm text-gray-700">Active (visible on website)</span>
                   </label>
                 </div>
@@ -224,7 +224,7 @@ export default function TeamManagerPage() {
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-gray-700">Bio</label>
                 <textarea rows={3} value={form.bio || ''} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
-                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500 resize-none"
                   placeholder="Short bio or description..." />
               </div>
 
@@ -239,7 +239,7 @@ export default function TeamManagerPage() {
             <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
               <button onClick={closeForm} className="px-4 py-2 text-gray-500 hover:text-gray-900 hover:bg-white rounded-xl transition-colors">Cancel</button>
               <button onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50">
+                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {editing ? 'Save Changes' : 'Add Member'}
               </button>

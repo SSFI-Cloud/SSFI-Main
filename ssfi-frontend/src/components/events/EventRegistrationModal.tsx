@@ -180,7 +180,7 @@ export default function EventRegistrationModal({
               </p>
               <button
                 onClick={handleClose}
-                className="mt-6 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+                className="mt-6 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
               >
                 Close
               </button>
@@ -190,8 +190,8 @@ export default function EventRegistrationModal({
               {/* Header */}
               <div className="p-6 border-b border-slate-700">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-blue-500/20 rounded-xl">
-                    <Trophy className="w-6 h-6 text-blue-400" />
+                  <div className="p-3 bg-emerald-500/20 rounded-xl">
+                    <Trophy className="w-6 h-6 text-emerald-400" />
                   </div>
                   <div className="flex-1 pr-8">
                     <h2 className="text-xl font-bold text-white mb-1">
@@ -244,7 +244,7 @@ export default function EventRegistrationModal({
                         onClick={() => handleDisciplineToggle(discipline.value)}
                         className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all ${
                           selectedDisciplines.includes(discipline.value)
-                            ? 'bg-blue-500/20 border-blue-500 text-blue-400'
+                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
                             : 'bg-slate-900/50 border-slate-700 text-slate-400 hover:border-slate-600'
                         }`}
                       >
@@ -296,7 +296,7 @@ export default function EventRegistrationModal({
                     onChange={(e) => setRemarks(e.target.value)}
                     placeholder="Any special requirements or notes..."
                     rows={2}
-                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 resize-none"
+                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 resize-none"
                   />
                 </div>
               </div>

@@ -44,7 +44,7 @@ export default function DistrictPortalPage() {
             <div className="min-h-screen py-20 px-4 text-center">
                 <h1 className="text-2xl font-bold text-slate-800">District Not Found</h1>
                 <p className="text-slate-600 mt-2">{error || 'The requested district portal does not exist.'}</p>
-                <Link href="/" className="mt-4 inline-block text-blue-600 hover:underline">Return Home</Link>
+                <Link href="/" className="mt-4 inline-block text-emerald-600 hover:underline">Return Home</Link>
             </div>
         );
     }
@@ -100,7 +100,7 @@ export default function DistrictPortalPage() {
 
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3 text-slate-600">
-                                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                                    <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                                         <Users size={20} />
                                     </div>
                                     <span>Active Skaters</span>
@@ -110,7 +110,7 @@ export default function DistrictPortalPage() {
 
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3 text-slate-600">
-                                    <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
+                                    <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
                                         <Calendar size={20} />
                                     </div>
                                     <span>Events Hosted</span>

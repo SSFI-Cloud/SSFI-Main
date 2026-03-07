@@ -42,7 +42,7 @@ export default function CMSLayout({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                   isActive
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-emerald-600 text-white'
                     : 'text-gray-500 hover:text-gray-900 hover:bg-white'
                 }`}
               >

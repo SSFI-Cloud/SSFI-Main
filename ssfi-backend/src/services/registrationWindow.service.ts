@@ -3,7 +3,7 @@
 import { PrismaClient, RegistrationWindow } from '@prisma/client';
 
 import prisma from '../config/prisma';
-export type RegistrationType = 'student' | 'club' | 'state' | 'district';
+export type RegistrationType = 'STUDENT' | 'CLUB' | 'STATE_SECRETARY' | 'DISTRICT_SECRETARY';
 
 export interface RegistrationWindowData {
     id: number;

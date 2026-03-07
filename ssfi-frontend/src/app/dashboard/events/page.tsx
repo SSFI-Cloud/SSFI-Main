@@ -28,7 +28,7 @@ import {
     Check,
     XCircle
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useEventStatusUpdate } from '@/lib/hooks/useEvents';
 
@@ -71,9 +71,9 @@ interface ApiResponse {
 }
 
 const eventLevels = [
-    { id: 1, name: 'District Level', icon: Building2, color: 'bg-blue-100 text-blue-600' },
-    { id: 2, name: 'State Level', icon: Flag, color: 'bg-purple-100 text-purple-600' },
-    { id: 3, name: 'National Meet', icon: Globe, color: 'bg-amber-100 text-amber-600' },
+    { id: 1, name: 'District Level', icon: Building2, color: 'bg-emerald-100 text-emerald-600' },
+    { id: 2, name: 'State Level', icon: Flag, color: 'bg-teal-100 text-teal-600' },
+    { id: 3, name: 'National Meet', icon: Globe, color: 'bg-emerald-100 text-emerald-600' },
 ];
 
 export default function EventsPage() {
@@ -171,9 +171,7 @@ export default function EventsPage() {
     const handleDelete = async (event: Event) => {
         setIsDeleting(true);
         try {
-            await axios.delete(`http://localhost:5001/api/v1/events/${event.id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/events/${event.id}`);
             setDeletingEvent(null);
             fetchEvents();
         } catch (err: any) {
@@ -207,13 +205,11 @@ export default function EventsPage() {
                 else if (statusFilter === 'pending') params.status = 'DRAFT';
             }
 
-            const response = await axios.get<ApiResponse>('http://localhost:5001/api/v1/events', {
-                headers: { Authorization: `Bearer ${token}` },
-                params
-            });
+            const response = await api.get('/events', { params });
 
-            if (response.data.status === 'success') {
-                const { events: data, meta } = response.data.data;
+            const resData = (response.data as any)?.data ?? response.data;
+            if (resData?.events) {
+                const { events: data, meta } = resData;
                 const mappedEvents = data.map((e: any) => ({
                     ...e,
                     event_level_type_id: e.eventLevel === 'NATIONAL' ? 3 : e.eventLevel === 'STATE' ? 2 : 1,
@@ -246,7 +242,7 @@ export default function EventsPage() {
                 </div>
                 <Link
                     href="/dashboard/events/new"
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
                 >
                     <Plus className="w-5 h-5" />
                     Create Event
@@ -262,13 +258,13 @@ export default function EventsPage() {
                         placeholder="Search events..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        className="w-full pl-10 pr-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                 </div>
                 <select
                     value={levelFilter}
                     onChange={(e) => setLevelFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                    className="px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 >
                     <option value="all">All Levels</option>
                     {eventLevels.map(level => (
@@ -278,7 +274,7 @@ export default function EventsPage() {
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive' | 'pending')}
-                    className="px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="px-4 py-2.5 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 >
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
@@ -291,7 +287,7 @@ export default function EventsPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {isLoading ? (
                     <div className="col-span-full py-12 text-center">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                     </div>
                 ) : events.length === 0 ? (
                     <div className="col-span-full py-12 text-center text-gray-500">
@@ -304,10 +300,10 @@ export default function EventsPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:border-blue-500/50 transition-colors"
+                            className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:border-emerald-500/50 transition-colors"
                         >
                             {/* Event Header */}
-                            <div className="relative h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 p-4">
+                            <div className="relative h-32 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 p-4">
                                 <div className="absolute top-4 left-4">
                                     {getEventLevelBadge(event.event_level_type_id)}
                                 </div>
@@ -358,7 +354,7 @@ export default function EventsPage() {
                                     {(user?.role === 'GLOBAL_ADMIN' || Number(user?.id) === event.creatorId) && (
                                         <Link
                                             href={`/dashboard/events/${event.id}/edit`}
-                                            className="flex-1 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 text-sm font-medium flex items-center justify-center gap-1"
+                                            className="flex-1 py-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 text-sm font-medium flex items-center justify-center gap-1"
                                         >
                                             <Edit2 className="w-4 h-4" />
                                             Edit
@@ -391,14 +387,14 @@ export default function EventsPage() {
                                     <div className="flex gap-2">
                                         <Link
                                             href={`/dashboard/manage-events/${event.id}/results`}
-                                            className="flex-1 py-2 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 text-sm font-medium flex items-center justify-center gap-1"
+                                            className="flex-1 py-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 text-sm font-medium flex items-center justify-center gap-1"
                                         >
                                             <Trophy className="w-4 h-4" />
                                             Results
                                         </Link>
                                         <Link
                                             href={`/dashboard/events/${event.id}/registrations`}
-                                            className="flex-1 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 text-sm font-medium flex items-center justify-center gap-1"
+                                            className="flex-1 py-2 bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 text-sm font-medium flex items-center justify-center gap-1"
                                         >
                                             <Users className="w-4 h-4" />
                                             Registrations
@@ -437,7 +433,7 @@ export default function EventsPage() {
                         >
                             <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
                                 <div>
-                                    <span className="text-blue-600 text-sm font-medium mb-1 block">{viewingEvent.eventLevel} Event</span>
+                                    <span className="text-emerald-600 text-sm font-medium mb-1 block">{viewingEvent.eventLevel} Event</span>
                                     <h2 className="text-2xl font-bold text-gray-900">{viewingEvent.name}</h2>
                                 </div>
                                 <button
@@ -486,7 +482,7 @@ export default function EventsPage() {
                                     <div className="bg-[#f5f6f8]/50 p-4 rounded-xl space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-500">Entry Fee</span>
-                                            <span className="text-xl font-bold text-amber-600">
+                                            <span className="text-xl font-bold text-emerald-600">
                                                 {viewingEvent.entryFee ? `₹${viewingEvent.entryFee}` : 'Free'}
                                             </span>
                                         </div>
@@ -509,7 +505,7 @@ export default function EventsPage() {
                                         <div className="pt-4 border-t border-gray-100">
                                             <Link
                                                 href={`/dashboard/events/${viewingEvent.id}/edit`}
-                                                className="block w-full py-2.5 bg-blue-600 text-white text-center rounded-xl hover:bg-blue-700 font-medium transition-colors"
+                                                className="block w-full py-2.5 bg-emerald-600 text-white text-center rounded-xl hover:bg-emerald-700 font-medium transition-colors"
                                             >
                                                 Edit Event
                                             </Link>

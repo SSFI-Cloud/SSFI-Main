@@ -134,8 +134,8 @@ export default function BeginnerProgramClient() {
             {/* ═══════ HERO ═══════ */}
             <section className="relative pt-28 pb-20 md:pt-36 md:pb-32 overflow-hidden">
                 {/* Ambient blobs */}
-                <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-violet-500/8 rounded-full blur-[180px]" />
-                <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-pink-500/8 rounded-full blur-[160px]" />
+                <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-emerald-500/8 rounded-full blur-[180px]" />
+                <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-teal-500/8 rounded-full blur-[160px]" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[140px]" />
 
                 {/* Confetti dots */}
@@ -146,7 +146,7 @@ export default function BeginnerProgramClient() {
                             style={{
                                 left: `${5 + Math.random() * 90}%`,
                                 top: `${5 + Math.random() * 90}%`,
-                                backgroundColor: ['#f59e0b', '#ec4899', '#06b6d4', '#8b5cf6', '#22c55e'][i % 5],
+                                backgroundColor: ['#14b8a6', '#10b981', '#06b6d4', '#2dd4bf', '#22c55e'][i % 5],
                                 opacity: 0.15 + Math.random() * 0.15,
                             }}
                             animate={{
@@ -162,14 +162,14 @@ export default function BeginnerProgramClient() {
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         {/* Left: Text */}
                         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
-                            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-pink-500/15 to-violet-500/15 border border-pink-500/20 text-pink-400 text-sm font-bold mb-6">
+                            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/20 text-emerald-400 text-sm font-bold mb-6">
                                 <Sparkles className="w-4 h-4" />
                                 For Young Champions
                             </span>
 
                             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-6">
                                 Beginner{' '}
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-violet-400 to-cyan-400">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">
                                     Certification
                                 </span>
                                 <br />
@@ -182,7 +182,7 @@ export default function BeginnerProgramClient() {
 
                             <div className="flex flex-wrap gap-4">
                                 <Link href="/beginner-certification/register"
-                                    className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold text-base shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.03] transition-all">
+                                    className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-base shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.03] transition-all">
                                     <GraduationCap className="w-5 h-5" />
                                     Enroll Now
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -203,13 +203,13 @@ export default function BeginnerProgramClient() {
                             style={{ perspective: '1000px' }}
                         >
                             {/* Glow halo */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-transparent to-violet-500/15 rounded-3xl blur-[80px]" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-teal-500/15 rounded-3xl blur-[80px]" />
                             {/* Float animation */}
                             <motion.div
                                 animate={{ y: [0, -18, 0], rotate: [-1, 1.5, -1] }}
                                 transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
                                 style={{
-                                    filter: 'drop-shadow(0 40px 60px rgba(0,0,0,0.45)) drop-shadow(0 15px 25px rgba(236,72,153,0.2))',
+                                    filter: 'drop-shadow(0 40px 60px rgba(0,0,0,0.45)) drop-shadow(0 15px 25px rgba(16,185,129,0.2))',
                                     transform: 'translateZ(40px)',
                                 }}
                             >
@@ -225,7 +225,7 @@ export default function BeginnerProgramClient() {
                                 </div>
                             </motion.div>
                             {/* Ground shadow */}
-                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-5 rounded-full" style={{ background: 'radial-gradient(ellipse, rgba(236,72,153,0.2) 0%, transparent 70%)' }} />
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-5 rounded-full" style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,0.2) 0%, transparent 70%)' }} />
                         </motion.div>
                     </div>
 
@@ -239,7 +239,7 @@ export default function BeginnerProgramClient() {
                             { icon: Star, value: 98, suffix: '%', label: 'Success Rate' },
                         ].map((s, i) => (
                             <div key={i} className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.06] backdrop-blur-sm">
-                                <s.icon className="w-5 h-5 text-pink-400" />
+                                <s.icon className="w-5 h-5 text-emerald-400" />
                                 <span className="text-xl font-extrabold text-white"><Counter target={s.value} suffix={s.suffix} /></span>
                                 <span className="text-dark-400 text-sm">{s.label}</span>
                             </div>
@@ -250,7 +250,7 @@ export default function BeginnerProgramClient() {
 
             {/* ═══════ OBJECTIVES ═══════ */}
             <section className="py-20 relative">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/[0.02] to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/[0.02] to-transparent" />
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="grid lg:grid-cols-2 gap-14 items-center">
                         {/* Mascot — coach.webp with 3D pop-out */}
@@ -261,7 +261,7 @@ export default function BeginnerProgramClient() {
                             className="relative order-2 lg:order-1 flex items-center justify-center"
                             style={{ perspective: '1000px' }}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-violet-500/5 rounded-3xl blur-[60px]" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-emerald-500/5 rounded-3xl blur-[60px]" />
                             <motion.div
                                 animate={{ y: [0, -14, 0], rotate: [1, -1.5, 1] }}
                                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
@@ -293,14 +293,14 @@ export default function BeginnerProgramClient() {
                             </motion.span>
                             <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-extrabold text-white mb-8 tracking-tight">
                                 Building Strong{' '}
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Foundations</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">Foundations</span>
                             </motion.h2>
 
                             <div className="space-y-4">
                                 {objectives.map((obj, i) => (
                                     <motion.div key={i} variants={fadeUp}
                                         className="flex items-start gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:border-cyan-500/20 hover:bg-cyan-500/[0.03] transition-all group">
-                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-cyan-500/20">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-cyan-500/20">
                                             <CheckCircle2 className="w-4 h-4 text-white" />
                                         </div>
                                         <p className="text-dark-300 text-base font-medium group-hover:text-white transition-colors pt-1">{obj}</p>
@@ -342,17 +342,17 @@ export default function BeginnerProgramClient() {
 
             {/* ═══════ PROGRAM STRUCTURE (Skills Grid) ═══════ */}
             <section className="py-20 relative">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pink-500/[0.02] to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-teal-500/[0.02] to-transparent" />
                 <div className="container mx-auto px-4 relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                         className="text-center mb-14">
-                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm font-bold mb-6">
+                        <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold mb-6">
                             <Zap className="w-4 h-4" />
                             What You'll Learn
                         </span>
                         <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
                             Program{' '}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">Structure</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">Structure</span>
                         </h2>
                         <p className="text-dark-400 mt-4 max-w-2xl mx-auto">
                             A comprehensive curriculum covering every essential skill for beginner skaters
@@ -362,8 +362,8 @@ export default function BeginnerProgramClient() {
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
                         className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
                         {skills.map((skill, i) => {
-                            const colors = ['from-pink-500 to-rose-500', 'from-violet-500 to-purple-500', 'from-cyan-500 to-blue-500', 'from-amber-500 to-orange-500', 'from-red-500 to-pink-500', 'from-emerald-500 to-teal-500'];
-                            const glows = ['shadow-pink-500/20', 'shadow-violet-500/20', 'shadow-cyan-500/20', 'shadow-amber-500/20', 'shadow-red-500/20', 'shadow-emerald-500/20'];
+                            const colors = ['from-emerald-500 to-teal-500', 'from-teal-500 to-cyan-500', 'from-cyan-500 to-emerald-500', 'from-emerald-500 to-green-500', 'from-teal-500 to-emerald-500', 'from-green-500 to-emerald-500'];
+                            const glows = ['shadow-emerald-500/20', 'shadow-teal-500/20', 'shadow-cyan-500/20', 'shadow-emerald-500/20', 'shadow-teal-500/20', 'shadow-green-500/20'];
                             return (
                                 <motion.div key={i} variants={fadeUp}
                                     className="group p-6 rounded-2xl bg-dark-800/50 border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300 hover:shadow-xl">
@@ -418,7 +418,7 @@ export default function BeginnerProgramClient() {
                             {/* Certificate note */}
                             <motion.div variants={fadeUp}
                                 className="mt-6 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center gap-3">
-                                <Award className="w-6 h-6 text-violet-400 flex-shrink-0" />
+                                <Award className="w-6 h-6 text-emerald-400 flex-shrink-0" />
                                 <p className="text-dark-400 text-sm">
                                     All participants also receive a <strong className="text-white">Certificate of Completion</strong> as per SSFI guidelines.
                                 </p>
@@ -477,10 +477,10 @@ export default function BeginnerProgramClient() {
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
                         className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
                         {[
-                            { icon: Shield, title: 'Standardized Pathway', desc: 'Official entry-level program under SSFI', color: 'from-blue-500 to-indigo-500' },
-                            { icon: Target, title: 'National Alignment', desc: 'Aligns with national development structures', color: 'from-violet-500 to-purple-500' },
-                            { icon: Users, title: 'Grassroots Growth', desc: 'Encourages participation at every level', color: 'from-pink-500 to-rose-500' },
-                            { icon: Trophy, title: 'Athlete Development', desc: 'Strong foundation for long-term progress', color: 'from-amber-500 to-orange-500' },
+                            { icon: Shield, title: 'Standardized Pathway', desc: 'Official entry-level program under SSFI', color: 'from-emerald-500 to-teal-500' },
+                            { icon: Target, title: 'National Alignment', desc: 'Aligns with national development structures', color: 'from-emerald-500 to-teal-500' },
+                            { icon: Users, title: 'Grassroots Growth', desc: 'Encourages participation at every level', color: 'from-teal-500 to-cyan-500' },
+                            { icon: Trophy, title: 'Athlete Development', desc: 'Strong foundation for long-term progress', color: 'from-teal-500 to-emerald-500' },
                         ].map((item, i) => (
                             <motion.div key={i} variants={fadeUp}
                                 className="text-center p-6 rounded-2xl bg-dark-800/40 border border-white/[0.05] hover:border-white/[0.1] transition-all group">
@@ -501,11 +501,11 @@ export default function BeginnerProgramClient() {
                     <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                         className="relative max-w-4xl mx-auto text-center rounded-3xl overflow-hidden">
                         {/* Background */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-violet-500/10 to-cyan-500/10 rounded-3xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl" />
                         <div className="absolute inset-0 border border-white/[0.08] rounded-3xl" />
 
                         <div className="relative p-10 md:p-16">
-                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500 to-violet-500 flex items-center justify-center mx-auto mb-8 shadow-xl shadow-pink-500/20">
+                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-500/20">
                                 <Sparkles className="w-10 h-10 text-white" />
                             </div>
 
@@ -518,7 +518,7 @@ export default function BeginnerProgramClient() {
 
                             <div className="flex flex-wrap justify-center gap-4">
                                 <Link href="/beginner-certification/register"
-                                    className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold text-base shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-[1.03] transition-all">
+                                    className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-base shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.03] transition-all">
                                     <GraduationCap className="w-5 h-5" />
                                     Get Started Today
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

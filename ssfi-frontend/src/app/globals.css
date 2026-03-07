@@ -72,7 +72,7 @@ body {
   }
 
   .gradient-orange {
-    background: linear-gradient(135deg, #f97316, #fbbf24);
+    background: linear-gradient(135deg, #10b981, #14b8a6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -111,7 +111,7 @@ body {
 /* Button styles */
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 bg-amber-500 text-black font-semibold rounded-full hover:bg-amber-400 transition-all duration-300 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-105;
+    @apply px-6 py-3 bg-emerald-500 text-white font-semibold rounded-full hover:bg-emerald-400 transition-all duration-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105;
   }
 
   .btn-secondary {
@@ -119,7 +119,7 @@ body {
   }
 
   .btn-accent {
-    @apply px-6 py-3 bg-amber-500 text-black font-bold rounded-full hover:bg-amber-400 transition-all duration-300 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-105;
+    @apply px-6 py-3 bg-emerald-500 text-white font-bold rounded-full hover:bg-emerald-400 transition-all duration-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105;
   }
 
   /* Card styles */
@@ -392,29 +392,15 @@ body {
 }
 
 /* ============================================
-   SSFI REDESIGN — ADD THESE TO YOUR globals.css
+   SSFI REDESIGN — Global Utility Classes
    ============================================ */
 
 /* Glassmorphism Utility Classes */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 .glass-strong {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-/* Gradient Text Helper */
-.gradient-text {
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Shine Animation for Cards */
@@ -452,37 +438,10 @@ body {
   animation-play-state: paused;
 }
 
-/* Floating Animation */
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
 /* Parallax Scroll Helper (use with JS) */
 .parallax-slow {
   will-change: transform;
   transition: transform 0.1s linear;
-}
-
-/* Card Hover Lift */
-.hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 /* Glow Pulse */
@@ -502,48 +461,6 @@ body {
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
-/* Custom Scrollbar (optional - dark theme) */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgb(15, 15, 20);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* ============================================
-   SSFI REDESIGN v2 — APPEND TO globals.css
-   ============================================ */
-
-/* Marquee Animation */
-@keyframes marquee-scroll {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(calc(-100% / 3));
-  }
-}
-
-.marquee-track {
-  animation: marquee-scroll 40s linear infinite;
-  width: max-content;
-}
-
-.marquee-track:hover {
-  animation-play-state: paused;
-}
-
 /* Smooth section transitions */
 section {
   will-change: auto;
@@ -555,70 +472,6 @@ section {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* ============================================
-   SSFI REDESIGN v3 — APPEND TO globals.css
-   ============================================ */
-
-/* Line clamp utility */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Marquee animation for PartnersMarquee */
-@keyframes marquee-scroll {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(calc(-100% / 3));
-  }
-}
-
-.marquee-track {
-  animation: marquee-scroll 40s linear infinite;
-  width: max-content;
-}
-
-.marquee-track:hover {
-  animation-play-state: paused;
-}
-
-/* ============================================
-   SSFI REDESIGN v3 — APPEND TO globals.css
-   ============================================ */
-
-/* Line clamp utility */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Marquee animation for PartnersMarquee */
-@keyframes marquee-scroll {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(calc(-100% / 3));
-  }
-}
-
-.marquee-track {
-  animation: marquee-scroll 40s linear infinite;
-  width: max-content;
-}
-
-.marquee-track:hover {
-  animation-play-state: paused;
 }
 
 /* ============================================

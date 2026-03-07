@@ -22,7 +22,7 @@ export default function Error({
           // Attempt to recover by trying to re-render the segment
           () => reset()
         }
-        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium transition-colors"
+        className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white font-medium transition-colors"
       >
         Try again
       </button>

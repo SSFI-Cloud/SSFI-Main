@@ -58,14 +58,14 @@ export default function AffiliationLookupStep({ type, onFound, onNew }: Affiliat
               onChange={(e) => { setIdentifier(e.target.value); reset(); }}
               onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
               placeholder={`Enter your registered phone or SSFI UID`}
-              className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white text-sm"
+              className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-sm"
             />
           </div>
           <button
             type="button"
             onClick={handleLookup}
             disabled={isLoading || !identifier.trim()}
-            className="px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 text-white rounded-xl font-medium text-sm flex items-center gap-2 whitespace-nowrap"
+            className="px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white rounded-xl font-medium text-sm flex items-center gap-2 whitespace-nowrap"
           >
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             Search
@@ -104,7 +104,7 @@ export default function AffiliationLookupStep({ type, onFound, onNew }: Affiliat
           >
             <div className="flex items-start justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center">
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -153,7 +153,7 @@ export default function AffiliationLookupStep({ type, onFound, onNew }: Affiliat
               <button
                 type="button"
                 onClick={() => onFound(result)}
-                className="flex-1 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
                 Renew Membership
@@ -174,7 +174,7 @@ export default function AffiliationLookupStep({ type, onFound, onNew }: Affiliat
       <button
         type="button"
         onClick={onNew}
-        className="w-full py-3 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-600 rounded-xl font-medium text-sm transition-all"
+        className="w-full py-3 border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 text-emerald-600 rounded-xl font-medium text-sm transition-all"
       >
         Register as New {typeLabels[type]}
       </button>

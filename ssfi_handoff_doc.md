@@ -1,12 +1,12 @@
 # SSFI Platform — Comprehensive Handoff Document
 
-**Project:** Skating Sports Federation of India Digital Platform  
-**Last Updated:** February 25, 2026  
-**Status:** Backend ~97% | Frontend ~95% | CMS 100% | Overall ~96%
+**Project:** Skating Sports Federation of India Digital Platform
+**Last Updated:** March 3, 2026 (Session 2)
+**Status:** Backend ~98% | Frontend ~97% | CMS 100% | Overall ~97%
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 1. [Project Overview](#project-overview)
 2. [Technology Stack](#technology-stack)
 3. [What's Completed](#whats-completed)
@@ -15,12 +15,16 @@
 6. [Database & Migrations](#database--migrations)
 7. [API Endpoints Reference](#api-endpoints-reference)
 8. [Environment Variables](#environment-variables)
-9. [Known Issues / Tech Debt](#known-issues--tech-debt)
-10. [How to Continue in New Chat](#how-to-continue-in-new-chat)
+9. [Email Service](#email-service)
+10. [SEO & Performance](#seo--performance)
+11. [Hostinger Deployment Config](#hostinger-deployment-config)
+12. [Known Issues / Tech Debt](#known-issues--tech-debt)
+13. [Bug Fixes Log](#bug-fixes-log)
+14. [How to Continue in New Chat](#how-to-continue-in-new-chat)
 
 ---
 
-## 📊 Project Overview
+## 1. Project Overview
 
 SSFI is a hierarchical federation management platform for skating sports across India with 5 user levels:
 1. **Global Admin** (SSFI HQ) — Full system access, manages all content
@@ -29,95 +33,86 @@ SSFI is a hierarchical federation management platform for skating sports across 
 4. **Club Owner** — Manages clubs and student approvals
 5. **Student (Skater)** — Registers, competes, downloads certificates
 
-**Core features:** Hierarchical RBAC, UID generation (`SSFI-[STATE]-[DISTRICT]-[CLUB]-[NUM]`), event management with age-category auto-calculation, Razorpay payments, certificate generation (PDFKit), CMS for all public content, Sharp image processing (WebP).
+**Core features:** Hierarchical RBAC, UID generation (`SSFI-[STATE]-[DISTRICT]-[CLUB]-[NUM]`), event management with age-category auto-calculation, Razorpay payments, certificate generation (PDFKit), CMS for all public content, Sharp image processing (WebP), comprehensive email notification system.
+
+**Live URLs:**
+- Frontend: `https://ssfiskate.com`
+- Backend API: `https://api.ssfiskate.com/api/v1`
+- Hosting: Hostinger Cloud Startup plan
 
 ---
 
-## 🛠 Technology Stack
+## 2. Technology Stack
 
-**Backend:** Node.js 20+, Express 4.18, Prisma 5.8, MySQL 8.0, JWT, Zod, Sharp 0.33, Twilio, Razorpay, Nodemailer, Winston
+**Backend:** Node.js 20+, Express 4.18, Prisma 5.8, MySQL 8.0, JWT, Zod, Sharp 0.33, Razorpay, Nodemailer, Winston, node-cache
 
-**Frontend:** Next.js 14.1 (App Router), TypeScript 5.3, Tailwind CSS 3.4, Framer Motion 11, React Hook Form + Zod, Zustand, Axios, Razorpay SDK
+**Frontend:** Next.js 14.2 (App Router), TypeScript 5.3, Tailwind CSS 3.4, Framer Motion 11, React Hook Form + Zod, Zustand, Axios, Razorpay SDK
 
 **Design System:**
 ```
-Primary Blue:  #003399   Dashboard BG: slate-900 (#0f172a)
-Accent Green:  #28A745   Card BG:      slate-800 (#1e293b)
-Alert Red:     #DC3545   Public BG:    light grey
-Fonts: Poppins (headings) / Inter (body)
+Fonts: Plus Jakarta Sans (body: 400,500,600,700) / Syne (headlines: 500,600,700)
+Dashboard BG: slate-900 (#0f172a) / Card BG: slate-800 (#1e293b)
+Public pages: white/gray-50 backgrounds with emerald/teal accents
+Primary accent: emerald-500, orange-500 (CTA)
 ```
 
 ---
 
-## ✅ What's Completed
+## 3. What's Completed
 
-### Backend (97% Complete)
+### Backend (98% Complete)
 
 #### Core Infrastructure ✅
-- Express + TypeScript, Prisma ORM, all middleware (auth, error, upload, validation, scope)
+- Express + TypeScript, Prisma ORM, all middleware (auth, error, upload, validation, scope, performance)
 - Winston logging, Helmet + CORS + rate limiting
-- Razorpay config, AES-256-CBC encryption utility for Aadhaar (`src/utils/encryption.util.ts`)
-- Email service with Nodemailer (`src/services/email.service.ts`) — credentials email done
+- Razorpay config with production URLs, AES-256-CBC encryption for Aadhaar
+- In-memory caching: auth tokens (2-min TTL), dashboard data (5-min TTL)
+- Performance middleware: request timer, request timeout (30s), HTTP cache headers
+- PM2 cluster mode config (2 instances, 512MB each)
 
 #### Authentication (100%) ✅
-- JWT access + refresh tokens, bcrypt, Twilio OTP, login/register/refresh/logout
+- JWT access + refresh tokens, bcrypt, OTP via email, login/register/refresh/logout
 - Forgot/reset password (OTP-based), expiry date renewal middleware
-- Login now accepts **phone number OR SSFI UID** as identifier (auto-detected in `auth.service.ts`)
+- Login accepts phone number OR SSFI UID (auto-detected)
 
-#### All Services (100%) ✅
+#### All 24 Services ✅
 ```
-auth.service.ts              student.service.ts          event.service.ts
-eventRegistration.service.ts payment.service.ts          dashboard.service.ts
-cms.service.ts               club.service.ts             state.service.ts
-district.service.ts          state-secretary.service.ts  district-secretary.service.ts
-affiliation.service.ts       renewal.service.ts          registration-window.service.ts
-report.service.ts            stats.service.ts            result.service.ts
-coach-cert.service.ts        beginner-cert.service.ts    image.service.ts
-otp.service.ts               uid.service.ts              email.service.ts
+auth, student, event, eventRegistration, payment, dashboard, cms,
+club, state, district, state-secretary, district-secretary,
+affiliation, renewal, registrationWindow, report, stats, result,
+coach-cert, beginner-cert, image, otp, uid, email
 ```
 
-#### All Controllers (100%) ✅
+#### All 24 Controllers ✅
 One controller per service domain. All CRUD operations implemented.
 
-Note: Two duplicate files exist that should be cleaned up:
-- `registration-window.controller.ts` AND `registrationWindow.controller.ts` (same logic, different names)
-- `registration-window.service.ts` AND `registrationWindow.service.ts` (same logic, different names)
+#### All 27 Routes ✅
+Every route registered in `app.ts`. Public routes have HTTP cache headers.
 
-#### All Routes (100%) ✅
-Every route registered in `app.ts`:
-```
-auth, student, event, eventRegistration, club, state, district
-state-secretary, district-secretary, affiliation, payment, dashboard
-cms, team, milestone, contact, upload, gallery (legacy), locations
-stats, result, certificate, renewal, registration-window, report
-settings, coach-cert, beginner-cert, news, renewal
-```
+#### Email Service — 8 Templates ✅
+Centralized `EmailService` class with shared SSFI-branded layout:
+1. OTP verification
+2. Welcome credentials
+3. Affiliation confirmation (registration + renewal)
+4. Approval notification
+5. Rejection notification with reason
+6. Event registration confirmation
+7. Beginner certification confirmation
+8. Contact form notification (to admin with replyTo)
 
-#### Database Migrations ✅ (4 migrations applied)
-```
-prisma/migrations/
-  20260127101056_add_event_fields/
-  20260127125045_add_affiliation_models_fixed/
-  20260209_add_renewal_system/
-  20260217033953_sync_schema/
-```
+All emails in affiliation/OTP flows are fire-and-forget (non-blocking).
 
-#### Seed Scripts ✅
-All in `src/scripts/`:
+#### Database (4 migrations applied) ✅
 ```
-create-admin.ts        seed-states.ts         seed-locations.ts
-seed-events.ts         seed-test-users.ts     seed-affiliation.ts
-seed_approvals.ts      check-windows.ts
+20260127101056_add_event_fields
+20260127125045_add_affiliation_models_fixed
+20260209_add_renewal_system
+20260217033953_sync_schema
 ```
-Also `prisma/seed-locations.ts` and `prisma/seed-states.sql`.
-
-#### CMS Backend (100%) ✅
-Full CRUD for: Banners, News, Pages, GalleryAlbum+GalleryItem, Menus, SiteSettings, TeamMember, Milestone, ContactMessage.
-All routes at `/api/v1/cms/*` (public) and `/api/v1/cms/admin/*` (admin).
 
 ---
 
-### Frontend (94% Complete)
+### Frontend (97% Complete)
 
 #### Public Pages — All Complete ✅
 ```
@@ -141,289 +136,242 @@ All routes at `/api/v1/cms/*` (public) and `/api/v1/cms/admin/*` (admin).
 ```
 
 #### Error/Loading Pages ✅
-`error.tsx`, `global-error.tsx`, `not-found.tsx`, `loading.tsx` — all exist.
+`error.tsx`, `global-error.tsx`, `not-found.tsx`, `loading.tsx`
 
 #### Auth Pages ✅
-`/auth/login` — updated with Phone / SSFI UID toggle, sends `identifier` field to backend.
-`/auth/register` — complete with Zod validation.
-`/auth/forgot-password` — **NEW** (Feb 25): Full 3-step flow — enter phone → OTP with 60s resend countdown → new password with strength validation + success screen.
-⚠️ `/auth/verify-otp` — **DOES NOT EXIST** (OTP verify after register is not yet a page).
+- `/auth/login` — Phone / SSFI UID toggle
+- `/auth/register` — Complete with Zod validation
+- `/auth/forgot-password` — 3-step flow: phone → OTP → new password
+- ⚠️ `/auth/verify-otp` — NOT BUILT (OTP verify after register)
 
 #### Registration Forms — All Complete ✅
 | Form | Location | Status |
 |------|----------|--------|
-| Student (6-step wizard) | `components/forms/StudentRegistrationForm.tsx` | ✅ Full form with API + Razorpay |
-| State Secretary | `components/forms/affiliation/StateSecretaryForm.tsx` | ✅ Full form with API + Razorpay |
-| District Secretary | `components/forms/affiliation/DistrictSecretaryForm.tsx` | ✅ Full form |
-| Club Registration | `components/forms/affiliation/ClubRegistrationForm.tsx` | ✅ Full form |
+| Student (6-step wizard) | `components/forms/StudentRegistrationForm.tsx` | ✅ Full with Razorpay |
+| State Secretary | `components/forms/affiliation/StateSecretaryForm.tsx` | ✅ Full with Razorpay |
+| District Secretary | `components/forms/affiliation/DistrictSecretaryForm.tsx` | ✅ Full |
+| Club Registration | `components/forms/affiliation/ClubRegistrationForm.tsx` | ✅ Full |
 
-Student registration wizard steps: Personal Info → Family/School → Nominee → Club/Coach → Address → Documents
-
-#### Event Registration Flow — Complete ✅
+#### Event Registration Flow ✅
 `/events/[id]/register/page.tsx` — 3-step flow:
-1. Student UID lookup (`POST /api/event-registration/lookup`)
+1. Student UID lookup
 2. Category selection (BEGINNER/RECREATIONAL/QUAD/PRO_INLINE)
-3. Race selection with mandatory race logic → `POST /api/event-registration/register` → redirect to `/payment?registrationId=...`
+3. Race selection → Payment → Confirmation
 
-Payment page (`/payment`) uses `PaymentButton.tsx` with full Razorpay checkout.
-
-#### Payment System — Complete ✅
+#### Payment System ✅
 - `PaymentButton.tsx` — Razorpay modal integration
-- `PaymentModal.tsx`, `PaymentHistory.tsx` — Additional components
-- `hooks/usePayment.ts` — Razorpay hook
-- `hooks/useEventRegistration.ts` — Event registration hook
-- `/payment/success` and `/payment/failure` pages exist
+- `PaymentModal.tsx`, `PaymentHistory.tsx`
+- `hooks/usePayment.ts`, `hooks/useEventRegistration.ts`
+- `/payment/success` and `/payment/failure` pages
 
-#### All 5 Role-Based Dashboards — Complete ✅
+#### All 5 Role-Based Dashboards ✅
 
-**Dashboard routing:** `dashboard/page.tsx` reads `user.role` and renders the correct component.
-**Dashboard layout:** `dashboard/layout.tsx` — role-filtered sidebar nav, hamburger mobile, renewal banner, logout.
-
-| Dashboard | Component | Features |
-|-----------|-----------|----------|
-| Global Admin | `dashboard/admin/AdminDashboard.tsx` | Stats overview, pending approvals widget, charts (registration/revenue trends), recent activity, quick actions |
-| State Secretary | `dashboard/state/StateSecretaryDashboard.tsx` | District stats, pending approvals (clubs/students/events), district performance table, upcoming events, recent activity, renewal banner |
-| District Secretary | `dashboard/district/DistrictSecretaryDashboard.tsx` | Club list, stats, pending approvals, upcoming events, recent activity, renewal banner |
-| Club Owner | `dashboard/club/ClubDashboard.tsx` | Student stats, renewal banner, gender/age-category donut charts, recent students, upcoming events |
-| Student | `dashboard/student/StudentDashboard.tsx` | Profile card with UID, membership status + renewal CTA, event registrations, certificates section, club info |
+| Dashboard | Component | Key Features |
+|-----------|-----------|-------------|
+| Global Admin | `AdminDashboard.tsx` | Stats, charts, pending approvals, quick actions |
+| State Secretary | `StateSecretaryDashboard.tsx` | District stats, approvals, events, activity |
+| District Secretary | `DistrictSecretaryDashboard.tsx` | Club list, stats, approvals, events |
+| Club Owner | `ClubDashboard.tsx` | Student stats, charts, events, renewal |
+| Student | `StudentDashboard.tsx` | Profile/UID card, events, certificates, renewal |
 
 #### Dashboard Sub-Pages — All Built ✅
 ```
-dashboard/                             (overview page)
-dashboard/approvals/students/          ✅ Table + view/approve/reject modal
+dashboard/                             (role-aware overview)
+dashboard/approvals/students/          ✅
 dashboard/approvals/clubs/             ✅
 dashboard/approvals/state-secretaries/ ✅
 dashboard/approvals/district-secretaries/ ✅
 dashboard/approvals/events/            ✅
-dashboard/events/                      ✅ List
-dashboard/events/new/                  ✅ Create event form
-dashboard/events/[id]/edit/            ✅ Edit event form
-dashboard/events/[id]/registrations/   ✅ Registration list
-dashboard/manage-events/[id]/results/  ✅ Results management
-dashboard/students/                    ✅ Students list
-dashboard/students/new/                ✅ Add student
-dashboard/clubs/                       ✅ Clubs list
-dashboard/clubs/new/                   ✅ Create club
+dashboard/events/ + /new + /[id]/edit  ✅
+dashboard/events/[id]/registrations/   ✅
+dashboard/manage-events/[id]/results/  ✅
+dashboard/students/ + /new + /[id]/edit ✅
+dashboard/clubs/ + /new + /[id]/edit   ✅
 dashboard/states/                      ✅
 dashboard/districts/                   ✅
-dashboard/my-events/                   ✅ Student events list
-dashboard/my-events/[id]/              ✅ Event detail
-dashboard/payments/                    ✅ Payments table with API
+dashboard/my-events/ + /[id]           ✅
+dashboard/payments/                    ✅
 dashboard/registration-windows/        ✅
 dashboard/renewals/                    ✅
-dashboard/reports/                     ✅ Stats + charts (partial mock data)
+dashboard/reports/                     ✅ (partial mock data)
 dashboard/settings/                    ✅
-dashboard/coach-certification/         ✅ List
-dashboard/coach-certification/create/  ✅
-dashboard/coach-certification/[id]/    ✅
-dashboard/beginner-certification/      ✅ List
-dashboard/beginner-certification/create/ ✅
-dashboard/beginner-certification/[id]/ ✅
+dashboard/certificates/                ✅
+dashboard/coach-certification/ + CRUD  ✅
+dashboard/beginner-certification/ + CRUD ✅
+dashboard/cms/ (9 sections)            ✅ 100% (audited + fixed)
 ```
 
-#### CMS Dashboard — 100% Complete ✅
-All pages under `dashboard/cms/` for: banners, news, pages, gallery, menus, team, milestones, settings, contact-messages.
+#### SEO ✅
+- `generateMetadata()` on all pages, dynamic OG images
+- JSON-LD structured data (Organization, Website, Breadcrumb, Article, Event)
+- `robots.ts`, `sitemap.ts` (dynamic: news, gallery, events)
+- `manifest.json` for PWA, favicon configured
+- DNS prefetch + preconnect for API domain
+- `optimizePackageImports` for tree-shaking
 
-#### Supporting Components ✅
-```
-components/home/            (HeroSection, OurTeam, StatsCounter, FeaturedEvents, NewsSection, etc.)
-components/events/          (EventCard, EventRegistrationModal)
-components/forms/           (StudentRegistrationForm + 6 step sub-components + 3 affiliation forms)
-components/dashboard/       (all 5 role dashboards + shared DashboardComponents)
-components/payment/         (PaymentButton, PaymentModal, PaymentHistory)
-components/admin/           (ImageUpload)
-components/common/          (RenewalBanner)
-components/auth/            (RegistrationGuard)
-components/ui/              (MagneticCard, MovingBorderButton, Particles, etc.)
-components/layout/          (Header, Footer)
-```
-
-#### Hooks & Services ✅
-```
-lib/hooks/useAuth.ts           lib/hooks/useCMS.ts
-lib/hooks/useDashboard.ts      lib/hooks/useEvents.ts
-lib/hooks/useStudent.ts        lib/hooks/useAffiliation.ts
-hooks/usePayment.ts            hooks/useEventRegistration.ts
-services/dashboard.service.ts  services/certificate.service.ts
-services/renewal.service.ts    services/result.service.ts
-services/portal.service.ts
-```
-
-#### Types ✅
-```
-types/cms.ts        types/dashboard.ts   types/student.ts
-types/event.ts      types/payment.ts     types/affiliation.ts
-types/eventRegistration.ts
-```
+#### Mobile Responsiveness ✅
+- All sections have `overflow-x-hidden` to prevent horizontal scroll
+- Touch targets ≥44px on all interactive elements
+- Responsive gap/spacing with breakpoint prefixes
+- Dashboard sidebar with hamburger mobile nav
+- All modals, forms, tables are responsive
 
 ---
 
-## ⏳ What's Actually Pending
+## 4. What's Actually Pending
 
-### Backend (~3% Remaining)
+### Backend (~2% Remaining)
 
-#### ❌ Email Templates (Partial)
-`email.service.ts` exists and has `sendCredentials()` implemented. Missing:
-- Approval notification email (user approved as State/District Secretary)
-- Rejection email with reason
-- Renewal reminder email (30 days, 7 days, expired)
-- Event registration confirmation email
+#### ❌ Renewal Reminder Emails
+Automated emails before expiry (30 days, 7 days, expired) not built.
 
 #### ❌ Duplicate Files to Clean Up
-- `src/controllers/registration-window.controller.ts` AND `registrationWindow.controller.ts` — same logic
-- `src/services/registration-window.service.ts` AND `registrationWindow.service.ts` — same logic
-One of each pair should be deleted and all imports consolidated.
+- `registration-window.controller.ts` AND `registrationWindow.controller.ts` — same logic
+- `registration-window.service.ts` AND `registrationWindow.service.ts` — same logic
+- `_LEGACY_registration-window.service.ts` and `_LEGACY_registration-window.controller.ts.bak`
+One pair should be deleted and all imports consolidated.
 
-#### ❌ Aadhaar Encryption Not Applied
-`encryption.util.ts` is fully built (AES-256-CBC), but the student registration service may not be calling `encryptAadhaar()` before saving to DB. Verify `student.service.ts` uses it.
+#### ❌ Aadhaar Encryption Not Verified
+`encryption.util.ts` is built (AES-256-CBC), but verify `student.service.ts` calls `encryptAadhaar()` before saving to DB.
 
-#### ❌ Razorpay Webhook Signature Verification
-Payment webhook handler should verify `razorpay_signature` using `crypto.createHmac`. Needs hardening before production.
+#### ❌ Razorpay Webhook Hardening
+Webhook handler should verify `razorpay_signature` using HMAC. Needs review before production.
 
----
+### Frontend (~3% Remaining)
 
-### Frontend (~6% Remaining)
-
-#### ❌ Approvals Pages Use Mock/Stub Data
-The approval pages exist and look complete but use **hardcoded mock data**:
-- `dashboard/approvals/students/page.tsx` — uses `mockPendingStudents[]` array with fake approve/reject that just uses `setTimeout`
-- Other approval pages likely similar
-
-**Fix needed:** Replace mock data with real API calls:
-```typescript
-// Should call:
-GET  /api/v1/students?status=PENDING&page=1
-PUT  /api/v1/students/:id/approve
-PUT  /api/v1/students/:id/reject  (with reason body)
-// Same pattern for clubs, state/district secretaries
+#### ❌ Approvals Pages May Use Mock Data
+Some approval sub-pages may still use hardcoded mock data arrays instead of real API calls. Verify each page fetches from:
 ```
+GET  /api/v1/students?status=PENDING
+PUT  /api/v1/students/:id/approve
+PUT  /api/v1/students/:id/reject
+```
+Same pattern for clubs, state/district secretaries.
 
-#### ❌ Reports Page Uses Mock Data
-`dashboard/reports/page.tsx` has hardcoded stats (`totalRegistrations: 1250`, `totalRevenue: 450000`, etc.) and a `useEffect` comment saying "Here we could fetch real stats". 
-
-**Fix needed:** Connect to `GET /api/v1/reports/dashboard` or `GET /api/v1/stats/*`.
-
-#### ❌ Payment Stats Are Hardcoded
-`dashboard/payments/page.tsx` has `totalRevenue: 125000`, `lastMonthRevenue: 45000` hardcoded as placeholders. The transaction table itself fetches from API correctly.
-
-**Fix needed:** Fetch revenue stats from `GET /api/v1/payments/stats` or similar.
-
-#### ✅ Forgot Password Page (NEW — Feb 25)
-`/auth/forgot-password` — 3-step animated flow: phone → OTP verification → new password reset. Wired to existing backend endpoints (`/auth/forgot-password` + `/auth/reset-password`). Includes 60s resend timer, back navigation, auto-return to OTP step on expired token error.
+#### ❌ Reports & Payment Stats Hardcoded
+- `dashboard/reports/page.tsx` has `totalRegistrations: 1250`, `totalRevenue: 450000` as placeholders
+- `dashboard/payments/page.tsx` has `totalRevenue: 125000` hardcoded
 
 #### ❌ OTP Verification Page Missing
-`/auth/verify-otp` page does not exist. After registration, the OTP flow has no UI page. The backend endpoint exists (`POST /api/v1/auth/verify-otp`).
+`/auth/verify-otp` page does not exist. Backend endpoint works.
 
-#### ❌ Profile Name Hardcoded in State/District Dashboards
-- `StateSecretaryDashboard.tsx`: title is hardcoded `"Tamil Nadu Speed Skating Federation"` 
-- `DistrictSecretaryDashboard.tsx`: subtitle is hardcoded `"District Dashboard"` (no dynamic district name)
+#### ❌ Profile Names Hardcoded
+- `StateSecretaryDashboard.tsx`: "Tamil Nadu Speed Skating Federation" should be dynamic
+- `DistrictSecretaryDashboard.tsx`: generic "District Dashboard"
 
-**Fix needed:** Fetch user profile from `GET /api/v1/auth/me` or the dashboard API to get the actual state/district name.
-
-#### ❌ Export Functionality (Reports)
-The "Export Data" button in reports page is a visual placeholder — no CSV/PDF export implemented.
-
-#### ❌ View Receipt in Payments
-The "View Receipt" button in `dashboard/payments/page.tsx` has no `onClick` handler.
+#### ❌ Export & Receipt Buttons
+- "Export Data" in reports — no implementation
+- "View Receipt" in payments — no handler
 
 ---
 
-## 📁 File Structure Reference
+## 5. File Structure Reference
 
 ### Backend
 ```
-H:\SSFI-New-Back\SSFI-Updated\ssfi-backend\
+ssfi-backend/
 ├── prisma/
-│   ├── schema.prisma                    ← 30+ models
-│   ├── migrations/                      ← 4 applied migrations
+│   ├── schema.prisma                    (30+ models)
+│   ├── migrations/                      (4 applied)
 │   ├── seed-locations.ts
 │   └── seed-states.sql
 ├── src/
-│   ├── app.ts                           ← All route registrations
-│   ├── config/razorpay.config.ts
-│   ├── controllers/                     ← 24 controller files
-│   ├── services/                        ← 24 service files (incl. 2 duplicates)
-│   ├── routes/                          ← 27 route files
-│   ├── middleware/                      ← auth, error, scope, upload, validation
-│   ├── validators/                      ← 8 Zod validator files
-│   ├── utils/                           ← asyncHandler, encryption, errors, logger, response, cache
-│   ├── types/                           ← index.ts, payment.types.ts
-│   └── scripts/                         ← 8 seed/utility scripts
+│   ├── app.ts                           (Route registrations + middleware)
+│   ├── config/
+│   │   ├── prisma.ts
+│   │   └── razorpay.config.ts
+│   ├── controllers/                     (24 controllers)
+│   ├── services/                        (24 services + email.service.ts)
+│   ├── routes/                          (27 route files)
+│   ├── middleware/
+│   │   ├── auth.middleware.ts
+│   │   ├── error.middleware.ts
+│   │   ├── performance.middleware.ts     (timer, timeout, httpCacheHeaders)
+│   │   ├── scope.middleware.ts
+│   │   ├── upload.middleware.ts
+│   │   └── validation.middleware.ts
+│   ├── validators/                      (8 Zod validators)
+│   ├── utils/
+│   │   ├── asyncHandler.ts
+│   │   ├── cache.util.ts                (node-cache wrapper)
+│   │   ├── encryption.util.ts           (AES-256-CBC for Aadhaar)
+│   │   ├── errors.ts
+│   │   ├── logger.util.ts              (Winston)
+│   │   ├── response.ts
+│   │   └── response.util.ts
+│   ├── types/
+│   │   ├── index.ts
+│   │   └── payment.types.ts
+│   └── scripts/                         (8 seed/utility scripts)
+├── ecosystem.config.js                  (PM2 config)
+├── package.json
+└── tsconfig.json
 ```
 
 ### Frontend
 ```
-H:\SSFI-New-Back\SSFI-Updated\ssfi-frontend\
+ssfi-frontend/
 ├── src/
 │   ├── app/
-│   │   ├── (public)/                    ← All public pages (20+ routes)
-│   │   ├── auth/login/, auth/register/  ← Auth pages
-│   │   ├── register/                    ← All registration forms (4 types)
-│   │   ├── dashboard/                   ← All dashboard pages (30+ routes)
-│   │   │   └── cms/                     ← CMS management (9 sections)
-│   │   ├── error.tsx, not-found.tsx, loading.tsx, global-error.tsx
-│   │   └── layout.tsx, globals.css
+│   │   ├── (public)/                    (20+ public routes)
+│   │   ├── auth/                        (login, register, forgot-password)
+│   │   ├── register/                    (4 registration types + success)
+│   │   ├── dashboard/                   (30+ dashboard routes + cms/)
+│   │   ├── layout.tsx                   (Root layout with fonts, metadata, DNS prefetch)
+│   │   ├── globals.css
+│   │   ├── robots.ts
+│   │   └── sitemap.ts
 │   ├── components/
-│   │   ├── dashboard/admin/             ← AdminDashboard + 4 sections
-│   │   ├── dashboard/state/             ← StateSecretaryDashboard
-│   │   ├── dashboard/district/          ← DistrictSecretaryDashboard
-│   │   ├── dashboard/club/              ← ClubDashboard
-│   │   ├── dashboard/student/           ← StudentDashboard + CertificatesSection
-│   │   ├── dashboard/shared/            ← DashboardComponents (StatCard, RecentList, etc.)
-│   │   ├── forms/                       ← StudentRegistrationForm + 6 steps + 3 affiliation forms
-│   │   ├── payment/                     ← PaymentButton, PaymentModal, PaymentHistory
-│   │   ├── home/                        ← All home section components
-│   │   ├── events/                      ← EventCard, EventRegistrationModal
-│   │   ├── admin/                       ← ImageUpload
-│   │   ├── common/                      ← RenewalBanner
-│   │   ├── auth/                        ← RegistrationGuard
-│   │   └── ui/                          ← MagneticCard, Particles, etc.
+│   │   ├── dashboard/                   (5 role dashboards + shared + view modals)
+│   │   ├── forms/                       (StudentRegistrationForm + steps + affiliation)
+│   │   ├── home/                        (20+ home sections)
+│   │   ├── payment/                     (PaymentButton, PaymentModal, PaymentHistory)
+│   │   ├── events/                      (EventCard, EventRegistrationModal)
+│   │   ├── layout/                      (Header, Footer)
+│   │   ├── seo/                         (StructuredData)
+│   │   ├── admin/                       (ImageUpload)
+│   │   ├── common/                      (RenewalBanner)
+│   │   ├── auth/                        (RegistrationGuard)
+│   │   └── ui/                          (MagneticCard, Particles, TubelightNavbar, etc.)
 │   ├── lib/
-│   │   ├── api/client.ts                ← Axios + auto-retry + token refresh
-│   │   ├── hooks/                       ← useAuth, useCMS, useDashboard, useEvents, useStudent, useAffiliation
-│   │   ├── store/registrationStore.ts   ← Zustand store for student registration wizard
-│   │   ├── utils/status.ts
-│   │   └── validations/student.ts
-│   ├── hooks/                           ← usePayment.ts, useEventRegistration.ts
-│   ├── services/                        ← dashboard, certificate, renewal, result, portal
-│   ├── types/                           ← 7 type files
-│   └── config/roles.tsx                 ← ROLE_CONFIG (colors, labels per role)
+│   │   ├── api/client.ts                (Axios + auto-retry + token refresh)
+│   │   ├── hooks/                       (useAuth, useCMS, useDashboard, useEvents, useStudent, useAffiliation)
+│   │   ├── store/registrationStore.ts   (Zustand)
+│   │   ├── utils/
+│   │   └── validations/
+│   ├── hooks/                           (usePayment, useEventRegistration)
+│   ├── services/                        (dashboard, certificate, renewal, result, portal)
+│   ├── types/                           (7 type files)
+│   └── config/roles.tsx
+├── public/
+│   ├── images/                          (events, hero, logo, mascot, og, partners, sponsors)
+│   └── manifest.json                    (PWA manifest)
+├── next.config.js                       (rewrites, headers, image optimization, CSP)
+├── tailwind.config.ts
+├── package.json
+└── tsconfig.json
 ```
 
 ---
 
-## 🗄 Database & Migrations
+## 6. Database & Migrations
 
-**Schema:** `prisma/schema.prisma` — 30+ models including all federation entities and CMS models.
+**Schema:** `prisma/schema.prisma` — 30+ models
 
-**Migrations applied (4):**
-1. `20260127101056_add_event_fields` — Event model enhancements
-2. `20260127125045_add_affiliation_models_fixed` — State/District/Club affiliation models
-3. `20260209_add_renewal_system` — Renewal, session, expiry tracking
-4. `20260217033953_sync_schema` — Full schema sync
+**Migrations (4 applied):**
+1. `20260127101056_add_event_fields`
+2. `20260127125045_add_affiliation_models_fixed`
+3. `20260209_add_renewal_system`
+4. `20260217033953_sync_schema`
 
-**Seed scripts available** (run manually from `src/scripts/`):
-- `create-admin.ts` — Creates initial Global Admin user
-- `seed-states.ts` — Seeds all Indian states
-- `seed-locations.ts` — Seeds state+district data (also in `prisma/`)
-- `seed-events.ts` — Seeds sample events
-- `seed-test-users.ts` — Seeds test users for each role
+**Seed scripts** (in `src/scripts/`):
+- `create-admin.ts`, `seed-states.ts`, `seed-locations.ts`, `seed-events.ts`, `seed-test-users.ts`, `seed-affiliation.ts`, `seed_approvals.ts`
 
-**CMS-specific models:** Banner, News, Page, GalleryAlbum, GalleryItem, Menu, SiteSettings, TeamMember, Milestone, ContactMessage
-
-**SiteSettings.metadata JSON shape:**
-```json
-{
-  "departments": [{ "name": "string", "email": "string", "phone": "string?" }],
-  "officeHours": { "weekdays": "string", "saturday": "string" },
-  "mapEmbedUrl": "string",
-  "phone2": "string"
-}
-```
+**CMS models:** Banner, News, Page, GalleryAlbum, GalleryItem, Menu, SiteSettings, TeamMember, Milestone, ContactMessage
 
 ---
 
-## 🔌 API Endpoints Reference
+## 7. API Endpoints Reference
 
 ### Auth
 ```
@@ -433,7 +381,7 @@ POST /api/v1/auth/forgot-password, /reset-password
 GET  /api/v1/auth/me
 ```
 
-### CMS (Public)
+### CMS (Public — cached 60s)
 ```
 GET /api/v1/cms/banners?position=HOME_HERO&status=PUBLISHED
 GET /api/v1/cms/news?page=1&limit=10&status=PUBLISHED
@@ -450,162 +398,276 @@ POST /api/v1/contact/submit
 ### CMS (Admin — GLOBAL_ADMIN role)
 ```
 Full CRUD: /cms/admin/banners, /cms/admin/news, /cms/admin/pages
-           /cms/admin/gallery/albums, /cms/admin/gallery/items
-           /cms/admin/menus
+           /cms/admin/gallery/albums, /cms/admin/gallery/items, /cms/admin/menus
 PUT /api/v1/cms/admin/settings
-GET /api/v1/contact/messages (admin inbox)
+GET /api/v1/contact/messages
 PATCH /api/v1/contact/messages/:id/read
 ```
 
 ### Federation Management
 ```
-GET/POST/PUT/DEL /api/v1/students/*
-GET/POST/PUT/DEL /api/v1/events/*
-POST /api/v1/event-registration/lookup
-POST /api/v1/event-registration/races
-POST /api/v1/event-registration/register
-GET  /api/v1/event-registration/races?category=X&ageGroup=Y
-GET/POST/PUT/DEL /api/v1/clubs/*
-GET /api/v1/dashboard/stats               ← Role-aware dashboard data
-GET /api/v1/payments/*
-POST /api/v1/payments/create-order
-POST /api/v1/payments/verify
-POST /api/v1/upload/image                 ← Sharp → WebP
-GET /api/v1/stats/*
-GET/POST /api/v1/registration-windows/*
-GET/POST /api/v1/renewals/*
-GET /api/v1/reports/*
-GET /api/v1/certificates/*
-GET/POST /api/v1/result/*
-GET/POST /api/v1/coach-cert/*
-GET/POST /api/v1/beginner-cert/*
+CRUD: /students/*, /events/*, /clubs/*, /states/*, /districts/*
+POST /api/v1/event-registration/lookup, /races, /register
+GET  /api/v1/dashboard/stats              (role-aware, cached 5 min)
+POST /api/v1/payments/create-order, /verify
+POST /api/v1/upload/image                 (Sharp → WebP)
+GET  /api/v1/stats/*, /results/*, /certificates/*
+CRUD: /registration-windows/*, /renewals/*, /reports/*
+CRUD: /coach-cert/*, /beginner-cert/*
 ```
 
 ---
 
-## 🔑 Environment Variables
+## 8. Environment Variables
 
 **Backend (`ssfi-backend/.env`):**
 ```bash
-NODE_ENV=development
+NODE_ENV=production
 PORT=5001
 DATABASE_URL="mysql://user:pass@localhost:3306/ssfi_db"
+BACKEND_URL=https://api.ssfiskate.com
+FRONTEND_URL=https://ssfiskate.com
 JWT_SECRET=...
 JWT_REFRESH_SECRET=...
-FRONTEND_URL=http://localhost:3000
 ENCRYPTION_KEY=32-char-key-for-aes256
-TWILIO_ACCOUNT_SID=...
-TWILIO_AUTH_TOKEN=...
-TWILIO_PHONE_NUMBER=...
 RAZORPAY_KEY_ID=...
 RAZORPAY_KEY_SECRET=...
-SMTP_HOST=...
+SMTP_HOST=smtp.example.com
 SMTP_PORT=587
-SMTP_USER=...
+SMTP_SECURE=false
+SMTP_USER=noreply@ssfiskate.com
 SMTP_PASS=...
+SMTP_FROM_NAME=SSFI
+CONTACT_RECEIVER_EMAIL=admin@ssfiskate.com
 SEASON_CUTOFF_DATE=2025-01-01
 ```
 
 **Frontend (`ssfi-frontend/.env.local`):**
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:5001/api/v1
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=https://api.ssfiskate.com/api/v1
+NEXT_PUBLIC_SITE_URL=https://ssfiskate.com
 NEXT_PUBLIC_RAZORPAY_KEY_ID=...
 ```
 
 ---
 
-## ⚠️ Known Issues / Tech Debt
+## 9. Email Service
+
+**File:** `src/services/email.service.ts` (695 lines)
+
+**Architecture:**
+- Single `EmailService` class with shared nodemailer transporter
+- Master `layout()` function wraps all emails in consistent SSFI branding (navy header, colored banner, content body, footer)
+- Helper functions: `row()`, `uidBox()`, `alertBox()`, `credentialCard()`, `sectionCard()`, `greeting()`, `payBadge()`
+- Private `send()` method with graceful error handling (never throws)
+- `sendInBackground()` for fire-and-forget calls
+- `escapeHtml()` utility for contact form XSS prevention
+
+**8 Email Templates:**
+
+| # | Method | Subject | Sent To | Used By |
+|---|--------|---------|---------|---------|
+| 1 | `sendOTPEmail()` | `{OTP} is your SSFI verification code` | User | otp.service.ts |
+| 2 | `sendCredentials()` | `Welcome to SSFI — Your Login Credentials` | User | affiliation.service.ts |
+| 3 | `sendAffiliationConfirmation()` | `SSFI Registration Received — {Type}` | User | affiliation.service.ts (4 calls) |
+| 4 | `sendApprovalNotification()` | `SSFI Application Approved — {Type}` | User | affiliation/student services (4 calls) |
+| 5 | `sendRejectionNotification()` | `SSFI Application Update — {Type}` | User | affiliation/student services (4 calls) |
+| 6 | `sendEventRegistrationConfirmation()` | `Event Registration Confirmed — {Ref}` | User | eventRegistration.service.ts |
+| 7 | `sendBeginnerCertConfirmation()` | `Beginner Certification Registered — {Ref}` | User | beginner-cert.service.ts |
+| 8 | `sendContactFormNotification()` | `Contact Form: {Subject}` | Admin | contact.controller.ts |
+
+**16 total email call sites** across 5 service/controller files.
 
 ---
 
-## 🐛 Bug Fixes Applied (Feb 25, 2026)
+## 10. SEO & Performance
 
+### SEO Configuration
+- `layout.tsx`: metadataBase, title template, description, keywords, OG images, Twitter cards, robots, canonical
+- `robots.ts`: disallow /dashboard/, /auth/, /api/, /register/, /_next/
+- `sitemap.ts`: dynamic routes for news articles, gallery albums, events + 13 static routes
+- `manifest.json`: PWA support with SSFI branding
+- JSON-LD structured data on relevant pages (Organization, Website, Breadcrumb, Article, Event)
+- `<link rel="dns-prefetch">` and `<link rel="preconnect">` for API domain
+
+### Performance Optimizations
+- **Image optimization:** AVIF/WebP formats, 30-day cache TTL, optimized device/image sizes
+- **Font optimization:** Reduced to 7 total weights (was 11), `display: 'swap'`
+- **Package tree-shaking:** `optimizePackageImports` for lucide-react, framer-motion, react-hot-toast
+- **Static asset caching:** 1-year immutable headers for `/images/*`, `/uploads/*`, `/_next/static/*`
+- **API caching:** 60s HTTP cache headers on public GET routes (news, locations, stats, results, team-members, milestones)
+- **Dashboard caching:** node-cache with 5-min TTL, prevents redundant DB queries
+- **Security headers:** CSP, HSTS (2 years + preload), X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+
+---
+
+## 11. Hostinger Deployment Config
+
+**Plan:** Cloud Startup (200 max processes, shared resources)
+
+**PM2 Config (`ecosystem.config.js`):**
+```javascript
+{
+  name: 'ssfi-backend',
+  script: 'dist/app.js',
+  instances: 2,
+  exec_mode: 'cluster',
+  max_memory_restart: '512M',
+  env_production: {
+    NODE_ENV: 'production',
+    PORT: 5001
+  }
+}
+```
+
+**Backend optimizations for Hostinger:**
+1. ✅ Slow endpoint profiling (request timer middleware)
+2. ✅ Dashboard caching (node-cache, 5-min TTL)
+3. ✅ HTTP cache headers on public routes (60s)
+4. ✅ Non-blocking emails (fire-and-forget for all affiliation + OTP emails)
+5. ✅ Hanging connection prevention (30s request timeout)
+
+**Frontend:** Next.js with API rewrites proxying `/api/*` → `https://api.ssfiskate.com/api/v1/*`
+
+---
+
+## 12. Known Issues / Tech Debt
+
+1. **Approvals pages may use mock data** — Verify all 5 approval sub-pages fetch from real API
+2. **Reports & payment stats hardcoded** — Need real API connections
+3. **Duplicate files** — `registration-window` vs `registrationWindow` (service + controller pairs). Delete one set.
+4. **Aadhaar encryption** — Verify `encryptAadhaar()` is called in `student.service.ts`
+5. **OTP verification page missing** — `/auth/verify-otp` has no UI
+6. **State/District profile names hardcoded** — Should come from API
+7. **Export/Receipt buttons** — Placeholders with no implementation
+8. **Legacy gallery routes** — `gallery.routes.ts` can be removed (replaced by CMS gallery)
+9. **No tests** — Zero test coverage
+10. **25+ loose scripts in backend root** — Should be moved to `scripts/` directory
+11. **5 `@ts-nocheck` files** in backend (affiliation.service.ts, affiliation.controller.ts, locations.routes.ts, uid.service.ts, _LEGACY)
+12. **No `.env.example` files** — Need to create for developer onboarding
+13. **`dist/` directory** — Should be in `.gitignore`, not committed
+
+---
+
+## 13. Bug Fixes Log
+
+### Feb 25, 2026
 | Component | Bug | Fix |
 |-----------|-----|-----|
-| `StudentViewModal` | `ssfi_id` showed hash-based `user.uid` (e.g. `STU-03FF8BFB`) instead of real membership ID | `student.service.ts` now maps `ssfi_id: student.membershipId \|\| user.uid` — all 5615+ students have `SSFI/BS/TN/25/S0001` format in `students.membershipId` column |
-| `StudentViewModal` | Blood group rendered as `A++`, `B++` | Fixed replace chain: `A_POSITIVE` → `A+`, `A_NEGATIVE` → `A-` (was `.replace('_','+').replace('POSITIVE','+')` causing double `+`) |
-| `ClubViewModal` | Club name card appeared twice in modal body | Removed duplicate club identity strip — header already shows name |
-| `ClubViewModal` | Owner card title showed club/org name instead of owner info | Owner card now shows `"Club Owner"` as title with `gender · phone` as subtitle |
+| `StudentViewModal` | `ssfi_id` showed hash-based `user.uid` | Now reads `student.membershipId` |
+| `StudentViewModal` | Blood group `A_POSITIVE` → `A++` | Fixed replace chain: → `A+` |
+| `ClubViewModal` | Club name appeared twice | Removed duplicate identity strip |
+| `ClubViewModal` | Owner card showed club name | Now shows "Club Owner" title |
+
+### March 3, 2026 — Session 2 (Registration Windows + CMS Audit)
+
+**Registration Windows & Beginner Certification:**
+- Fixed `registrationWindow.service.ts`: added `.toUpperCase()` normalization for `entityType` (frontend sends lowercase `state_secretary`, backend expects Prisma enum `STATE_SECRETARY`)
+- All 6 registration window entity types now work correctly from dashboard
+
+**CMS Audit — Complete Review & Fixes:**
+| Component | Issue | Fix |
+|-----------|-------|-----|
+| CMS Hub page | Missing Banners & Menus links | Added Banners & Sliders + Navigation Menus module cards |
+| `ImageUpload` component | Dark slate-* colors invisible on white dashboard | Rewrote all colors from slate-* to gray-* |
+| Pages create/edit | Missing `featuredImage` upload (field existed in DB/types) | Added `ImageUpload` to both create & edit pages |
+| Site Settings | Missing logo/favicon upload (fields existed in DB/types) | Added Branding section with two `ImageUpload` components |
+| Settings type fix | `ImageUpload.onChange` returns `null`, Settings expects `undefined` | Used `url \|\| undefined` conversion |
+| `ScrollNavigation` | Had both up+down scroll arrows | Removed scroll-to-top arrow, kept only scroll-to-bottom |
+
+**CMS Pages Verified Working (No Changes Needed):**
+Banners ✅, News ✅, Gallery ✅, Team Members ✅, Milestones ✅, Contact Messages ✅, Menus ✅
+
+### March 2–3, 2026 (Hostinger Optimization + Quality Pass)
+
+**Backend:**
+- All `localhost:5001`/`localhost:5000` → production URLs (`api.ssfiskate.com`, `ssfiskate.com`)
+- Razorpay callback URLs fixed to production
+- Dashboard controller: added cache SET (was only doing GET)
+- 11 affiliation email calls made fire-and-forget
+- OTP email made fire-and-forget
+- HTTP cache headers on 6 public route prefixes
+- Removed 4 debug `console.log` from `club.controller.ts`
+- Contact controller refactored to use centralized `emailService` (removed duplicate transporter, -126 lines)
+- Email service: added `sendContactFormNotification()` (#8), extended `send()` with replyTo/text support
+
+**Frontend:**
+- `renewal.service.ts` and `dashboard.service.ts`: localhost fallback → production
+- `clubs/[id]/edit/page.tsx`: created full page (was empty, caused build failure)
+- `globals.css`: removed ~180 lines of duplicate CSS
+- 4 empty `alt=""` → meaningful alt text
+- Removed 2 debug `console.log` from `districts/page.tsx`
+- Font weights reduced (11 → 7)
+- Favicon, manifest.json, OG image fixed
+- DNS prefetch + preconnect for API
+- `optimizePackageImports` added
+- Static asset cache headers (1-year immutable)
+- GlobeStats: removed `min-w-[1200px]`, fixed `preserveAspectRatio`, `overflow-hidden`
+- Touch targets: Header menu `p-2` → `p-2.5`, PaymentModal close `p-2` → `p-2.5`
+- EventHighlightCards: `gap-10` → `gap-6 md:gap-10`, section overflow fixed
+- EventCategories: section overflow fixed
+- Small text bumped on public pages (WhyJoinSSFI, AffiliatedCoachesClient)
 
 ---
 
-1. **Approvals pages use mock data** — Highest priority fix. All 5 approval sub-pages need real API wiring.
-
-2. **Reports & payment stats are hardcoded** — Need real API connections.
-
-3. **Duplicate service/controller files** — `registration-window` vs `registrationWindow` (both exist). Delete one set and fix all imports.
-
-4. **Aadhaar encryption** — `encryptAadhaar()` exists in `encryption.util.ts` but verify it's being called in `student.service.ts` before DB write.
-
-5. **OTP verification page missing** — `/auth/verify-otp` route doesn't exist. The backend endpoint works but there's no UI for it.
-
-6. **State/District profile names hardcoded** — State dashboard shows "Tamil Nadu Speed Skating Federation", District shows "District Dashboard". Should come from API.
-
-7. **Email templates minimal** — Only credentials email done. Approval, rejection, renewal emails not built.
-
-8. **Export buttons are placeholders** — "Export Data" in reports and "View Receipt" in payments have no implementation.
-
-9. **Legacy gallery routes** — `gallery.routes.ts` at `/api/v1/gallery/*` still exists alongside new `/api/v1/cms/gallery/*`. Can be removed.
-
-10. **No tests** — Zero test coverage across both frontend and backend.
-
----
-
-## 📝 How to Continue in New Chat
+## 14. How to Continue in New Chat
 
 Paste this into the next conversation:
 
 ```
 I'm continuing development of the SSFI platform.
 
-Project: H:\SSFI-New-Back\SSFI-Updated\
+Project root: H:\SSFI-New-Back\SSFI-Updated\
 Backend:  ssfi-backend\   (Node.js/Express/Prisma/MySQL)
 Frontend: ssfi-frontend\  (Next.js 14/TypeScript/Tailwind)
+Docs:     SSFI-TODO.md, ssfi_handoff_doc.md (read these first)
 
-OVERALL STATUS: ~95% complete
+LIVE URLS:
+  Frontend: https://ssfiskate.com
+  Backend:  https://api.ssfiskate.com/api/v1
+  Hosting:  Hostinger Cloud Startup
+
+OVERALL STATUS: ~97% complete
 
 WHAT IS 100% DONE:
-- Auth system (JWT, OTP, refresh)
-- All 5 role-based dashboards (Admin, State Secretary, District Secretary, Club Owner, Student)
-- Complete dashboard layout with role-filtered sidebar + mobile nav
-- All registration forms (Student 6-step wizard, State Secretary, District Secretary, Club)
+- Auth system (JWT, OTP, refresh, forgot password)
+- All 5 role-based dashboards (Admin, State, District, Club, Student)
+- Dashboard layout with role-filtered sidebar + mobile nav
+- All registration forms (Student 6-step wizard, State/District Secretary, Club)
 - Event registration flow (UID lookup → category → races → Razorpay payment)
-- Payment system (PaymentButton with Razorpay, success/failure pages)
-- All dashboard sub-pages (approvals, events CRUD, students, clubs, states, districts, payments, reports, renewals, registration windows, coach/beginner certs, my-events)
-- CMS system 100% (backend API + admin dashboard + public pages)
-- Public website (home, about, contact, news, gallery, events, results, register forms, legal pages)
-- Database with 4 migrations applied, seed scripts available
+- Payment system (Razorpay modal, success/failure pages)
+- All dashboard sub-pages (approvals, events CRUD, students, clubs, payments, reports, etc.)
+- CMS system 100% (API + admin dashboard + public pages — fully audited with image upload fixes)
+- Public website (home, about, contact, news, gallery, events, results, etc.)
+- Email service with 8 templates (OTP, credentials, affiliation, approval, rejection, event reg, cert, contact)
+- SEO (metadata, sitemap, robots, JSON-LD, manifest, favicon, OG images)
+- Mobile responsiveness (overflow fixes, touch targets, responsive spacing)
+- Performance (caching, font/image optimization, tree-shaking, cache headers)
+- Security headers (CSP, HSTS, X-Frame-Options, etc.)
+- All localhost references replaced with production URLs
+- Registration windows work for all 6 entity types (case normalization fix)
+- ScrollNavigation: only scroll-to-bottom arrow (removed scroll-to-top)
+- Zero TypeScript errors on both frontend and backend builds
 
-WHAT IS PENDING (fix these):
-1. HIGHEST PRIORITY: Wire approvals pages to real API (replace mock data)
-   - dashboard/approvals/students/page.tsx uses mockPendingStudents[] hardcoded array
-   - Needs: GET /api/v1/students?status=PENDING, PUT /students/:id/approve, PUT /students/:id/reject
-   - Same fix needed for clubs, state-secretaries, district-secretaries approval pages
+WHAT IS PENDING:
+1. Wire approvals pages to real API (may still use mock data)
+2. Wire reports/payment stats to real API (hardcoded placeholders)
+3. Fix hardcoded profile names in State/District dashboards
+4. Build /auth/verify-otp page
+5. Add renewal reminder emails
+6. Clean up duplicate registration-window files
+7. Add .env.example files
+8. Export/Receipt button implementations
+9. Unit tests
 
-2. Wire reports page to real API (dashboard/reports/page.tsx uses hardcoded stats)
-   - Connect to GET /api/v1/stats/* or GET /api/v1/reports/dashboard
-
-3. Fix hardcoded profile names in dashboards:
-   - StateSecretaryDashboard: "Tamil Nadu Speed Skating Federation" should be dynamic
-   - DistrictSecretaryDashboard: shows generic "District Dashboard" instead of actual district name
-   - Pull from GET /api/v1/auth/me or the dashboard response
-
-4. Build /auth/verify-otp page (OTP verification after registration — backend works, no UI)
-
-5. Email templates: add approval/rejection/renewal reminder emails to email.service.ts
-
-6. Fix hardcoded revenue stats in dashboard/payments/page.tsx
-
-7. Clean up duplicate files: registration-window.service.ts + registrationWindow.service.ts
-
-TECH CONVENTIONS:
-- API base: http://localhost:5001/api/v1 (NEXT_PUBLIC_API_URL env)
-- Image upload: POST /upload/image → { url: "/uploads/x.webp" }
-- Dashboard dark theme: slate-900/slate-800/slate-700 with blue-600 accents
-- Hooks in: src/lib/hooks/ (useAuth, useDashboard, etc.) and src/hooks/ (usePayment, useEventRegistration)
+CONVENTIONS:
+- API base: https://api.ssfiskate.com/api/v1 (NEXT_PUBLIC_API_URL)
+- Image upload: POST /upload/image → Sharp → WebP → { url: "/uploads/x.webp" }
+- Dashboard dark theme: slate-900/800/700 with blue-600 accents
+- Hooks: src/lib/hooks/ (shared) and src/hooks/ (specific)
 - Role type: 'GLOBAL_ADMIN' | 'STATE_SECRETARY' | 'DISTRICT_SECRETARY' | 'CLUB_OWNER' | 'STUDENT'
-- All approval actions require Bearer token + role check in backend
+- Email: centralized emailService in email.service.ts (8 templates, fire-and-forget pattern)
+- Caching: node-cache (auth 2min, dashboard 5min), HTTP cache headers (public routes 60s)
 
 I want to build: [DESCRIBE WHAT YOU WANT NEXT]
 ```

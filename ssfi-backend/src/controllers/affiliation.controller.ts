@@ -11,6 +11,7 @@ import {
   registrationWindowQuerySchema,
   RegistrationTypeEnum,
 } from '../validators/affiliation.validator';
+import { studentRegistrationSchema } from '../validators/student.validator';
 import { successResponse } from '../utils/response.util';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../utils/errors';
@@ -491,6 +492,64 @@ export const registerStudent = asyncHandler(async (req: Request, res: Response) 
   });
 });
 
+/**
+ * @desc    Initiate Student Registration with Payment
+ * @route   POST /api/v1/affiliations/student/initiate
+ * @access  Public (when registration is open)
+ */
+export const initiateStudentRegistration = asyncHandler(async (req: Request, res: Response) => {
+  // Same body/file parsing as registerStudent
+  const body = { ...req.body };
+  if (req.files) {
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    if (files.profilePhoto?.[0]) body.profilePhoto = files.profilePhoto[0].path;
+    if (files.aadhaarCardImage?.[0]) body.aadhaarCardImage = files.aadhaarCardImage[0].path;
+    if (files.birthCertificate?.[0]) body.birthCertificate = files.birthCertificate[0].path;
+  }
+
+  if (body.termsAccepted === 'true') body.termsAccepted = true;
+  if (body.nomineeAge) body.nomineeAge = Number(body.nomineeAge);
+
+  const validatedData = studentRegistrationSchema.parse(body);
+
+  const { isOpen, window, message } = await affiliationService.isRegistrationOpen('STUDENT');
+  if (!isOpen || !window) {
+    throw new AppError(message, 400);
+  }
+
+  const result = await affiliationService.initiateStudentRegistration(validatedData, window.id);
+
+  return successResponse(res, {
+    statusCode: 201,
+    message: 'Registration initiated. Please complete payment.',
+    data: result,
+  });
+});
+
+/**
+ * @desc    Verify Student Registration Payment
+ * @route   POST /api/v1/affiliations/student/verify
+ * @access  Public
+ */
+export const verifyStudentPayment = asyncHandler(async (req: Request, res: Response) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    throw new AppError('Missing payment details', 400);
+  }
+
+  const result = await affiliationService.verifyStudentPayment({
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+  });
+
+  return successResponse(res, {
+    message: result.message,
+    data: result,
+  });
+});
+
 // ==========================================
 // LOOKUP & RENEWAL CONTROLLERS
 // ==========================================
@@ -607,6 +666,8 @@ export default {
 
   // Student
   registerStudent,
+  initiateStudentRegistration,
+  verifyStudentPayment,
 
   // Lookup & Renewal
   lookupMember,

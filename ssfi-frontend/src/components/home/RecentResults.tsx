@@ -152,9 +152,9 @@ const SKATE_LABELS: Record<string, string> = {
 };
 
 const CAT_COLORS: Record<string, { badge: string; accent: string }> = {
-  NATIONAL: { badge: 'bg-blue-100 text-blue-700',    accent: 'from-blue-500 to-indigo-500'    },
-  STATE:    { badge: 'bg-violet-100 text-violet-700', accent: 'from-violet-500 to-purple-500'  },
-  DISTRICT: { badge: 'bg-teal-100 text-teal-700',     accent: 'from-teal-500 to-emerald-500'   },
+  NATIONAL: { badge: 'bg-emerald-100 text-emerald-700',    accent: 'from-emerald-500 to-teal-500'    },
+  STATE:    { badge: 'bg-emerald-100 text-emerald-700', accent: 'from-emerald-500 to-teal-500'  },
+  DISTRICT: { badge: 'bg-orange-100 text-orange-700',     accent: 'from-orange-500 to-amber-500'   },
 };
 
 const CARD_INTERVAL = 3500;
@@ -369,7 +369,7 @@ export default function RecentResults() {
         style={{ backgroundImage: 'radial-gradient(circle,#d1d5db 1px,transparent 1px)', backgroundSize: '24px 24px' }}
       />
       <div className="absolute top-10 right-0 w-[500px] h-[500px] bg-emerald-100/40 rounded-full blur-[150px]" />
-      <div className="absolute bottom-10 left-0 w-[400px] h-[400px] bg-amber-50/30 rounded-full blur-[120px]" />
+      <div className="absolute bottom-10 left-0 w-[400px] h-[400px] bg-teal-50/30 rounded-full blur-[120px]" />
 
       {/* ── Floating mascot — 3D pop-out, outside the cards ── */}
       <motion.div
@@ -381,7 +381,7 @@ export default function RecentResults() {
         style={{ perspective: '1000px' }}
       >
         {/* Soft glow halo behind mascot */}
-        <div className="absolute -inset-10 bg-gradient-to-br from-emerald-200/30 via-amber-100/20 to-blue-200/25 rounded-full blur-3xl" />
+        <div className="absolute -inset-10 bg-gradient-to-br from-emerald-200/30 via-teal-100/20 to-teal-200/25 rounded-full blur-3xl" />
 
         {/* Floating animation wrapper */}
         <motion.div

@@ -1,11 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // Disable server-side image optimization — it uses Sharp which spawns
+    // threads and kills Hostinger's 200 process limit. Images are already
+    // pre-optimized as WebP at upload time on the backend.
+    unoptimized: true,
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '5001',
+        protocol: 'https',
+        hostname: 'api.ssfiskate.com',
         pathname: '/uploads/**',
       },
       {
@@ -19,19 +22,19 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  // Enable experimental optimizations
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
+  },
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:5001/api/v1/:path*',
+        destination: 'https://api.ssfiskate.com/api/v1/:path*',
       },
     ];
   },
@@ -48,11 +51,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://www.google.com https://www.gstatic.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://www.google.com https://www.gstatic.com https://static.cloudflareinsights.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: blob: http://localhost:5001 https://ssfiskate.com https://*.ssfiskate.com",
+              "img-src 'self' data: blob: https://api.ssfiskate.com https://ssfiskate.com https://*.ssfiskate.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' http://localhost:5001 https://ssfiskate.com https://*.ssfiskate.com https://api.razorpay.com https://lumberjack-cx.razorpay.com",
+              "connect-src 'self' https://api.ssfiskate.com https://ssfiskate.com https://*.ssfiskate.com https://api.razorpay.com https://lumberjack-cx.razorpay.com https://cloudflareinsights.com",
               "frame-src https://www.google.com https://maps.google.com https://api.razorpay.com",
               "object-src 'none'",
               "base-uri 'self'",
@@ -65,7 +68,35 @@ const nextConfig = {
         ],
       },
       {
+        // Prevent shared caches (Hostinger LiteSpeed, Cloudflare) from caching
+        // HTML pages for too long. Next.js defaults to s-maxage=31536000 for
+        // static pages which causes stale HTML after deployments.
+        // Short s-maxage (60s) + stale-while-revalidate gives fast responses
+        // while ensuring fresh content within ~1 minute of a deploy.
+        source: '/:path((?!_next/static|_next/image|images|uploads|favicon\\.ico).*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, s-maxage=60, stale-while-revalidate=300',
+          },
+        ],
+      },
+      {
         source: '/uploads/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // Cache static images for 1 year
+        source: '/images/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // Cache Next.js static assets (JS/CSS chunks) — already hashed
+        source: '/_next/static/(.*)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
@@ -75,3 +106,4 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+ 

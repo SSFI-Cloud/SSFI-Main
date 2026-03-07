@@ -37,7 +37,7 @@ export default function NewMenuPage() {
     finally { setSaving(false); }
   };
 
-  const inputClass = "w-full px-3 py-2 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 text-sm";
+  const inputClass = "w-full px-3 py-2 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 text-sm";
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -69,7 +69,7 @@ export default function NewMenuPage() {
           </div>
           <div className="flex items-center gap-2">
             <input type="checkbox" id="active" checked={form.isActive} onChange={e => set('isActive', e.target.checked)}
-              className="w-4 h-4 rounded border-gray-200 bg-[#f5f6f8] text-blue-600 focus:ring-blue-500" />
+              className="w-4 h-4 rounded border-gray-200 bg-[#f5f6f8] text-emerald-600 focus:ring-emerald-500" />
             <label htmlFor="active" className="text-sm text-gray-700 select-none">Active (visible on site)</label>
           </div>
         </div>
@@ -79,7 +79,7 @@ export default function NewMenuPage() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Menu Items</h3>
             <button type="button" onClick={addItem}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors">
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors">
               <Plus className="w-3.5 h-3.5" /> Add Item
             </button>
           </div>
@@ -112,7 +112,7 @@ export default function NewMenuPage() {
 
         <div className="flex justify-end">
           <button type="submit" disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium">
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Create Menu
           </button>

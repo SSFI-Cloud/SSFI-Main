@@ -160,7 +160,7 @@ export default function StateSecretariesApprovalPage() {
                         onClick={() => setFilter(l)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                             filter === l
-                                ? 'bg-blue-500 text-white'
+                                ? 'bg-emerald-500 text-white'
                                 : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                         }`}
                     >
@@ -177,7 +177,7 @@ export default function StateSecretariesApprovalPage() {
                     value={searchInput}
                     onChange={e => setSearchInput(e.target.value)}
                     placeholder="Search by name, email, or state…"
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
             </div>
 
@@ -193,7 +193,7 @@ export default function StateSecretariesApprovalPage() {
             {/* List */}
             {loading ? (
                 <div className="flex justify-center py-16">
-                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
                 </div>
             ) : secretaries.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
@@ -302,7 +302,7 @@ export default function StateSecretariesApprovalPage() {
                                     disabled={actionLoading === rejectTarget.id}
                                     className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                                 >
-                                    {actionLoading === rejectTarget.id ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Conlirm Reject'}
+                                    {actionLoading === rejectTarget.id ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirm Reject'}
                                 </button>
                             </div>
                         </motion.div>

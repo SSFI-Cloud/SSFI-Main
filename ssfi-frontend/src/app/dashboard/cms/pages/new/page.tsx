@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,7 @@ import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import apiClient from '@/lib/api/client';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 const pageSchema = z.object({
     title: z.string().min(1, 'Title is required'),
@@ -22,6 +23,7 @@ type PageForm = z.input<typeof pageSchema>;
 export default function CreatePage() {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [featuredImage, setFeaturedImage] = useState<string | null>(null);
 
     const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<PageForm>({
         resolver: zodResolver(pageSchema),
@@ -42,7 +44,13 @@ export default function CreatePage() {
     const onSubmit = async (data: PageForm) => {
         try {
             setIsSubmitting(true);
-            await apiClient.post('/cms/admin/pages', { ...data, template: 'default', status: data.isPublished ? 'PUBLISHED' : 'DRAFT', sortOrder: 0 });
+            await apiClient.post('/cms/admin/pages', {
+                ...data,
+                template: 'default',
+                status: data.isPublished ? 'PUBLISHED' : 'DRAFT',
+                sortOrder: 0,
+                featuredImage: featuredImage || undefined,
+            });
             toast.success('Page created successfully');
             router.push('/dashboard/cms/pages');
         } catch (error: any) {
@@ -75,7 +83,7 @@ export default function CreatePage() {
                             <input
                                 {...register('title')}
                                 onChange={handleTitleChange}
-                                className="w-full px-4 py-2 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500"
+                                className="w-full px-4 py-2 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500"
                                 placeholder="e.g. About Us"
                             />
                             {errors.title && (
@@ -87,7 +95,7 @@ export default function CreatePage() {
                             <label className="text-sm font-medium text-gray-700">Slug (URL)</label>
                             <input
                                 {...register('slug')}
-                                className="w-full px-4 py-2 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500"
+                                className="w-full px-4 py-2 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500"
                                 placeholder="e.g. about-us"
                             />
                             {errors.slug && (
@@ -101,7 +109,7 @@ export default function CreatePage() {
                         <textarea
                             {...register('content')}
                             rows={15}
-                            className="w-full px-4 py-3 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-blue-500 font-mono"
+                            className="w-full px-4 py-3 bg-[#f5f6f8] border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 font-mono"
                             placeholder="# Heading&#10;&#10;Write your content here..."
                         />
                         {errors.content && (
@@ -109,12 +117,20 @@ export default function CreatePage() {
                         )}
                     </div>
 
+                    <ImageUpload
+                        type="news"
+                        label="Featured Image"
+                        value={featuredImage}
+                        onChange={url => setFeaturedImage(url)}
+                        hint="Used as the page header or social share image"
+                    />
+
                     <div className="flex items-center gap-2">
                         <input
                             type="checkbox"
                             id="isPublished"
                             {...register('isPublished')}
-                            className="w-4 h-4 rounded border-gray-200 bg-[#f5f6f8] text-blue-600 focus:ring-blue-500"
+                            className="w-4 h-4 rounded border-gray-200 bg-[#f5f6f8] text-emerald-600 focus:ring-emerald-500"
                         />
                         <label htmlFor="isPublished" className="text-gray-700 select-none">
                             Publish immediately
@@ -125,7 +141,7 @@ export default function CreatePage() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
                         >
                             {isSubmitting ? (
                                 <>

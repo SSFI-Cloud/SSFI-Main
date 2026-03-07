@@ -20,7 +20,7 @@ import {
     Globe,
     X
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import StateViewModal from '@/components/dashboard/StateViewModal';
 
@@ -90,9 +90,7 @@ export default function StatesPage() {
         setViewingState(null);
         setViewLoading(true);
         try {
-            const response = await axios.get(`http://localhost:5001/api/v1/states/${stateId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get(`/states/${stateId}`);
             setViewingState(response.data?.data?.state ?? null);
         } catch (err) {
             console.error('Failed to load state profile:', err);
@@ -120,10 +118,7 @@ export default function StatesPage() {
             };
             if (searchQuery) params.search = searchQuery;
 
-            const response = await axios.get<ApiResponse>('http://localhost:5001/api/v1/states', {
-                headers: { Authorization: `Bearer ${token}` },
-                params
-            });
+            const response = await api.get<ApiResponse>('/states', { params });
 
             if (response.data && response.data.data) {
                 const { states: data, meta } = response.data.data;
@@ -131,10 +126,10 @@ export default function StatesPage() {
                 setTotalPages(meta.totalPages);
 
                 const currentStats = {
-                    totalStates: meta.total, // This will reflect filtered total
-                    totalDistricts: data.reduce((acc, d) => acc + d.districtsCount, 0),
-                    totalClubs: data.reduce((acc, d) => acc + d.clubsCount, 0),
-                    totalSkaters: data.reduce((acc, d) => acc + d.skatersCount, 0),
+                    totalStates: meta.total,
+                    totalDistricts: data.reduce((acc: number, d: any) => acc + d.districtsCount, 0),
+                    totalClubs: data.reduce((acc: number, d: any) => acc + d.clubsCount, 0),
+                    totalSkaters: data.reduce((acc: number, d: any) => acc + d.skatersCount, 0),
                 };
                 setStats(currentStats);
             }
@@ -201,7 +196,7 @@ export default function StatesPage() {
                     </button>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+                        className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2"
                     >
                         <Plus className="w-4 h-4" />
                         Add State
@@ -224,7 +219,7 @@ export default function StatesPage() {
                     className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
                             <Globe className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -241,7 +236,7 @@ export default function StatesPage() {
                     className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center">
                             <Building2 className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -278,7 +273,7 @@ export default function StatesPage() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search states..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                 </div>
                 <div className="flex items-center gap-2">
@@ -287,7 +282,7 @@ export default function StatesPage() {
                         id="registeredOnly"
                         checked={registeredOnly}
                         onChange={(e) => setRegisteredOnly(e.target.checked)}
-                        className="w-5 h-5 rounded border-gray-200 bg-gray-100 text-blue-500 focus:ring-blue-500/50"
+                        className="w-5 h-5 rounded border-gray-200 bg-gray-100 text-emerald-500 focus:ring-emerald-500/50"
                     />
                     <label htmlFor="registeredOnly" className="text-gray-700 cursor-pointer select-none">Show Registered Only</label>
                 </div>
@@ -304,7 +299,7 @@ export default function StatesPage() {
                                         type="checkbox"
                                         checked={selectedStates.length === states.length && states.length > 0}
                                         onChange={toggleSelectAll}
-                                        className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-blue-500 focus:ring-blue-500/50"
+                                        className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500 focus:ring-emerald-500/50"
                                     />
                                 </th>
                                 <th
@@ -365,7 +360,7 @@ export default function StatesPage() {
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={9} className="px-4 py-12 text-center">
-                                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                                        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                                     </td>
                                 </tr>
                             ) : states.length === 0 ? (
@@ -388,12 +383,12 @@ export default function StatesPage() {
                                                 type="checkbox"
                                                 checked={selectedStates.includes(state.id)}
                                                 onChange={() => toggleSelect(state.id)}
-                                                className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-blue-500 focus:ring-blue-500/50"
+                                                className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500 focus:ring-emerald-500/50"
                                             />
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                                                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
                                                     <Globe className="w-4 h-4 text-gray-600" />
                                                 </div>
                                                 <span className="font-medium text-gray-900">{state.state_name}</span>
@@ -434,7 +429,7 @@ export default function StatesPage() {
                                                 </button>
                                                 <button
                                                     onClick={() => setEditingState(state)}
-                                                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-blue-600 transition-colors"
+                                                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-emerald-600 transition-colors"
                                                     title="Edit"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
@@ -518,6 +513,7 @@ export default function StatesPage() {
                                     name: formData.get('name'),
                                     code: formData.get('code'),
                                     website: formData.get('website'),
+                                    logo: formData.get('logo') || undefined,
                                 };
                                 if (!editingState) {
                                     data.secretaryName = formData.get('secretaryName');
@@ -531,13 +527,9 @@ export default function StatesPage() {
                                 }
                                 try {
                                     if (editingState) {
-                                        await axios.put(`http://localhost:5001/api/v1/states/${editingState.id}`, data, {
-                                            headers: { Authorization: `Bearer ${token}` }
-                                        });
+                                        await api.put(`/states/${editingState.id}`, data);
                                     } else {
-                                        await axios.post('http://localhost:5001/api/v1/states', data, {
-                                            headers: { Authorization: `Bearer ${token}` }
-                                        });
+                                        await api.post('/states', data);
                                     }
                                     setShowAddModal(false);
                                     setEditingState(null);
@@ -556,7 +548,7 @@ export default function StatesPage() {
                                     required
                                     defaultValue={editingState?.state_name || ''}
                                     placeholder="e.g., Tamil Nadu"
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 />
                             </div>
 
@@ -568,7 +560,7 @@ export default function StatesPage() {
                                     required
                                     defaultValue={editingState?.code || ''}
                                     placeholder="e.g., TN"
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 />
                             </div>
 
@@ -579,7 +571,18 @@ export default function StatesPage() {
                                     name="website"
                                     defaultValue={editingState?.website || ''}
                                     placeholder="https://example.com"
-                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Logo URL (Optional)</label>
+                                <input
+                                    type="url"
+                                    name="logo"
+                                    defaultValue={editingState?.logo || ''}
+                                    placeholder="https://example.com/logo.png"
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 />
                             </div>
 
@@ -594,7 +597,7 @@ export default function StatesPage() {
                                                 type="text"
                                                 name="secretaryName"
                                                 required
-                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             />
                                         </div>
                                         <div>
@@ -602,7 +605,7 @@ export default function StatesPage() {
                                             <select
                                                 name="secretaryGender"
                                                 required
-                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             >
                                                 <option value="MALE">Male</option>
                                                 <option value="FEMALE">Female</option>
@@ -618,7 +621,7 @@ export default function StatesPage() {
                                                 type="email"
                                                 name="secretaryEmail"
                                                 required
-                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             />
                                         </div>
                                         <div>
@@ -627,7 +630,7 @@ export default function StatesPage() {
                                                 type="tel"
                                                 name="secretaryPhone"
                                                 required
-                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             />
                                         </div>
                                     </div>
@@ -638,7 +641,7 @@ export default function StatesPage() {
                                             type="text"
                                             name="secretaryAadhaar"
                                             required
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
 
@@ -648,7 +651,7 @@ export default function StatesPage() {
                                             name="secretaryAddress"
                                             required
                                             rows={2}
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
 
@@ -659,7 +662,7 @@ export default function StatesPage() {
                                                 type="text"
                                                 name="secretaryCity"
                                                 required
-                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             />
                                         </div>
                                         <div>
@@ -668,7 +671,7 @@ export default function StatesPage() {
                                                 type="text"
                                                 name="secretaryPincode"
                                                 required
-                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                             />
                                         </div>
                                     </div>
@@ -685,7 +688,7 @@ export default function StatesPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
+                                    className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium"
                                 >
                                     {editingState ? 'Save Changes' : 'Add State'}
                                 </button>

@@ -14,11 +14,11 @@ const eventCategories = [
         description: 'Join national championships and represent your state on the biggest stage. Compete against the best athletes from across the country.',
         image: '/images/events/national-event.webp',
         href: '/events?level=national',
-        // Amber/Orange Theme
-        cardGradient: 'from-amber-500/90 to-orange-600/90',
-        shadowColor: 'shadow-orange-500/30',
-        accentColor: 'text-amber-100',
-        buttonColor: 'bg-white text-orange-600 hover:bg-orange-50',
+        // Red/Rose Theme
+        cardGradient: 'from-red-500/90 to-teal-600/90',
+        shadowColor: 'shadow-red-500/30',
+        accentColor: 'text-red-100',
+        buttonColor: 'bg-white text-red-600 hover:bg-red-50',
     },
     {
         id: 'state',
@@ -28,10 +28,10 @@ const eventCategories = [
         image: '/images/events/state-event.webp',
         href: '/events?level=state',
         // Blue/Cyan Theme
-        cardGradient: 'from-blue-500/90 to-cyan-600/90',
-        shadowColor: 'shadow-blue-500/30',
-        accentColor: 'text-blue-100',
-        buttonColor: 'bg-white text-blue-600 hover:bg-blue-50',
+        cardGradient: 'from-emerald-500/90 to-cyan-600/90',
+        shadowColor: 'shadow-emerald-500/30',
+        accentColor: 'text-emerald-100',
+        buttonColor: 'bg-white text-emerald-600 hover:bg-emerald-50',
     },
     {
         id: 'district',
@@ -50,7 +50,7 @@ const eventCategories = [
 
 export default function EventCategories() {
     return (
-        <section className="relative py-32 bg-white overflow-visible">
+        <section className="relative py-32 bg-white overflow-x-hidden overflow-y-visible">
             {/* Background Elements */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 {/* Faded Skating Shoe Icons */}
@@ -98,7 +98,7 @@ export default function EventCategories() {
                         Event Categories
                     </span>
                     <h2 className="text-4xl md:text-6xl font-headline font-bold text-slate-900 mb-6 tracking-tight">
-                        Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Events</span>
+                        Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-500">Events</span>
                     </h2>
                     <p className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
                         From local competitions to national championships, find the perfect event for your skating journey.

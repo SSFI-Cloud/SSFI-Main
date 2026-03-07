@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -16,7 +16,7 @@ import {
     Globe,
     IndianRupee
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Link from 'next/link';
 
@@ -26,7 +26,7 @@ interface State {
     code: string;
 }
 
-const eventLevels = [
+const ALL_EVENT_LEVELS = [
     { value: 'DISTRICT', label: 'District Level', icon: Building2 },
     { value: 'STATE', label: 'State Level', icon: Flag },
     { value: 'NATIONAL', label: 'National Meet', icon: Globe },
@@ -50,19 +50,29 @@ const eventCategories = [
 
 export default function NewEventPage() {
     const router = useRouter();
-    const { token } = useAuth();
+    const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
     const [states, setStates] = useState<State[]>([]);
 
+    // Role-based event level options
+    const eventLevels = useMemo(() => {
+        if (user?.role === 'DISTRICT_SECRETARY') return ALL_EVENT_LEVELS.filter(l => l.value === 'DISTRICT');
+        if (user?.role === 'STATE_SECRETARY') return ALL_EVENT_LEVELS.filter(l => l.value === 'STATE' || l.value === 'DISTRICT');
+        if (user?.role === 'CLUB_OWNER') return ALL_EVENT_LEVELS.filter(l => l.value === 'DISTRICT');
+        return ALL_EVENT_LEVELS; // GLOBAL_ADMIN sees all
+    }, [user?.role]);
+
+    const defaultLevel = eventLevels[0]?.value || 'DISTRICT';
+
     const [formData, setFormData] = useState({
         name: '',
         code: '',
         type: 'Speed Skating',
         category: 'Championship',
-        level: 'DISTRICT',
+        level: defaultLevel,
         stateId: '',
         eventDate: '',
         endDate: '',
@@ -75,23 +85,26 @@ export default function NewEventPage() {
         maxParticipants: 100,
     });
 
+    // Update default level when eventLevels changes
     useEffect(() => {
-        // Fetch states
+        setFormData(prev => ({ ...prev, level: eventLevels[0]?.value || 'DISTRICT' }));
+    }, [eventLevels]);
+
+    useEffect(() => {
+        // Fetch states (for state dropdown — only needed for admin/state roles)
         const fetchStates = async () => {
             try {
-                const response = await axios.get('http://localhost:5001/api/v1/states', {
-                    headers: { Authorization: `Bearer ${token}` },
-                    params: { limit: 100 } // Fetch all states, not just the default 10
-                });
-                if (response.data.data?.states) {
-                    setStates(response.data.data.states);
+                const response = await api.get('/states', { params: { limit: 100 } });
+                const statesData = (response.data as any)?.data?.states || (response.data as any)?.states;
+                if (statesData) {
+                    setStates(statesData);
                 }
             } catch (err) {
                 console.error('Failed to fetch states', err);
             }
         };
-        if (token) fetchStates();
-    }, [token]);
+        fetchStates();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -99,20 +112,22 @@ export default function NewEventPage() {
         setError(null);
 
         try {
-            await axios.post('http://localhost:5001/api/v1/events', {
-                ...formData,
+            await api.post('/events', {
+                name: formData.name,
+                code: formData.code,
+                description: formData.description,
                 eventLevel: formData.level,
                 entryFee: Number(formData.baseFee),
-                eventType: formData.category, // Map UI category (Championship) to backend eventType
-                disciplines: [formData.type], // Map UI type (Speed Skating) to disciplines
+                eventType: formData.category,
+                disciplines: [formData.type],
                 stateId: formData.stateId ? Number(formData.stateId) : null,
                 eventDate: new Date(formData.eventDate).toISOString(),
-                endDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
-                registrationStartDate: formData.registrationStartDate ? new Date(formData.registrationStartDate).toISOString() : null,
-                registrationEndDate: formData.registrationEndDate ? new Date(formData.registrationEndDate).toISOString() : null,
+                eventEndDate: formData.endDate ? new Date(formData.endDate).toISOString() : null,
+                registrationStartDate: formData.registrationStartDate ? new Date(formData.registrationStartDate).toISOString() : new Date(formData.eventDate).toISOString(),
+                registrationEndDate: formData.registrationEndDate ? new Date(formData.registrationEndDate).toISOString() : new Date(formData.eventDate).toISOString(),
                 maxParticipants: Number(formData.maxParticipants),
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
+                venue: formData.venue,
+                city: formData.city,
             });
 
             setSuccess(true);
@@ -188,7 +203,7 @@ export default function NewEventPage() {
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 placeholder="e.g., 15th State Speed Skating Championship 2024"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -199,7 +214,7 @@ export default function NewEventPage() {
                                 value={formData.code}
                                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                                 placeholder="e.g., SSC2024"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -208,7 +223,7 @@ export default function NewEventPage() {
                                 required
                                 value={formData.level}
                                 onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 {eventLevels.map(level => (
                                     <option key={level.value} value={level.value}>{level.label}</option>
@@ -220,7 +235,7 @@ export default function NewEventPage() {
                             <select
                                 value={formData.type}
                                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 {eventTypes.map(type => (
                                     <option key={type} value={type}>{type}</option>
@@ -232,7 +247,7 @@ export default function NewEventPage() {
                             <select
                                 value={formData.category}
                                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             >
                                 {eventCategories.map(cat => (
                                     <option key={cat} value={cat}>{cat}</option>
@@ -246,7 +261,7 @@ export default function NewEventPage() {
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 rows={3}
                                 placeholder="Event description and details"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                     </div>
@@ -266,7 +281,7 @@ export default function NewEventPage() {
                                 required
                                 value={formData.eventDate}
                                 onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -275,25 +290,27 @@ export default function NewEventPage() {
                                 type="date"
                                 value={formData.endDate}
                                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-500 mb-2">Registration Opens</label>
+                            <label className="block text-sm font-medium text-gray-500 mb-2">Registration Opens *</label>
                             <input
                                 type="date"
+                                required
                                 value={formData.registrationStartDate}
                                 onChange={(e) => setFormData({ ...formData, registrationStartDate: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-500 mb-2">Registration Closes</label>
+                            <label className="block text-sm font-medium text-gray-500 mb-2">Registration Closes *</label>
                             <input
                                 type="date"
+                                required
                                 value={formData.registrationEndDate}
                                 onChange={(e) => setFormData({ ...formData, registrationEndDate: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                     </div>
@@ -314,7 +331,7 @@ export default function NewEventPage() {
                                 value={formData.venue}
                                 onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                                 placeholder="e.g., Jawaharlal Nehru Stadium"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -325,22 +342,25 @@ export default function NewEventPage() {
                                 value={formData.city}
                                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                                 placeholder="e.g., Chennai"
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-500 mb-2">State</label>
-                            <select
-                                value={formData.stateId}
-                                onChange={(e) => setFormData({ ...formData, stateId: e.target.value })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                            >
-                                <option value="">Select State</option>
-                                {states.map(state => (
-                                    <option key={state.id} value={state.id}>{state.state_name}</option>
-                                ))}
-                            </select>
-                        </div>
+                        {/* State dropdown — only shown for admin who needs to pick; others auto-assigned by backend */}
+                        {(user?.role === 'GLOBAL_ADMIN' || !user?.role) && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">State</label>
+                                <select
+                                    value={formData.stateId}
+                                    onChange={(e) => setFormData({ ...formData, stateId: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                >
+                                    <option value="">Select State</option>
+                                    {states.map(state => (
+                                        <option key={state.id} value={state.id}>{state.state_name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -358,7 +378,7 @@ export default function NewEventPage() {
                                 min="0"
                                 value={formData.baseFee}
                                 onChange={(e) => setFormData({ ...formData, baseFee: Number(e.target.value) })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                         <div>
@@ -368,7 +388,7 @@ export default function NewEventPage() {
                                 min="1"
                                 value={formData.maxParticipants}
                                 onChange={(e) => setFormData({ ...formData, maxParticipants: Number(e.target.value) })}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
                     </div>
@@ -385,7 +405,7 @@ export default function NewEventPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="flex-1 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isLoading ? (
                             <>

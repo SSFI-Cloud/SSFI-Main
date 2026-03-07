@@ -507,7 +507,7 @@ export const getStudentDashboard = async (studentId: number) => {
   const student = await prisma.student.findUnique({
     where: { id: studentId },
     include: {
-      user: { select: { email: true, phone: true, expiryDate: true, isApproved: true } },
+      user: { select: { uid: true, email: true, phone: true, expiryDate: true, isApproved: true } },
       club: { select: { id: true, name: true, phone: true } },
       state: { select: { name: true } },
       district: { select: { name: true } },
@@ -564,18 +564,41 @@ export const getStudentDashboard = async (studentId: number) => {
     ? Math.ceil((new Date(expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : 0;
 
+  // Split "Firstname Lastname" into parts for frontend
+  const nameParts = (student.name || '').trim().split(/\s+/);
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+
+  // Compute age category from date of birth
+  const dob = student.dateOfBirth ? new Date(student.dateOfBirth) : null;
+  let ageCategory = '';
+  if (dob) {
+    const age = Math.floor((Date.now() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+    if (age < 10) ageCategory = 'U-10';
+    else if (age < 14) ageCategory = 'U-14';
+    else if (age < 17) ageCategory = 'U-17';
+    else if (age < 20) ageCategory = 'U-20';
+    else ageCategory = 'Senior';
+  }
+
   return {
+    role: 'STUDENT',
     profile: {
       id: student.id,
+      uid: student.user?.uid || '',
+      firstName,
+      lastName,
       name: student.name,
       dateOfBirth: student.dateOfBirth,
       gender: student.gender,
+      ageCategory,
       phone: student.user?.phone,
       email: student.user?.email,
       profilePhoto: student.profilePhoto,
       club: student.club,
       state: student.state?.name,
       district: student.district?.name,
+      status: student.user?.isApproved ? 'APPROVED' : 'PENDING',
     },
     membership: {
       isApproved: student.user?.isApproved,

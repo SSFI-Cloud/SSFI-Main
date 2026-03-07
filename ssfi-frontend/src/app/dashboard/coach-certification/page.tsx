@@ -33,18 +33,18 @@ interface Program {
 
 const STATUS_CFG: Record<string, { bg: string; text: string }> = {
   DRAFT: { bg: 'bg-gray-100', text: 'text-gray-600' },
-  PUBLISHED: { bg: 'bg-blue-100', text: 'text-blue-700' },
+  PUBLISHED: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
   REGISTRATION_OPEN: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
-  REGISTRATION_CLOSED: { bg: 'bg-amber-100', text: 'text-amber-700' },
-  ONGOING: { bg: 'bg-purple-100', text: 'text-purple-700' },
+  REGISTRATION_CLOSED: { bg: 'bg-slate-100', text: 'text-slate-700' },
+  ONGOING: { bg: 'bg-teal-100', text: 'text-teal-700' },
   COMPLETED: { bg: 'bg-teal-100', text: 'text-teal-700' },
   CANCELLED: { bg: 'bg-red-100', text: 'text-red-700' },
 };
 
 const LEVEL_CFG: Record<number, { label: string; gradient: string; border: string }> = {
   1: { label: 'Level 1 — Certified Coach', gradient: 'from-sky-500 to-cyan-500', border: 'border-sky-200' },
-  2: { label: 'Level 2 — Advanced Coach', gradient: 'from-violet-500 to-purple-500', border: 'border-violet-200' },
-  3: { label: 'Level 3 — Master Coach', gradient: 'from-amber-500 to-orange-500', border: 'border-amber-200' },
+  2: { label: 'Level 2 — Advanced Coach', gradient: 'from-emerald-500 to-teal-500', border: 'border-emerald-200' },
+  3: { label: 'Level 3 — Master Coach', gradient: 'from-teal-500 to-emerald-500', border: 'border-teal-200' },
 };
 
 export default function CoachCertificationPage() {
@@ -90,7 +90,7 @@ export default function CoachCertificationPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500">
               <Award className="w-6 h-6 text-white" />
             </div>
             Coach Certification
@@ -108,17 +108,17 @@ export default function CoachCertificationPage() {
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
           <input type="text" placeholder="Search programs..." value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
         </div>
         <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
           <option value="">All Levels</option>
           <option value="1">Level 1</option>
           <option value="2">Level 2</option>
           <option value="3">Level 3</option>
         </select>
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
           <option value="">All Status</option>
           <option value="DRAFT">Draft</option>
           <option value="PUBLISHED">Published</option>
@@ -187,11 +187,11 @@ export default function CoachCertificationPage() {
 
                   <div className="flex items-center gap-2">
                     <Link href={'/dashboard/coach-certification/' + p.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 text-sm border border-gray-100 transition-all">
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white hover:bg-emerald-50 text-gray-600 hover:text-emerald-600 text-sm border border-gray-100 transition-all">
                       <Eye className="w-3.5 h-3.5" /> View
                     </Link>
                     <Link href={'/dashboard/coach-certification/create?edit=' + p.id}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 text-sm border border-gray-100 transition-all">
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white hover:bg-emerald-50 text-gray-600 hover:text-emerald-600 text-sm border border-gray-100 transition-all">
                       <Edit2 className="w-3.5 h-3.5" /> Edit
                     </Link>
                     <button onClick={() => handleDelete(p.id)}

@@ -33,8 +33,8 @@ interface Program {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  REGISTERED: 'bg-blue-100 text-blue-700', PAYMENT_PENDING: 'bg-yellow-100 text-yellow-700',
-  CONFIRMED: 'bg-emerald-100 text-emerald-700', ATTENDED: 'bg-purple-100 text-purple-700',
+  REGISTERED: 'bg-emerald-100 text-emerald-700', PAYMENT_PENDING: 'bg-yellow-100 text-yellow-700',
+  CONFIRMED: 'bg-emerald-100 text-emerald-700', ATTENDED: 'bg-teal-100 text-teal-700',
   COMPLETED: 'bg-teal-100 text-teal-700', FAILED: 'bg-red-100 text-red-700',
   CANCELLED: 'bg-gray-100 text-gray-600',
 };
@@ -85,7 +85,7 @@ export default function ProgramDetailPage() {
   const handleExport = async () => {
     try {
       const res = await api.get('/coach-cert/programs/' + id + '/registrations/export', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const url = window.URL.createObjectURL(new Blob([res.data as any]));
       const a = document.createElement('a'); a.href = url;
       a.download = 'coach-cert-registrations-' + id + '.xlsx'; a.click();
       window.URL.revokeObjectURL(url);
@@ -145,9 +145,9 @@ export default function ProgramDetailPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Total Registered', value: stats.total, icon: Users, color: 'text-blue-700' },
+          { label: 'Total Registered', value: stats.total, icon: Users, color: 'text-emerald-700' },
           { label: 'Paid', value: stats.paid, icon: IndianRupee, color: 'text-emerald-700' },
-          { label: 'Confirmed', value: stats.confirmed, icon: CheckCircle2, color: 'text-purple-700' },
+          { label: 'Confirmed', value: stats.confirmed, icon: CheckCircle2, color: 'text-teal-700' },
           { label: 'Completed', value: stats.completed, icon: Award, color: 'text-amber-700' },
         ].map((s, i) => (
           <div key={i} className="rounded-xl bg-white border border-gray-100 shadow-sm p-4">
@@ -262,7 +262,7 @@ export default function ProgramDetailPage() {
           <div className="p-4 border-t border-gray-200 flex justify-center gap-2">
             {Array.from({ length: meta.totalPages }, (_, i) => (
               <button key={i} onClick={() => fetchRegistrations(i + 1)}
-                className={`px-3 py-1 rounded-lg text-sm ${meta.page === i + 1 ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}>
+                className={`px-3 py-1 rounded-lg text-sm ${meta.page === i + 1 ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:text-gray-900'}`}>
                 {i + 1}
               </button>
             ))}

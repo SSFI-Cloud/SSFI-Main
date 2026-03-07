@@ -51,7 +51,7 @@ export default function NewsPage() {
           <p className="text-gray-500 text-sm">Manage news articles, announcements, and press releases</p>
         </div>
         <Link href="/dashboard/cms/news/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium">
+          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
           <Plus className="w-4 h-4" /> Create Article
         </Link>
       </div>
@@ -62,7 +62,7 @@ export default function NewsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input type="text" placeholder="Search articles..." value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-blue-500 text-sm placeholder:text-gray-600" />
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:border-emerald-500 text-sm placeholder:text-gray-600" />
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export default function NewsPage() {
             <p className="text-gray-500 text-sm mb-5">Create your first news article to get started.</p>
             {!searchQuery && (
               <Link href="/dashboard/cms/news/new"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
+                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm">
                 <Plus className="w-4 h-4" /> Create Article
               </Link>
             )}
@@ -103,7 +103,7 @@ export default function NewsPage() {
                     <tr key={article.id} className="hover:bg-gray-100/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-blue-100 text-blue-600 mt-0.5 shrink-0">
+                          <div className="p-2 rounded-lg bg-emerald-100 text-emerald-600 mt-0.5 shrink-0">
                             <FileText className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
@@ -153,7 +153,7 @@ export default function NewsPage() {
         <div className="flex justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
             <button key={p} onClick={() => setParams(prev => ({ ...prev, page: p }))}
-              className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${p === params.page ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-100'}`}>
+              className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${p === params.page ? 'bg-emerald-600 text-white' : 'bg-white text-gray-500 hover:bg-gray-100'}`}>
               {p}
             </button>
           ))}

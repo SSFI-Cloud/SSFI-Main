@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ArrowRight, Sparkles, Trophy, GraduationCap, UserPlus } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { api } from '@/lib/api/client';
+import { useInView } from 'framer-motion';
 
-interface HeroSlide {
+/* ─── Types ─── */
+interface CMSBanner {
   id: string;
   title: string;
   subtitle?: string;
@@ -15,230 +15,452 @@ interface HeroSlide {
   linkUrl?: string;
   linkText?: string;
   sortOrder: number;
+  metadata?: {
+    badge?: string;
+    highlight?: string;
+    description?: string;
+    secondaryCtaText?: string;
+    secondaryCtaLink?: string;
+    ghostWord?: string;
+  };
 }
 
-const FALLBACK_SLIDES = [
+interface SlideData {
+  id: string;
+  tag: string;
+  titleLine1: string;
+  accent: string;
+  stroke: string;
+  description: string;
+  ctaText: string;
+  ctaLink: string;
+  secondaryText: string;
+  secondaryLink: string;
+  image: string;
+  ghost: string;
+  stats: { n: string; l: string }[];
+}
+
+/* ─── Static fallback slides ─── */
+const FALLBACK_SLIDES: SlideData[] = [
   {
-    id: 'join-skating',
-    badge: 'Start Your Journey',
-    title: 'Lace Up.',
-    highlight: 'Roll Forward.',
-    subtitle: 'Dream Big.',
-    description: "Every champion started with a single stride. Join India's fastest-growing skating community and discover the thrill of speed, balance, and endless possibility.",
-    ctaText: 'Join SSFI Today',
-    ctaLink: '/auth/register',
-    secondaryCta: { text: 'Learn More', link: '/about' },
-    image: '/images/hero/slide-1.webp',
-    gradient: 'from-blue-600/30 via-cyan-500/20 to-transparent',
-    icon: Sparkles,
-  },
-  {
-    id: 'national-event',
-    badge: 'Just Concluded',
-    title: 'National Championship',
-    highlight: '2025 Recap',
-    subtitle: 'Records Shattered. Stars Born.',
-    description: 'Over 2,000 athletes from 28 states competed in the biggest skating showdown India has ever seen.',
+    id: 'national-championship',
+    tag: 'Just Concluded \u00b7 National Championship 2025',
+    titleLine1: 'National',
+    accent: 'Championship',
+    stroke: '2025 Recap',
+    description: 'Records shattered. Stars born. Over 2,000 athletes from 28 states competed in India\u2019s biggest speed skating showdown.',
     ctaText: 'View Results & Gallery',
     ctaLink: '/gallery',
-    secondaryCta: { text: 'See Events', link: '/events' },
-    image: '/images/hero/slide-2.webp',
-    gradient: 'from-amber-600/30 via-orange-500/20 to-transparent',
-    icon: Trophy,
+    secondaryText: 'See Events',
+    secondaryLink: '/events',
+    image: '/images/hero/Hero-1.webp',
+    ghost: 'GLORY',
+    stats: [
+      { n: '2,000+', l: 'Athletes' },
+      { n: '28', l: 'States' },
+      { n: '5,616+', l: 'Registered' },
+    ],
   },
   {
-    id: 'coach-training',
-    badge: 'Certification Program',
-    title: 'Shape the Next',
-    highlight: 'Generation.',
-    subtitle: 'SSFI Coach Training Program',
-    description: 'Become a certified SSFI coach. Our comprehensive training program equips you with world-class techniques and credentials.',
+    id: 'find-club',
+    tag: 'Registrations Open \u00b7 Season 2025\u201326',
+    titleLine1: 'Empowering',
+    accent: 'Young India',
+    stroke: 'Find a Club',
+    description: '500+ affiliated clubs across 18 states. From beginners to elite \u2014 every young skater has a home with SSFI.',
+    ctaText: 'Register Now',
+    ctaLink: '/auth/register',
+    secondaryText: 'View Programs',
+    secondaryLink: '/beginner-program',
+    image: '/images/hero/Hero-2.webp',
+    ghost: 'SPEED',
+    stats: [
+      { n: '500+', l: 'Clubs' },
+      { n: '18', l: 'States' },
+      { n: 'Age 6+', l: 'Any Level' },
+    ],
+  },
+  {
+    id: 'coach-certification',
+    tag: 'Certification Open \u00b7 Apply Now',
+    titleLine1: 'Coach &',
+    accent: 'Referee',
+    stroke: 'Certification',
+    description: 'Get nationally certified. 3 levels of coach certification and referee licensing \u2014 shaping the future of Indian speed skating.',
     ctaText: 'Apply for Certification',
-    ctaLink: '/affiliated-coaches',
-    secondaryCta: { text: 'Program Details', link: '/affiliated-coaches' },
-    image: '/images/hero/hero_speed_new.jpg',
-    gradient: 'from-emerald-600/30 via-green-500/20 to-transparent',
-    icon: GraduationCap,
+    ctaLink: '/coach-certification',
+    secondaryText: 'View Coaches',
+    secondaryLink: '/affiliated-coaches',
+    image: '/images/hero/Hero-3.webp',
+    ghost: 'INDIA',
+    stats: [
+      { n: '240+', l: 'Coaches' },
+      { n: '3', l: 'Cert Levels' },
+      { n: 'All India', l: 'Recognition' },
+    ],
   },
   {
-    id: 'registrations',
-    badge: 'Registrations Open',
-    title: 'Your Spot Is',
-    highlight: 'Waiting.',
-    subtitle: 'Secretary & Student Registration',
+    id: 'register-now',
+    tag: 'Season 2025\u201326 \u00b7 Registrations Open',
+    titleLine1: 'Your Spot Is',
+    accent: 'Waiting.',
+    stroke: 'Register Now',
     description: 'Registration windows are now open for State/District Secretaries and Student Athletes. Secure your place.',
     ctaText: 'Register Now',
     ctaLink: '/auth/register',
-    secondaryCta: { text: 'Check Eligibility', link: '/about' },
-    image: '/images/hero/hero_national_new.jpg',
-    gradient: 'from-purple-600/30 via-violet-500/20 to-transparent',
-    icon: UserPlus,
+    secondaryText: 'About SSFI',
+    secondaryLink: '/about',
+    image: '/images/hero/Hero-4.webp',
+    ghost: 'SKATE',
+    stats: [
+      { n: '36', l: 'States' },
+      { n: '5,616+', l: 'Skaters' },
+      { n: 'Open', l: 'Season' },
+    ],
   },
 ];
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1').replace('/api/v1', '');
+const GHOST_WORDS = ['GLORY', 'SPEED', 'INDIA', 'SKATE'];
 
+/* ─── CSS Keyframes ─── */
+const heroCSS = `
+@keyframes hero-up{to{opacity:1;transform:translateY(0)}}
+@keyframes hero-ken{from{transform:scale(1.08)}to{transform:scale(1)}}
+@keyframes hero-swipe{0%{left:-110%;opacity:0}8%{opacity:1}65%{opacity:0.85}100%{left:120%;opacity:0}}
+@keyframes hero-pdot{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.6)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+@keyframes hero-pip-fill{from{width:0%}to{width:100%}}
+`;
+
+/* ─── Component ─── */
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [direction, setDirection] = useState(1);
-  const [cmsSlides, setCmsSlides] = useState<HeroSlide[] | null>(null);
+  const [fireLines, setFireLines] = useState(false);
+  const [slideKey, setSlideKey] = useState(0);
+  const [cmsSlides, setCmsSlides] = useState<CMSBanner[] | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load HOME_HERO banners from CMS — fallback silently if none
+  // Load CMS banners
   useEffect(() => {
     api.get('/cms/banners?position=HOME_HERO&status=PUBLISHED')
       .then(res => {
-        const data: HeroSlide[] = res.data?.data || [];
-        if (data.length > 0) {
-          setCmsSlides(data.sort((a, b) => a.sortOrder - b.sortOrder));
+        const data: CMSBanner[] = res.data?.data || [];
+        if (data.length > 0) setCmsSlides(data.sort((a, b) => a.sortOrder - b.sortOrder));
+      })
+      .catch(() => {});
+  }, []);
+
+  const hasCms = cmsSlides && cmsSlides.length > 0;
+
+  // Map CMS banners to slide format using metadata fields
+  const cmsAdapted: SlideData[] = (cmsSlides || []).map((s, i) => {
+    const meta = s.metadata || {};
+    const fallback = FALLBACK_SLIDES[i % FALLBACK_SLIDES.length];
+    return {
+      id: s.id,
+      tag: meta.badge || s.subtitle || 'SSFI Announcement',
+      titleLine1: s.title,
+      accent: meta.highlight || '',
+      stroke: '',
+      description: meta.description || '',
+      ctaText: s.linkText || 'Learn More',
+      ctaLink: s.linkUrl || '/about',
+      secondaryText: meta.secondaryCtaText || '',
+      secondaryLink: meta.secondaryCtaLink || '',
+      image: s.imageUrl
+        ? (s.imageUrl.startsWith('http') ? s.imageUrl : `${API_BASE}${s.imageUrl}`)
+        : fallback.image,
+      ghost: meta.ghostWord || GHOST_WORDS[i % GHOST_WORDS.length],
+      stats: fallback.stats,
+    };
+  });
+
+  const slides = hasCms ? cmsAdapted : FALLBACK_SLIDES;
+  const N = slides.length;
+
+  const goTo = useCallback((n: number) => {
+    setCurrent(n);
+    setSlideKey(k => k + 1);
+    setFireLines(false);
+    requestAnimationFrame(() => setFireLines(true));
+    setTimeout(() => setFireLines(false), 700);
+  }, []);
+
+  const next = useCallback(() => goTo((current + 1) % N), [current, N, goTo]);
+  const prev = useCallback(() => goTo((current - 1 + N) % N), [current, N, goTo]);
+
+  useEffect(() => { setCurrent(0); }, [hasCms]);
+
+  // Auto-advance
+  useEffect(() => {
+    if (isPaused) return;
+    timerRef.current = setInterval(() => {
+      setCurrent(c => {
+        const n = (c + 1) % N;
+        setSlideKey(k => k + 1);
+        setFireLines(false);
+        requestAnimationFrame(() => setFireLines(true));
+        setTimeout(() => setFireLines(false), 700);
+        return n;
+      });
+    }, 5800);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [isPaused, N]);
+
+  // Keyboard nav
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'ArrowLeft') prev();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [next, prev]);
+
+  const slide = slides[current];
+  if (!slide) return null;
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: heroCSS }} />
+
+      <section
+        className="relative overflow-hidden bg-[#06101e]"
+        style={{ height: 'calc(100vh - 72px - var(--ribbon-h, 0px))', minHeight: 520 }}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {/* Speed Lines */}
+        <div className="absolute inset-0 z-[20] pointer-events-none overflow-hidden">
+          {[33, 50, 67, 43, 58].map((top, i) => (
+            <div
+              key={`sl-${i}`}
+              className="absolute"
+              style={{
+                top: `${top}%`,
+                left: '-110%',
+                height: i === 1 ? 2.5 : i >= 3 ? 1 : 2,
+                width: ['85%', '105%', '70%', '50%', '60%'][i],
+                background: 'linear-gradient(to right, transparent, rgba(16,185,129,0.9), rgba(255,255,255,0.95), rgba(16,185,129,0.9), transparent)',
+                borderRadius: 2,
+                opacity: 0,
+                ...(fireLines ? {
+                  animation: `hero-swipe ${[0.55, 0.58, 0.52, 0.42, 0.44][i]}s cubic-bezier(0.4,0,0.2,1) ${[0, 0.05, 0.02, 0.09, 0.07][i]}s forwards`,
+                } : {}),
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Top accent line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] z-[15]" style={{ background: 'linear-gradient(to right, #10b981 0%, rgba(16,185,129,0.3) 40%, transparent 70%)' }} />
+
+        {/* Vertical label */}
+        <div className="absolute left-4 top-1/2 z-10 pointer-events-none hidden lg:block text-[8px] tracking-[6px] uppercase whitespace-nowrap"
+          style={{ color: 'rgba(255,255,255,0.1)', transform: 'translateY(-50%) rotate(-90deg)', transformOrigin: 'center' }}>
+          Speed Skating Federation of India &mdash; Est. 2001
+        </div>
+
+        {/* ─── Slides ─── */}
+        {slides.map((s, i) => {
+          const isActive = i === current;
+          return (
+            <div key={s.id} className={`absolute inset-0 transition-none ${isActive ? 'z-[2] opacity-100' : 'z-[1] opacity-0 pointer-events-none'}`}>
+              {/* BG Image with Ken Burns */}
+              <div className="absolute inset-0" style={{
+                animation: isActive ? 'hero-ken 7s ease forwards' : 'none',
+                transform: isActive ? undefined : 'scale(1.08)',
+                willChange: 'transform',
+              }}>
+                <Image src={s.image} alt={s.titleLine1} fill className="object-cover" style={{ objectPosition: 'center 25%' }} priority={i === 0} quality={90} sizes="100vw" />
+              </div>
+
+              {/* Overlays */}
+              <div className="absolute inset-0 z-[2]" style={{ background: 'linear-gradient(100deg, rgba(6,16,30,0.97) 0%, rgba(6,16,30,0.82) 30%, rgba(6,16,30,0.45) 55%, rgba(6,16,30,0.1) 75%, transparent 90%)' }} />
+              <div className="absolute bottom-0 left-0 right-0 z-[2]" style={{ height: '40%', background: 'linear-gradient(to top, rgba(6,16,30,0.95), transparent)' }} />
+              <div className="absolute top-0 left-0 right-0 z-[2]" style={{ height: '18%', background: 'linear-gradient(to bottom, rgba(6,16,30,0.7), transparent)' }} />
+
+              {/* Ghost word — font-hero (900 italic) */}
+              <div className="absolute bottom-[-20px] right-[-10px] z-[3] pointer-events-none select-none font-hero italic"
+                style={{ fontSize: 'clamp(110px, 18vw, 240px)', fontWeight: 900, letterSpacing: -4, lineHeight: 1, color: 'transparent', WebkitTextStroke: '1px rgba(16,185,129,0.1)', textTransform: 'uppercase' }}>
+                {s.ghost}
+              </div>
+
+              {/* Slide content */}
+              <div className="absolute left-0 bottom-0 w-full sm:w-[65%] lg:w-[58%] px-5 sm:px-10 lg:px-[52px] pb-14 sm:pb-14 z-10">
+                {/* Tag — body font (light weight) */}
+                <div style={{ opacity: 0, transform: 'translateY(22px)', animation: isActive ? 'hero-up 0.5s ease 0.12s forwards' : 'none' }}>
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-[14px] sm:py-[5px] mb-4 sm:mb-[18px] rounded-full border"
+                    style={{ background: 'rgba(16,185,129,0.1)', borderColor: 'rgba(16,185,129,0.25)' }}>
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#10b981', animation: 'hero-pdot 2s infinite' }} />
+                    <span className="text-[10px] sm:text-[11px] font-medium tracking-[3px] uppercase" style={{ color: '#10b981' }}>{s.tag}</span>
+                  </span>
+                </div>
+
+                {/* Title — font-hero (900 italic) */}
+                <div style={{ opacity: 0, transform: 'translateY(22px)', animation: isActive ? 'hero-up 0.55s ease 0.24s forwards' : 'none' }}>
+                  <h1 className="font-hero italic uppercase mb-3 sm:mb-4 leading-[0.92] tracking-tight"
+                    style={{ fontSize: 'clamp(42px, 7.2vw, 94px)', fontWeight: 900 }}>
+                    <span className="text-white block">{s.titleLine1}</span>
+                    {s.accent && <span className="block" style={{ color: '#10b981' }}>{s.accent}</span>}
+                    {s.stroke && <span className="block" style={{ color: 'transparent', WebkitTextStroke: '2px rgba(255,255,255,0.7)' }}>{s.stroke}</span>}
+                  </h1>
+                </div>
+
+                {/* Description — hidden on very small screens for space */}
+                {s.description && (
+                  <div className="hidden sm:block" style={{ opacity: 0, transform: 'translateY(22px)', animation: isActive ? 'hero-up 0.5s ease 0.38s forwards' : 'none' }}>
+                    <p className="text-sm font-light leading-[1.75] mb-8 max-w-[390px]" style={{ color: 'rgba(255,255,255,0.58)' }}>
+                      {s.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Buttons */}
+                <div style={{ opacity: 0, transform: 'translateY(22px)', animation: isActive ? 'hero-up 0.5s ease 0.38s forwards' : 'none' }}>
+                  <div className="flex flex-wrap gap-3">
+                    <Link href={s.ctaLink}
+                      className="inline-flex items-center gap-2 px-5 py-3 sm:px-[26px] sm:py-[13px] rounded-md font-hero text-[11px] sm:text-xs font-bold tracking-[2.5px] uppercase text-black transition-all duration-200 hover:translate-x-[3px]"
+                      style={{ background: '#10b981' }}>
+                      {s.ctaText}
+                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5h9M8 3l3.5 3.5L8 10" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </Link>
+                    {s.secondaryText && s.secondaryLink && (
+                      <Link href={s.secondaryLink}
+                        className="inline-flex items-center gap-2 px-5 py-3 sm:px-[22px] sm:py-[12px] rounded-md font-hero text-[11px] sm:text-xs font-bold tracking-[2px] uppercase border transition-all duration-200 hover:border-white/45 hover:text-white"
+                        style={{ color: 'rgba(255,255,255,0.65)', borderColor: 'rgba(255,255,255,0.18)' }}>
+                        {s.secondaryText}
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats badge — font-hero for numbers, body for labels */}
+              <div className="absolute right-4 sm:right-[4%] bottom-14 sm:bottom-14 z-10 hidden sm:flex gap-[1px]"
+                style={{ opacity: 0, transform: 'translateY(14px)', animation: isActive ? 'hero-up 0.5s ease 0.62s forwards' : 'none' }}>
+                {s.stats.map((st, si) => (
+                  <div key={si} className="text-center backdrop-blur-sm"
+                    style={{
+                      background: 'rgba(8,18,34,0.88)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      padding: '13px 20px',
+                      minWidth: 105,
+                      borderRadius: si === 0 ? '8px 0 0 8px' : si === s.stats.length - 1 ? '0 8px 8px 0' : 0,
+                      borderLeft: si > 0 ? 'none' : undefined,
+                      borderRight: si < s.stats.length - 1 ? 'none' : undefined,
+                    }}>
+                    <div className="font-hero text-[26px] font-bold leading-none mb-[3px]" style={{ color: '#10b981' }}>{st.n}</div>
+                    <div className="text-[9px] font-medium tracking-[2px] uppercase" style={{ color: 'rgba(255,255,255,0.35)' }}>{st.l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* ─── Progress Nav ─── */}
+        <div className="absolute bottom-5 sm:bottom-7 left-6 sm:left-[52px] z-10 flex items-center gap-2">
+          {slides.map((s, i) => (
+            <button key={s.id} onClick={() => goTo(i)} className="flex items-center gap-2 py-1 cursor-pointer" aria-label={`Slide ${i + 1}`}>
+              <div className="relative overflow-hidden rounded-sm transition-all duration-300"
+                style={{ width: i === current ? 52 : 28, height: 3, background: 'rgba(255,255,255,0.12)' }}>
+                {i === current && (
+                  <div key={`pip-${slideKey}`} className="absolute left-0 top-0 bottom-0 rounded-sm" style={{ background: '#10b981', animation: 'hero-pip-fill 5.5s linear forwards' }} />
+                )}
+              </div>
+              <span className="font-hero text-[10px] tracking-[1px] transition-colors duration-300"
+                style={{ color: i === current ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.2)' }}>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* ─── Arrow Nav ─── */}
+        <div className="absolute bottom-5 sm:bottom-[22px] right-6 sm:right-[52px] z-10 flex gap-2">
+          <button onClick={prev} className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 text-[15px] select-none hover:text-[#10b981]"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.45)' }} aria-label="Previous">&#8592;</button>
+          <button onClick={next} className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-200 text-[15px] select-none hover:text-[#10b981]"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.45)' }} aria-label="Next">&#8594;</button>
+        </div>
+      </section>
+
+      {/* ─── Stats Strip (dynamic from backend) ─── */}
+      <StatsStrip />
+
+      {/* ─── Seamless transition: navy → white ─── */}
+      <div className="h-40 sm:h-56 lg:h-64" style={{ background: 'linear-gradient(to bottom, #0e1e38 0%, #13243f 12%, #1a3050 24%, #243d5e 36%, #3a5a7a 46%, #5d809e 55%, #8aa8c0 64%, #b0c8d8 72%, #d0dee8 80%, #e4ecf1 87%, #f2f5f7 93%, #ffffff 100%)' }} />
+
+    </>
+  );
+};
+
+/* ─── Animated Counter ─── */
+function AnimatedCounter({ target, suffix = '', duration = 2000 }: { target: number; suffix?: string; duration?: number }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
+
+  useEffect(() => {
+    if (!isInView || target === 0) return;
+    let start: number | null = null;
+    let rafId: number;
+    const step = (ts: number) => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setCount(Math.floor(eased * target));
+      if (p < 1) rafId = requestAnimationFrame(step);
+      else setCount(target);
+    };
+    rafId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafId);
+  }, [isInView, target, duration]);
+
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+}
+
+/* ─── Stats Strip (backend-connected) ─── */
+function StatsStrip() {
+  const [stats, setStats] = useState({ students: 0, states: 0, clubs: 0, events: 0, certifiedCoaches: 0 });
+
+  useEffect(() => {
+    api.get('/stats/public')
+      .then(response => {
+        const payload = (response.data as any);
+        if (payload.success || payload.status === 'success') {
+          const d = payload.data ?? payload;
+          setStats({ students: d.students || 0, states: d.states || 0, clubs: d.clubs || 0, events: d.totalEvents || d.events || 0, certifiedCoaches: d.certifiedCoaches || 0 });
         }
       })
       .catch(() => {});
   }, []);
 
-  // Determine which slides to show
-  const hasCms = cmsSlides && cmsSlides.length > 0;
-
-  // Adapted slide structure for CMS banners
-  const cmsAdapted = (cmsSlides || []).map((s, i) => ({
-    id: s.id,
-    badge: s.subtitle || 'SSFI Announcement',
-    title: s.title,
-    highlight: '',
-    subtitle: s.subtitle || '',
-    description: '',
-    ctaText: s.linkText || 'Learn More',
-    ctaLink: s.linkUrl || '/about',
-    secondaryCta: null as null,
-    image: s.imageUrl ? (s.imageUrl.startsWith('http') ? s.imageUrl : `${API_BASE}${s.imageUrl}`) : `/images/hero/slide-${(i % 4) + 1}.webp`,
-    gradient: ['from-blue-600/30 via-cyan-500/20 to-transparent', 'from-amber-600/30 via-orange-500/20 to-transparent', 'from-emerald-600/30 via-green-500/20 to-transparent', 'from-purple-600/30 via-violet-500/20 to-transparent'][i % 4],
-    icon: [Sparkles, Trophy, GraduationCap, UserPlus][i % 4],
-  }));
-
-  const slides = hasCms ? cmsAdapted : FALLBACK_SLIDES;
-
-  const next = useCallback(() => { setDirection(1); setCurrent((p) => (p + 1) % slides.length); }, [slides.length]);
-  const prev = useCallback(() => { setDirection(-1); setCurrent((p) => (p - 1 + slides.length) % slides.length); }, [slides.length]);
-
-  useEffect(() => {
-    setCurrent(0); // reset on slide source change
-  }, [hasCms]);
-
-  useEffect(() => {
-    if (isPaused) return;
-    const t = setInterval(next, 6000);
-    return () => clearInterval(t);
-  }, [isPaused, next]);
-
-  const slide = slides[Math.min(current, slides.length - 1)];
-  if (!slide) return null;
-  const Icon = slide.icon;
+  const items = [
+    { value: stats.students, suffix: '+', label: 'Registered Skaters' },
+    { value: stats.states, suffix: '', label: 'State Associations' },
+    { value: stats.events, suffix: '+', label: 'National Events' },
+    { value: stats.clubs, suffix: '+', label: 'Affiliated Clubs' },
+    { value: stats.certifiedCoaches, suffix: '+', label: 'Certified Coaches' },
+  ];
 
   return (
-    <section className="relative overflow-hidden" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
-      {/* BG Image */}
-      <AnimatePresence mode="wait" custom={direction}>
-        <motion.div key={slide.id + '-bg'} initial={{ opacity: 0, scale: 1.08 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0">
-          <Image src={slide.image} alt={slide.title} fill className="object-cover" priority quality={90} />
-          <div className="absolute inset-0 bg-gray-950/70" />
-          <div className={`absolute inset-0 bg-gradient-to-r ${slide.gradient}`} />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/30 to-transparent" />
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Floating glass orbs */}
-      <div className="absolute inset-0 z-[2] pointer-events-none overflow-hidden">
-        <motion.div animate={{ y: [0, -20, 0], x: [0, 10, 0] }} transition={{ duration: 12, repeat: Infinity }} className="absolute top-[15%] right-[10%] w-72 h-72 rounded-full bg-white/[0.03] backdrop-blur-3xl border border-white/[0.05]" />
-        <motion.div animate={{ y: [0, 15, 0] }} transition={{ duration: 10, repeat: Infinity }} className="absolute bottom-[30%] left-[5%] w-56 h-56 rounded-full bg-white/[0.02] backdrop-blur-2xl border border-white/[0.04]" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 min-h-screen flex items-center pt-28 pb-56">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-7">
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div key={slide.id} custom={direction}
-                  initial={{ x: direction > 0 ? '8%' : '-8%', opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  exit={{ x: direction > 0 ? '-8%' : '8%', opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="space-y-6">
-                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/90 text-sm font-medium">
-                    <Icon className="w-4 h-4" /> {slide.badge}
-                  </span>
-                  <h1 className="text-4xl sm:text-5xl lg:text-7xl font-headline font-bold leading-[1.08] tracking-tight">
-                    <span className="text-white">{slide.title}</span>
-                    {slide.highlight && <><br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300">{slide.highlight}</span>
-                    </>}
-                  </h1>
-                  {slide.subtitle && <p className="text-lg sm:text-xl text-white/60 font-medium">{slide.subtitle}</p>}
-                  {slide.description && <p className="text-base sm:text-lg text-white/45 max-w-xl leading-relaxed">{slide.description}</p>}
-                  <div className="flex flex-wrap gap-4 pt-4">
-                    <Link href={slide.ctaLink} className="group inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-gray-900 font-bold shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 transition-all duration-300">
-                      {slide.ctaText} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                    {slide.secondaryCta && (
-                      <Link href={slide.secondaryCta.link} className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold hover:bg-white/20 transition-all">
-                        {slide.secondaryCta.text}
-                      </Link>
-                    )}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-            <div className="lg:col-span-5 hidden lg:flex items-center justify-center">
-              <AnimatePresence mode="wait">
-                <motion.div key={slide.id + '-card'} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6, delay: 0.15 }} className="relative">
-                  <div className="w-80 h-80 rounded-3xl bg-white/[0.07] backdrop-blur-xl border border-white/[0.12] p-8 flex flex-col items-center justify-center text-center shadow-2xl">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400/20 to-orange-500/20 flex items-center justify-center mb-6 border border-amber-400/30">
-                      <Icon className="w-10 h-10 text-amber-400" />
-                    </div>
-                    <h3 className="text-xl font-headline font-bold text-white mb-2">{slide.badge}</h3>
-                    <p className="text-white/50 text-sm">{slide.subtitle || slide.title}</p>
-                    <div className="flex gap-2 mt-6">
-                      {slides.map((_, i) => (<div key={i} className={`h-2 rounded-full transition-all duration-300 ${i === current ? 'bg-amber-400 w-6' : 'bg-white/20 w-2'}`} />))}
-                    </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
+    <div className="flex flex-wrap items-center border-t" style={{ background: '#0e1e38', borderColor: 'rgba(255,255,255,0.05)' }}>
+      {items.map((st, i) => (
+        <div key={i} className="flex-1 text-center py-5 sm:py-6 px-3 sm:px-5 relative min-w-[50%] sm:min-w-0">
+          {i > 0 && <div className="absolute left-0 top-[15%] bottom-[15%] w-px hidden sm:block" style={{ background: 'rgba(255,255,255,0.07)' }} />}
+          <div className="font-hero text-xl sm:text-[32px] font-bold leading-none mb-1" style={{ color: '#10b981' }}>
+            {st.value > 0 ? <AnimatedCounter target={st.value} suffix={st.suffix} /> : `0${st.suffix}`}
           </div>
+          <div className="text-[9px] sm:text-[10px] font-medium tracking-[2.5px] uppercase" style={{ color: 'rgba(255,255,255,0.3)' }}>{st.label}</div>
         </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="absolute bottom-48 sm:bottom-56 left-0 right-0 z-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="hidden sm:flex items-center gap-1.5 bg-white/[0.06] backdrop-blur-xl rounded-full p-1.5 border border-white/10">
-              {slides.map((s, i) => (
-                <button key={s.id} onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${i === current ? 'bg-amber-500 text-gray-900 shadow-lg' : 'text-white/50 hover:text-white/80'}`}>
-                  {String(i + 1).padStart(2, '0')}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={prev} className="w-10 h-10 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:bg-white/15 transition-all" aria-label="Previous"><ChevronLeft className="w-5 h-5" /></button>
-              <button onClick={next} className="w-10 h-10 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:bg-white/15 transition-all" aria-label="Next"><ChevronRight className="w-5 h-5" /></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Seamless fade to next section */}
-      <div className="absolute bottom-0 left-0 right-0 z-[3] pointer-events-none">
-        <div className="h-20 bg-gradient-to-b from-transparent to-gray-950/30" />
-        <div className="h-20 bg-gradient-to-b from-gray-950/30 to-gray-950/70" />
-        <div className="h-16 bg-gradient-to-b from-gray-950/70 to-gray-950" />
-        <div className="h-12 bg-gradient-to-b from-gray-950 via-[#1a1f2e] to-[#3a3f4e]" />
-        <div className="h-10 bg-gradient-to-b from-[#3a3f4e] via-[#7a7f8e] to-[#c8cbd0]" />
-        <div className="h-8 bg-gradient-to-b from-[#c8cbd0] via-[#e8eaed] to-white" />
-      </div>
-    </section>
+      ))}
+    </div>
   );
-};
+}
+
 
 export default HeroSection;

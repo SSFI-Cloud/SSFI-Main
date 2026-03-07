@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Users, UserPlus, UserCheck, Clock, Trophy, Calendar, AlertCircle, ChevronRight } from 'lucide-react';
-import { StatCard, RecentList, StatusBadge, ChartCard, SimpleBarChart, DonutChart, QuickAction, DashboardHero, DashCard } from '../shared/DashboardComponents';
+import { Users, UserPlus, UserCheck, Trophy, Calendar, AlertCircle, ChevronRight, BarChart3 } from 'lucide-react';
+import { StatCard, RecentList, StatusBadge, ChartCard, SimpleBarChart, DonutChart, QuickAction, DashboardHero, DashCard, RenewalCountdownBadge } from '../shared/DashboardComponents';
 import { useDashboard } from '@/lib/hooks/useDashboard';
 import type { ClubDashboardData } from '@/types/dashboard';
 import renewalService, { RenewalStatus } from '@/services/renewal.service';
@@ -18,7 +18,7 @@ export default function ClubDashboard() {
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-96">
-      <div className="animate-spin rounded-full h-10 w-10 border-2 border-pink-500 border-t-transparent" />
+      <div className="animate-spin rounded-full h-10 w-10 border-2 border-teal-500 border-t-transparent" />
     </div>
   );
 
@@ -31,13 +31,13 @@ export default function ClubDashboard() {
   const dashboard = data as ClubDashboardData;
 
   const genderData = [
-    { label: 'Male',   value: dashboard.statistics?.studentsByGender?.['MALE']   || 0, color: '#3b82f6' },
-    { label: 'Female', value: dashboard.statistics?.studentsByGender?.['FEMALE'] || 0, color: '#ec4899' },
-    { label: 'Other',  value: dashboard.statistics?.studentsByGender?.['OTHER']  || 0, color: '#8b5cf6' },
+    { label: 'Male',   value: dashboard.statistics?.studentsByGender?.['MALE']   || 0, color: '#10b981' },
+    { label: 'Female', value: dashboard.statistics?.studentsByGender?.['FEMALE'] || 0, color: '#14b8a6' },
+    { label: 'Other',  value: dashboard.statistics?.studentsByGender?.['OTHER']  || 0, color: '#10b981' },
   ];
 
   const ageCategoryData = Object.entries(dashboard.statistics?.studentsByAgeCategory || {})
-    .map(([label, value]) => ({ label, value: Number(value), color: 'bg-pink-500' }))
+    .map(([label, value]) => ({ label, value: Number(value), color: 'bg-teal-500' }))
     .sort((a, b) => b.value - a.value).slice(0, 6);
 
   return (
@@ -51,7 +51,7 @@ export default function ClubDashboard() {
         stats={[
           { label: 'Total Students', value: dashboard.overview.totalStudents || 0 },
           { label: 'Approved', value: dashboard.overview.approvedStudents || 0 },
-          { label: 'Pending', value: dashboard.overview.pendingStudents || 0 },
+          { label: 'Events', value: dashboard.statistics?.totalEventRegistrations || 0 },
         ]}
         actions={
           <div className="flex items-center gap-2">
@@ -62,36 +62,27 @@ export default function ClubDashboard() {
 
       {renewalInfo?.showNotification && <RenewalBanner expiryDate={renewalInfo.expiryDate} daysUntilExpiry={renewalInfo.daysUntilExpiry || 0} userRole="CLUB_OWNER" />}
 
-      {/* Membership status */}
+      {/* Renewal countdown */}
       {renewalInfo && (
-        <DashCard className="p-5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-            <Clock className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs text-gray-600">Membership Status</p>
-            <div className="flex items-center gap-3 mt-0.5">
-              <span className={`font-bold ${renewalInfo.accountStatus === 'ACTIVE' ? 'text-green-600' : renewalInfo.accountStatus === 'EXPIRED' ? 'text-red-600' : 'text-amber-600'}`}>{renewalInfo.accountStatus}</span>
-              <span className="text-gray-500">·</span>
-              <span className="text-sm text-gray-500">Renews: <span className="font-medium text-gray-800">{renewalInfo.expiryDate ? new Date(renewalInfo.expiryDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</span></span>
-            </div>
-          </div>
-        </DashCard>
+        <RenewalCountdownBadge
+          daysUntilExpiry={renewalInfo.daysUntilExpiry}
+          expiryDate={renewalInfo.expiryDate}
+          accountStatus={renewalInfo.accountStatus}
+        />
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <StatCard title="Total Students"      value={dashboard.overview.totalStudents || 0}                      icon={Users}     color="pink"   href="/dashboard/students"              delay={0}    />
         <StatCard title="Approved"            value={dashboard.overview.approvedStudents || 0}                   icon={UserCheck} color="green"  delay={0.07} />
-        <StatCard title="Pending Approval"    value={dashboard.overview.pendingStudents || 0}                    icon={Clock}     color="amber"  href="/dashboard/students?status=PENDING" delay={0.14} />
-        <StatCard title="Event Registrations" value={dashboard.statistics?.totalEventRegistrations || 0}         icon={Trophy}    color="blue"   delay={0.21} />
+        <StatCard title="Event Registrations" value={dashboard.statistics?.totalEventRegistrations || 0}         icon={Trophy}    color="blue"   delay={0.14} />
       </div>
 
       {/* Expired memberships alert */}
       {(dashboard.overview.expiredMemberships || 0) > 0 && (
         <DashCard className="p-4">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-teal-600 flex items-center justify-center flex-shrink-0">
               <AlertCircle className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
@@ -112,8 +103,8 @@ export default function ClubDashboard() {
             items={dashboard.recentActivity?.students || []}
             renderItem={(s: any) => (
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 overflow-hidden">
-                  {s.profilePhoto ? <img src={s.profilePhoto} alt="" className="w-full h-full object-cover" /> : (s.name || 'U').charAt(0)}
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-500 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 overflow-hidden">
+                  {s.profilePhoto ? <img src={s.profilePhoto} alt={s.name || 'Student'} className="w-full h-full object-cover" /> : (s.name || 'U').charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{s.name || 'Unknown Student'}</p>
@@ -139,12 +130,12 @@ export default function ClubDashboard() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
                 <Calendar className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-base font-semibold text-gray-900">Upcoming Events</h3>
             </div>
-            <Link href="/events" className="text-xs font-medium text-amber-600 hover:underline flex items-center gap-1">
+            <Link href="/events" className="text-xs font-medium text-emerald-600 hover:underline flex items-center gap-1">
               View all <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
@@ -153,8 +144,8 @@ export default function ClubDashboard() {
               (dashboard.upcomingEvents || []).map((event: any) => (
                 <Link key={event.id} href={`/events/${event.id}`}
                   className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/60 transition-colors group">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 flex flex-col items-center justify-center flex-shrink-0">
-                    <span className="text-[10px] font-semibold text-amber-500 uppercase">{new Date(event.eventDate).toLocaleDateString('en-IN', { month: 'short' })}</span>
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 flex flex-col items-center justify-center flex-shrink-0">
+                    <span className="text-[10px] font-semibold text-emerald-500 uppercase">{new Date(event.eventDate).toLocaleDateString('en-IN', { month: 'short' })}</span>
                     <span className="text-lg font-bold text-gray-900 leading-tight">{new Date(event.eventDate).getDate()}</span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -178,10 +169,10 @@ export default function ClubDashboard() {
       <div>
         <h2 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <QuickAction title="Add Student"       description="Register new student"          icon={UserPlus} href="/dashboard/students/add"            color="green"  />
-          <QuickAction title="Event Registration" description="Register for events"           icon={Trophy}   href="/dashboard/event-registrations/new"  color="blue"   />
-          <QuickAction title="Manage Students"   description="View & edit student details"   icon={Users}    href="/dashboard/students"                 color="pink"   />
-          <QuickAction title="View Events"       description="Browse upcoming events"        icon={Calendar} href="/events"                             color="amber"  />
+          <QuickAction title="Add Student"       description="Register new student"          icon={UserPlus}  href="/dashboard/students/add"            color="green"  />
+          <QuickAction title="Event Registration" description="Register for events"           icon={Trophy}    href="/dashboard/event-registrations/new"  color="blue"   />
+          <QuickAction title="Reports"           description="Analytics & insights"          icon={BarChart3} href="/dashboard/reports"                   color="purple" />
+          <QuickAction title="View Events"       description="Browse upcoming events"        icon={Calendar}  href="/events"                             color="teal"  />
         </div>
       </div>
     </div>

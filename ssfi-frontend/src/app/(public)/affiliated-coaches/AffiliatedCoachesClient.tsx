@@ -23,8 +23,8 @@ interface Program {
 
 const LEVEL_CFG: Record<number, { gradient: string; badge: string; label: string }> = {
   1: { gradient: 'from-sky-500 to-cyan-500', badge: 'bg-sky-50 text-sky-700 border-sky-200', label: 'Level 1 - Certified Coach' },
-  2: { gradient: 'from-violet-500 to-purple-500', badge: 'bg-violet-50 text-violet-700 border-violet-200', label: 'Level 2 - Advanced Coach' },
-  3: { gradient: 'from-amber-500 to-orange-500', badge: 'bg-amber-50 text-amber-700 border-amber-200', label: 'Level 3 - Master Coach' },
+  2: { gradient: 'from-emerald-500 to-teal-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: 'Level 2 - Advanced Coach' },
+  3: { gradient: 'from-teal-500 to-emerald-500', badge: 'bg-teal-50 text-teal-700 border-teal-200', label: 'Level 3 - Master Coach' },
 };
 
 export default function AffiliatedCoachesClient() {
@@ -142,17 +142,17 @@ export default function AffiliatedCoachesClient() {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h3 className="text-base font-bold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">{coach.name}</h3>
-                                <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 text-[10px] font-bold rounded-full border ${lc.badge}`}>
+                                <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 text-[11px] font-bold rounded-full border ${lc.badge}`}>
                                   <Shield className="w-2.5 h-2.5" /> {lc.label}
                                 </span>
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-y-2 text-xs text-gray-500 mb-3">
-                              <span className="flex items-center gap-1.5"><MapPin className="w-3 h-3 text-rose-400" />{coach.state}</span>
+                              <span className="flex items-center gap-1.5"><MapPin className="w-3 h-3 text-teal-400" />{coach.state}</span>
                               {coach.experience && <span className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-sky-400" />{coach.experience}</span>}
-                              {coach.certifiedSince && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3 text-violet-400" />Since {coach.certifiedSince}</span>}
+                              {coach.certifiedSince && <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3 text-emerald-400" />Since {coach.certifiedSince}</span>}
                               {coach.rating && (
-                                <span className="flex items-center gap-1.5 text-amber-500"><Star className="w-3 h-3 fill-amber-400" />{coach.rating.toFixed(1)}</span>
+                                <span className="flex items-center gap-1.5 text-teal-500"><Star className="w-3 h-3 fill-teal-400" />{coach.rating.toFixed(1)}</span>
                               )}
                             </div>
                           </div>
@@ -214,8 +214,8 @@ export default function AffiliatedCoachesClient() {
                 <div className="space-y-2.5">
                   {[
                     { level: 'Level 1', desc: 'Beginner training & fundamentals', gradient: 'from-sky-500 to-cyan-500' },
-                    { level: 'Level 2', desc: 'Competition prep & advanced techniques', gradient: 'from-violet-500 to-purple-500' },
-                    { level: 'Level 3', desc: 'National-level athlete development', gradient: 'from-amber-500 to-orange-500' },
+                    { level: 'Level 2', desc: 'Competition prep & advanced techniques', gradient: 'from-emerald-500 to-teal-500' },
+                    { level: 'Level 3', desc: 'National-level athlete development', gradient: 'from-teal-500 to-emerald-500' },
                   ].map(l => (
                     <div key={l.level} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
                       <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${l.gradient} flex items-center justify-center flex-shrink-0`}>

@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import {
   Save, Globe, Mail, Phone, MapPin, Facebook, Instagram,
   Youtube, Linkedin, AlertTriangle, Loader2, Clock, Plus,
-  Trash2, Building2, Twitter
+  Trash2, Building2, Twitter, ImageIcon
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useSiteSettings } from '@/lib/hooks/useCMS';
 import { SiteSettings } from '@/types/cms';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 interface Department {
   name: string;
@@ -61,10 +62,10 @@ export default function SettingsPage() {
   };
 
   if (isLoading && !settings.siteName) {
-    return <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>;
+    return <div className="flex items-center justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
   }
 
-  const inputClass = "w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-gray-500 text-sm";
+  const inputClass = "w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder:text-gray-500 text-sm";
   const labelClass = "text-sm font-medium text-gray-700";
   const sectionClass = "bg-white p-6 rounded-xl border border-gray-200 space-y-5";
 
@@ -91,6 +92,34 @@ export default function SettingsPage() {
             <div className="space-y-1.5">
               <label className={labelClass}>Tagline</label>
               <input value={settings.siteTagline || ''} onChange={e => setSettings({ ...settings, siteTagline: e.target.value })} className={inputClass} placeholder="Promoting skating excellence across India" />
+            </div>
+          </div>
+        </div>
+
+        {/* Branding */}
+        <div className={sectionClass}>
+          <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+            <ImageIcon className="w-5 h-5 text-gray-900" />
+            <h3 className="text-base font-semibold text-gray-900">Branding</h3>
+          </div>
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <ImageUpload
+                type="news"
+                label="Site Logo"
+                value={settings.logo || null}
+                onChange={url => setSettings({ ...settings, logo: url || undefined })}
+                hint="Displayed in the header and footer. Recommended: transparent PNG, 200×80px"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <ImageUpload
+                type="news"
+                label="Favicon"
+                value={settings.favicon || null}
+                onChange={url => setSettings({ ...settings, favicon: url || undefined })}
+                hint="Browser tab icon. Recommended: square PNG or ICO, 32×32px or 64×64px"
+              />
             </div>
           </div>
         </div>
@@ -192,7 +221,7 @@ export default function SettingsPage() {
             {[
               { key: 'facebook', label: 'Facebook', Icon: Facebook, color: 'text-blue-500', placeholder: 'https://facebook.com/ssfi' },
               { key: 'twitter', label: 'Twitter / X', Icon: Twitter, color: 'text-sky-700', placeholder: 'https://twitter.com/ssfi' },
-              { key: 'instagram', label: 'Instagram', Icon: Instagram, color: 'text-pink-500', placeholder: 'https://instagram.com/ssfi' },
+              { key: 'instagram', label: 'Instagram', Icon: Instagram, color: 'text-teal-500', placeholder: 'https://instagram.com/ssfi' },
               { key: 'youtube', label: 'YouTube', Icon: Youtube, color: 'text-red-500', placeholder: 'https://youtube.com/@ssfi' },
               { key: 'linkedin', label: 'LinkedIn', Icon: Linkedin, color: 'text-blue-600', placeholder: 'https://linkedin.com/company/ssfi' },
             ].map(({ key, label, Icon, color, placeholder }) => (
@@ -211,7 +240,7 @@ export default function SettingsPage() {
 
         <div className="flex justify-end pt-2">
           <button type="submit" disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50">
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50">
             {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
             Save All Settings
           </button>

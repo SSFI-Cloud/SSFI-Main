@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowDown } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function ScrollNavigation() {
     const [isVisible, setIsVisible] = useState(false);
@@ -27,13 +27,6 @@ export default function ScrollNavigation() {
         };
     }, []);
 
-    const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-        });
-    };
-
     const scrollToBottom = () => {
         window.scrollTo({
             top: document.documentElement.scrollHeight,
@@ -45,18 +38,6 @@ export default function ScrollNavigation() {
 
     return (
         <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-3">
-            <motion.button
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={scrollToTop}
-                className="p-3 bg-slate-800/80 backdrop-blur-md border border-white/10 rounded-full text-white shadow-lg hover:bg-primary-500 transition-colors group"
-                aria-label="Scroll to top"
-            >
-                <ArrowUp className="w-5 h-5 group-hover:-translate-y-1 transition-transform duration-300" />
-            </motion.button>
-
             <motion.button
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}

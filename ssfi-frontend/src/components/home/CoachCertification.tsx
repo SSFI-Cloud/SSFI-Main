@@ -57,11 +57,12 @@ export default function CoachCertification() {
   const pct = batch.totalSpots > 0 ? ((batch.totalSpots - batch.spotsLeft) / batch.totalSpots) * 100 : 0;
 
   return (
-    <section className="relative py-28 overflow-hidden bg-gray-950">
-      <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[150px]" />
+    <section className="relative py-16 sm:py-20 overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative rounded-3xl bg-gray-950 shadow-2xl overflow-hidden px-6 py-14 sm:px-10 sm:py-16 lg:px-16 lg:py-20">
+          <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[150px]" />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="relative z-10 grid lg:grid-cols-2 gap-16 items-center">
           {/* Left */}
           <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }}>
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium mb-6">
@@ -117,7 +118,7 @@ export default function CoachCertification() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-white/60"><Calendar className="w-5 h-5 text-emerald-400" /><span className="text-sm">{batch.date}</span></div>
                   <div className="flex items-center gap-3 text-white/60"><MapPin className="w-5 h-5 text-emerald-400" /><span className="text-sm">{batch.location}</span></div>
-                  <div className="flex items-center gap-3 text-white/60"><Clock className="w-5 h-5 text-amber-400" /><span className="text-sm">Deadline: {batch.deadline}</span></div>
+                  <div className="flex items-center gap-3 text-white/60"><Clock className="w-5 h-5 text-teal-400" /><span className="text-sm">Deadline: {batch.deadline}</span></div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between text-sm mb-2">
@@ -127,7 +128,7 @@ export default function CoachCertification() {
                   <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                     <motion.div initial={{ width: 0 }} whileInView={{ width: `${pct}%` }} viewport={{ once: true }} transition={{ duration: 1.2 }} className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" />
                   </div>
-                  {batch.spotsLeft > 0 && <p className="text-amber-400 text-xs font-medium mt-2">Only {batch.spotsLeft} spots remaining!</p>}
+                  {batch.spotsLeft > 0 && <p className="text-teal-400 text-xs font-medium mt-2">Only {batch.spotsLeft} spots remaining!</p>}
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <div><p className="text-white/30 text-xs">Program Fee</p><p className="text-2xl font-headline font-bold text-white">{batch.fee}</p></div>
@@ -139,6 +140,7 @@ export default function CoachCertification() {
               </div>
             </div>
           </motion.div>
+          </div>
         </div>
       </div>
     </section>

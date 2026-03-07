@@ -1,12 +1,16 @@
 {
   "name": "ssfi-backend",
   "version": "1.0.0",
-  "description": "Skating Sports Federation of India - Backend API",
+  "description": "Speed Skating Federation of India - Backend API",
   "main": "dist/app.js",
   "scripts": {
     "dev": "nodemon src/app.ts",
-    "build": "tsc",
-    "start": "node dist/app.js",
+    "build": "prisma generate && tsc",
+    "start": "UV_THREADPOOL_SIZE=2 VIPS_CONCURRENCY=1 node --max-old-space-size=256 dist/app.js",
+    "start:pm2": "pm2 start ecosystem.config.js",
+    "stop:pm2": "pm2 stop ecosystem.config.js",
+    "restart:pm2": "pm2 restart ecosystem.config.js",
+    "logs:pm2": "pm2 logs ssfi-api",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -46,9 +50,6 @@
     "twilio": "^4.20.0",
     "uuid": "^9.0.1",
     "winston": "^3.11.0",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
@@ -62,13 +63,16 @@
     "@types/nodemailer": "^6.4.22",
     "@types/pdfkit": "^0.13.4",
     "@types/uuid": "^9.0.7",
+    "prisma": "^5.8.0",
+    "typescript": "^5.9.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
     "eslint": "^8.56.0",
     "nodemon": "^3.0.2",
-    "prisma": "^5.8.0",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.3.3"
+    "tsconfig-paths": "^4.2.0"
   }
 }

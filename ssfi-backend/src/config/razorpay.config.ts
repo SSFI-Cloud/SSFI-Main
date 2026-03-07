@@ -48,13 +48,23 @@ export const razorpayConfig = {
             baseAmount: 50000, // ₹500
             description: 'SSFI Annual Membership Renewal',
         },
+        COACH_CERTIFICATION: {
+            name: 'Coach Certification',
+            baseAmount: 0, // Variable - depends on program
+            description: 'SSFI Coach Certification Fee',
+        },
+        BEGINNER_CERTIFICATION: {
+            name: 'Beginner Certification',
+            baseAmount: 0, // Variable - depends on program
+            description: 'SSFI Beginner Certification Fee',
+        },
     },
 
     // Callback URLs
     callbackUrls: {
-        success: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/payment/success`,
-        failure: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/payment/failure`,
-        webhook: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/v1/payments/webhook`,
+        success: `${process.env.FRONTEND_URL || 'https://ssfiskate.com'}/payment/success`,
+        failure: `${process.env.FRONTEND_URL || 'https://ssfiskate.com'}/payment/failure`,
+        webhook: `${process.env.BACKEND_URL || 'https://api.ssfiskate.com'}/api/v1/payments/webhook`,
     },
 };
 

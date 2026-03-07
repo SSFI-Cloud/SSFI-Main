@@ -1,5 +1,7 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { emailService } from './email.service';
+import { paymentService } from './payment.service';
+import { razorpayConfig } from '../config/razorpay.config';
 
 import prisma from '../config/prisma';
 class BeginnerCertService {
@@ -35,9 +37,9 @@ class BeginnerCertService {
     return program;
   }
 
-  async listPrograms(query: { category?: string; status?: string; isActive?: string; page: string; limit: string }) {
-    const page = parseInt(query.page);
-    const limit = parseInt(query.limit);
+  async listPrograms(query: { category?: string; status?: string; isActive?: string; page?: string; limit?: string }) {
+    const page = parseInt(query.page || '1');
+    const limit = parseInt(query.limit || '20');
     const where: any = {};
     if (query.category) where.category = query.category;
     if (query.status) where.status = query.status;
@@ -202,6 +204,93 @@ class BeginnerCertService {
     return registration;
   }
 
+  async initiateRegistration(data: any, files: { photo?: string; aadhaarCard?: string; birthCertificate?: string }) {
+    // 1. Register using existing logic
+    const registration = await this.registerBeginner(data, files);
+
+    // 2. Find user for payment linkage (try by phone)
+    let userId = 1;
+    if (data.phone) {
+      const user = await prisma.user.findFirst({ where: { phone: data.phone } });
+      if (user) userId = user.id;
+    }
+
+    // 3. Create Razorpay order
+    const order = await paymentService.createOrder({
+      amount: Number(registration.amount) * 100, // convert to paise
+      currency: 'INR',
+      payment_type: 'BEGINNER_CERTIFICATION',
+      entity_id: registration.id,
+      entity_type: 'beginner_certification',
+      user_id: userId,
+      notes: {
+        registration_number: registration.registrationNumber,
+        name: data.fullName,
+        type: 'BEGINNER_CERTIFICATION',
+      },
+    });
+
+    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+
+    return {
+      registration,
+      razorpayOrderId: order.id,
+      amount: Number(registration.amount) * 100,
+      currency: 'INR',
+      key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+      userDetails: {
+        name: data.fullName,
+        email: data.email || '',
+        phone: data.phone,
+      },
+    };
+  }
+
+  async verifyPayment(data: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }) {
+    const isValid = paymentService.verifyPaymentSignature(data);
+    if (!isValid) throw new Error('Invalid payment signature');
+
+    const payment = await prisma.payment.findFirst({
+      where: { razorpayOrderId: data.razorpay_order_id },
+    });
+    if (!payment) throw new Error('Payment not found');
+
+    if (payment.status === 'COMPLETED') {
+      return { success: true, message: 'Payment already verified.' };
+    }
+
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: 'COMPLETED',
+        razorpayPaymentId: data.razorpay_payment_id,
+        razorpaySignature: data.razorpay_signature,
+      },
+    });
+
+    // Update registration payment status
+    const descParts = payment.description?.split('#') || [];
+    const regId = descParts[1]?.trim();
+    let registrationNumber = '';
+    if (regId) {
+      const reg = await prisma.beginnerCertRegistration.update({
+        where: { id: Number(regId) },
+        data: { paymentStatus: 'PAID' },
+      });
+      registrationNumber = reg.registrationNumber;
+    }
+
+    return {
+      success: true,
+      registrationNumber,
+      message: 'Payment verified successfully.',
+    };
+  }
+
   async getRegistrationsByProgram(programId: number, query: any) {
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '50');
@@ -283,6 +372,25 @@ class BeginnerCertService {
     });
 
     return reg;
+  }
+
+  // For registration windows integration (mirrors coach-cert)
+  async getActiveProgramsForWindows() {
+    const programs = await this.getActivePrograms();
+    return programs.map(p => ({
+      id: `beginner_${p.id}`,
+      title: p.title,
+      type: `beginner_${p.category.toLowerCase()}`,
+      startDate: p.startDate,
+      endDate: p.lastDateToApply,
+      baseFee: Number(p.price),
+      isActive: p.isActive,
+      isPaused: false,
+      description: p.description,
+      registrationsCount: p.filledSeats,
+      maxRegistrations: p.totalSeats,
+      createdAt: p.createdAt,
+    }));
   }
 }
 

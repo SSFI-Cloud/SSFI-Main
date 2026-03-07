@@ -90,7 +90,7 @@ export default function AlbumDetailClient() {
         <div className="min-h-screen">
             {/* ===================== HERO — DARK ===================== */}
             <section className="relative py-24 md:py-32 overflow-hidden bg-dark-950">
-                <div className="absolute top-10 -left-40 w-[500px] h-[500px] bg-violet-500/10 rounded-full blur-[140px]" />
+                <div className="absolute top-10 -left-40 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[140px]" />
                 <div className="absolute bottom-10 -right-40 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[140px]" />
 
                 <div className="container mx-auto px-4 relative z-10">
@@ -161,7 +161,7 @@ export default function AlbumDetailClient() {
                                     </span>
                                 )}
                                 <span className="flex items-center gap-1.5">
-                                    <ImageIcon className="w-4 h-4 text-violet-400" />
+                                    <ImageIcon className="w-4 h-4 text-emerald-400" />
                                     {images.length} photos
                                 </span>
                             </div>

@@ -192,7 +192,7 @@ export default function ClubApprovalsPage() {
                     value={searchInput}
                     onChange={e => setSearchInput(e.target.value)}
                     placeholder="Search by club name or contact…"
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
             </div>
 
@@ -200,7 +200,7 @@ export default function ClubApprovalsPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {isLoading ? (
                     <div className="col-span-full py-16 text-center">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                         <p className="text-gray-500 mt-2 text-sm">Loading pending clubs…</p>
                     </div>
                 ) : clubs.length === 0 ? (
@@ -219,12 +219,12 @@ export default function ClubApprovalsPage() {
                         >
                             <div className="p-4">
                                 <div className="flex items-start gap-3 mb-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center shrink-0">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center shrink-0">
                                         <Shield className="w-6 h-6 text-white" />
                                     </div>
                                     <div className="min-w-0">
                                         <h3 className="font-semibold text-gray-900 truncate">{club.club_name}</h3>
-                                        <p className="text-xs text-blue-600 font-mono">{club.membership_id}</p>
+                                        <p className="text-xs text-emerald-600 font-mono">{club.membership_id}</p>
                                     </div>
                                 </div>
                                 <div className="space-y-1.5 text-sm text-gray-500">
@@ -309,12 +309,12 @@ export default function ClubApprovalsPage() {
                         >
                             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center">
                                         <Shield className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-900">{viewingClub.club_name}</h2>
-                                        <p className="text-blue-600 font-mono text-xs">{viewingClub.membership_id}</p>
+                                        <p className="text-emerald-600 font-mono text-xs">{viewingClub.membership_id}</p>
                                     </div>
                                 </div>
                                 <button onClick={() => setViewingClub(null)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500">

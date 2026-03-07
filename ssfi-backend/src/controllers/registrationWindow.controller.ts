@@ -5,6 +5,24 @@ import { RegistrationType } from '../services/registrationWindow.service';
 import { AuthRequest } from '../types';
 
 /**
+ * Map frontend lowercase types to DB uppercase types
+ */
+const typeMap: Record<string, RegistrationType> = {
+    student: 'STUDENT',
+    club: 'CLUB',
+    state: 'STATE_SECRETARY',
+    district: 'DISTRICT_SECRETARY',
+};
+
+/** Reverse map: DB uppercase type → frontend lowercase key */
+const reverseTypeMap: Record<string, string> = {
+    STUDENT: 'student',
+    CLUB: 'club',
+    STATE_SECRETARY: 'state',
+    DISTRICT_SECRETARY: 'district',
+};
+
+/**
  * Get all active registration windows (public)
  * GET /api/registration-windows/active
  */
@@ -36,6 +54,15 @@ export async function getActiveWindows(req: Request, res: Response) {
             // Coach cert table may not exist yet during migration — silently skip
         }
 
+        // Also include active beginner certification programs
+        try {
+            const beginnerCertService = (await import('../services/beginner-cert.service')).default;
+            const beginnerWindows = await beginnerCertService.getActiveProgramsForWindows();
+            mappedWindows.push(...beginnerWindows as any);
+        } catch (e) {
+            // Beginner cert table may not exist yet during migration — silently skip
+        }
+
         return res.status(200).json({
             success: true,
             data: mappedWindows,
@@ -57,25 +84,15 @@ export async function getActiveWindowByType(req: Request, res: Response) {
     try {
         const { type } = req.params;
 
-        if (!['student', 'club', 'state', 'district'].includes(type)) {
+        if (!typeMap[type]) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid registration type',
             });
         }
 
-        const typeMap: any = {
-            student: 'STUDENT',
-            club: 'CLUB',
-            state: 'STATE_SECRETARY',
-            district: 'DISTRICT_SECRETARY'
-        };
-
         const dbType = typeMap[type];
 
-        // Service expects the DB value (which technically might duplicate RegistrationType definition if it was correct)
-        // But since service type def is lowercase, we need to bypass or assumes it handles strings.
-        // Actually, let's cast to any to avoid TS issues since we know DB has UPPERCASE.
         const window = await registrationWindowService.getActiveWindowByType(dbType);
 
         if (!window) {
@@ -129,8 +146,11 @@ export async function getAllWindows(req: AuthRequest, res: Response) {
     try {
         const { type, isActive, page, limit } = req.query;
 
+        // Map frontend lowercase type to DB uppercase type
+        const mappedType = type ? (typeMap[type as string] || type) as RegistrationType : undefined;
+
         const filters = {
-            type: type as RegistrationType | undefined,
+            type: mappedType,
             isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
             page: page ? parseInt(page as string) : 1,
             limit: limit ? parseInt(limit as string) : 20,
@@ -216,11 +236,12 @@ export async function createWindow(req: AuthRequest, res: Response) {
             });
         }
 
-        // Validate type
-        if (!['student', 'club', 'state', 'district'].includes(type)) {
+        // Validate and map type (frontend sends lowercase, DB stores uppercase)
+        const dbType = typeMap[type];
+        if (!dbType) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid registration type',
+                message: 'Invalid registration type. Must be: student, club, state, or district',
             });
         }
 
@@ -244,7 +265,7 @@ export async function createWindow(req: AuthRequest, res: Response) {
         }
 
         const window = await registrationWindowService.createWindow({
-            type,
+            type: dbType,
             name,
             description,
             startDate: start,

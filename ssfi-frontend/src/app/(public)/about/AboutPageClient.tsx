@@ -31,10 +31,46 @@ const missionPoints = [
   { icon: Shield, text: 'Uphold sportsmanship, discipline, and excellence in competition' },
 ];
 
-const teamMembers = [
-  { name: 'Mr. Krishna Baisware', role: 'President', description: 'Co-founder and President of SSFI, Mr. Krishna Baisware has been instrumental in shaping the strategic direction and governance of speed skating in India since its inception.', icon: Star, gradient: 'from-amber-500 to-orange-500', glowColor: 'rgba(245, 158, 11, 0.15)' },
-  { name: 'Shri S. Muruganantham', role: 'General Secretary', description: 'Co-founder and General Secretary of SSFI, Shri S. Muruganantham continues to drive the operational excellence and nationwide expansion of speed skating across India.', icon: Award, gradient: 'from-emerald-500 to-teal-500', glowColor: 'rgba(16, 185, 129, 0.15)' },
+/* ── Hierarchy org-chart data ────────────────────────────── */
+const hierarchyTop = [
+  { name: 'TBD', role: 'Chief Patron', photo: '' },
+  { name: 'Mr. Krishna Baisware', role: 'President', photo: '/images/team/krishna-baisware.webp' },
+  { name: 'TBD', role: 'Vice President', photo: '' },
+  { name: 'Shri S. Muruganantham', role: 'General Secretary', photo: '/images/team/muruganantham.webp' },
 ];
+const hierarchyBottom = [
+  { name: 'TBD', role: 'Joint Secretary', photo: '' },
+  { name: 'TBD', role: 'Treasurer', photo: '' },
+  { name: 'TBD', role: 'EC Member', photo: '' },
+];
+
+const orgChartCSS = `
+@keyframes hGradient{0%{background-position:0% 0%}100%{background-position:0% 200%}}
+@keyframes hGradientH{0%{background-position:0% 0%}100%{background-position:200% 0%}}
+@keyframes hGlow{0%,100%{box-shadow:0 0 8px rgba(16,185,129,.25)}50%{box-shadow:0 0 20px rgba(16,185,129,.5)}}
+.org-line-v{width:2px;background:linear-gradient(180deg,#10b981,#14b8a6,#0ea5e9,#10b981);background-size:100% 200%;animation:hGradient 3s linear infinite}
+.org-line-h{height:2px;background:linear-gradient(90deg,#10b981,#14b8a6,#0ea5e9,#10b981);background-size:200% 100%;animation:hGradientH 3s linear infinite}
+.org-avatar{animation:hGlow 3s ease-in-out infinite}
+`;
+
+function HierarchyNode({ name, role, photo, delay = 0 }: { name: string; role: string; photo: string; delay?: number }) {
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay, duration: 0.5, ease: 'easeOut' }}
+      className="flex flex-col items-center gap-2">
+      <div className="org-avatar relative w-20 h-20 md:w-24 md:h-24 rounded-full p-[2.5px] bg-gradient-to-br from-emerald-400 via-teal-400 to-sky-400">
+        <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-100">
+          {photo ? (
+            <Image src={photo} alt={name} fill className="object-cover object-top" sizes="96px" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"><Users className="w-8 h-8 md:w-10 md:h-10 text-gray-300" /></div>
+          )}
+        </div>
+      </div>
+      <h3 className="text-sm md:text-base font-semibold text-gray-900 text-center leading-tight">{name}</h3>
+      <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-[11px] md:text-xs font-semibold tracking-wide uppercase">{role}</span>
+    </motion.div>
+  );
+}
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -58,12 +94,12 @@ export default function AboutPageClient({ initialMilestones, initialStats }: Abo
   const statsData = initialStats || { students: 5600, clubs: 800, states: 36, districts: 640, totalEvents: 50, championships: 25 };
 
   const stats = [
-    { label: 'Registered Skaters', value: `${statsData.students?.toLocaleString()}+`, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-    { label: 'Active Clubs', value: `${statsData.clubs}+`, icon: Shield, color: 'text-teal-400', bg: 'bg-teal-500/10', border: 'border-teal-500/20' },
-    { label: 'States Covered', value: statsData.states?.toString(), icon: MapPin, color: 'text-sky-400', bg: 'bg-sky-500/10', border: 'border-sky-500/20' },
-    { label: 'Districts', value: `${statsData.districts || 640}+`, icon: Target, color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
-    { label: 'Events Organized', value: `${statsData.totalEvents}+`, icon: Trophy, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-    { label: 'Championships', value: statsData.championships?.toString() || '25', icon: Medal, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+    { label: 'Registered Skaters', value: `${statsData.students?.toLocaleString()}+`, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200/60', accent: '#10b981' },
+    { label: 'Active Clubs', value: `${statsData.clubs}+`, icon: Shield, color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-200/60', accent: '#14b8a6' },
+    { label: 'States Covered', value: statsData.states?.toString(), icon: MapPin, color: 'text-sky-500', bg: 'bg-sky-50', border: 'border-sky-200/60', accent: '#0ea5e9' },
+    { label: 'Districts', value: `${statsData.districts || 640}+`, icon: Target, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200/60', accent: '#10b981' },
+    { label: 'Events Organized', value: `${statsData.totalEvents}+`, icon: Trophy, color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-200/60', accent: '#14b8a6' },
+    { label: 'Championships', value: statsData.championships?.toString() || '25', icon: Medal, color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-200/60', accent: '#14b8a6' },
   ];
 
   return (
@@ -102,32 +138,15 @@ export default function AboutPageClient({ initialMilestones, initialStats }: Abo
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="py-20 bg-dark-950 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-dark-900/50 to-dark-950" />
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-            {stats.map((stat, index) => (
-              <motion.div key={stat.label} custom={index} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-                className={`text-center p-6 rounded-2xl border ${stat.border} ${stat.bg} backdrop-blur-sm hover:scale-105 transition-transform duration-300 group`}>
-                <div className={`w-12 h-12 mx-auto mb-4 rounded-xl flex items-center justify-center ${stat.bg}`}><stat.icon className={`w-6 h-6 ${stat.color}`} /></div>
-                <div className="text-3xl font-headline font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-sm font-medium text-dark-400">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* VISION & MISSION */}
       <section className="py-20 md:py-28 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
               className="bg-white rounded-3xl p-10 border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
-              <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-violet-100 to-purple-100 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
-                <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-purple-500 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-violet-200"><Eye className="w-7 h-7 text-white" /></div>
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-emerald-200"><Eye className="w-7 h-7 text-white" /></div>
                 <h2 className="text-3xl font-headline font-bold text-gray-900 mb-6">Our Vision</h2>
                 <p className="text-lg text-gray-600 leading-relaxed">To establish India as a globally competitive force in speed skating by building a structured, inclusive, and high-performance sporting ecosystem.</p>
               </div>
@@ -187,30 +206,86 @@ export default function AboutPageClient({ initialMilestones, initialStats }: Abo
         </div>
       </section>
 
-      {/* TEAM */}
-      <section className="py-20 md:py-28 bg-white">
-        <div className="container mx-auto px-4">
+      {/* LEADERSHIP HIERARCHY */}
+      <section className="py-20 md:py-28 bg-white relative overflow-hidden">
+        <style dangerouslySetInnerHTML={{ __html: orgChartCSS }} />
+        <div className="absolute top-20 -right-40 w-[500px] h-[500px] bg-emerald-50/40 rounded-full blur-[160px] pointer-events-none" />
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm font-medium mb-4">
               <Users className="w-4 h-4" /> Leadership
             </span>
-            <h2 className="text-3xl md:text-5xl font-headline font-bold text-gray-900 mb-6 tracking-tight">Meet Our Team</h2>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">The visionaries who founded SSFI and continue to lead India&apos;s speed skating movement.</p>
+            <h2 className="text-3xl md:text-5xl font-headline font-bold text-gray-900 mb-4 tracking-tight">
+              Executive <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Committee</span>
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">The leadership team steering India&apos;s speed skating movement forward.</p>
           </motion.div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {teamMembers.map((member, index) => (
-              <motion.div key={member.name} custom={index} variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-                className="relative rounded-3xl p-8 md:p-10 border border-gray-100 bg-gray-50 hover:shadow-2xl transition-all duration-500 group overflow-hidden">
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"
-                  style={{ background: `radial-gradient(circle at 50% 0%, ${member.glowColor}, transparent 70%)` }} />
-                <div className="relative z-10">
-                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${member.gradient} flex items-center justify-center mb-6 shadow-lg group-hover:scale-105 transition-transform duration-300`}>
-                    <member.icon className="w-10 h-10 text-white" />
+
+          {/* Org chart */}
+          <div className="flex flex-col items-center max-w-4xl mx-auto">
+            {/* Top 4 — single chain */}
+            {hierarchyTop.map((member, idx) => (
+              <div key={member.role} className="flex flex-col items-center">
+                {idx > 0 && <div className="org-line-v h-10 md:h-14" />}
+                <HierarchyNode name={member.name} role={member.role} photo={member.photo} delay={idx * 0.12} />
+              </div>
+            ))}
+
+            {/* Branch connector: vertical stem */}
+            <div className="org-line-v h-10 md:h-14" />
+
+            {/* Branch: horizontal bar + 3 drops */}
+            <div className="relative w-full max-w-md md:max-w-xl">
+              {/* Horizontal bar spanning outer two nodes */}
+              <div className="org-line-h absolute top-0 left-[16.67%] right-[16.67%]" />
+              <div className="grid grid-cols-3">
+                {hierarchyBottom.map((member, idx) => (
+                  <div key={member.role} className="flex flex-col items-center">
+                    <div className="org-line-v h-10 md:h-14" />
+                    <HierarchyNode name={member.name} role={member.role} photo={member.photo} delay={0.5 + idx * 0.12} />
                   </div>
-                  <h3 className="text-2xl font-headline font-bold text-gray-900 mb-1">{member.name}</h3>
-                  <span className={`inline-block text-sm font-semibold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent mb-4`}>{member.role}</span>
-                  <p className="text-gray-600 leading-relaxed">{member.description}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS — Impact Numbers */}
+      <section className="py-20 md:py-28 relative overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-50/60 rounded-full blur-[160px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-teal-50/40 rounded-full blur-[140px] pointer-events-none" />
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm font-medium mb-4">
+              <Trophy className="w-4 h-4" /> Our Impact
+            </span>
+            <h2 className="text-3xl md:text-5xl font-headline font-bold text-gray-900 mb-4 tracking-tight">
+              Numbers That <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Speak</span>
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">Over two decades of building India&apos;s speed skating ecosystem — measured in impact.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-4 md:gap-5 max-w-6xl mx-auto">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                custom={index}
+                variants={fadeInUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="relative bg-white rounded-2xl p-5 md:p-6 border border-gray-100 shadow-md shadow-gray-100/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${stat.bg} to-transparent opacity-40 pointer-events-none`} />
+                <div className="relative z-10">
+                  <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center mb-4 border ${stat.border}`}>
+                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                  </div>
+                  <div className="text-2xl md:text-3xl font-headline font-bold text-gray-900 mb-1 tracking-tight">{stat.value}</div>
+                  <div className="text-sm font-medium text-gray-500">{stat.label}</div>
                 </div>
+                <div className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full opacity-60" style={{ background: `linear-gradient(to right, transparent, ${stat.accent}40, transparent)` }} />
               </motion.div>
             ))}
           </div>
@@ -219,7 +294,7 @@ export default function AboutPageClient({ initialMilestones, initialStats }: Abo
 
       {/* AFFILIATIONS */}
       <section className="py-20 md:py-28 bg-dark-950 relative overflow-hidden">
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-violet-500/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[120px]" />
         <div className="container mx-auto px-4 relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-sm font-medium mb-4 backdrop-blur-sm">

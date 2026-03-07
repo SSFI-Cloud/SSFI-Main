@@ -290,7 +290,7 @@ export default function StudentApprovalsPage() {
                     value={searchInput}
                     onChange={e => setSearchInput(e.target.value)}
                     placeholder="Search by name, UID, or mobile..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
             </div>
 
@@ -320,7 +320,7 @@ export default function StudentApprovalsPage() {
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-16 text-center">
-                                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+                                        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
                                         <p className="text-gray-500 mt-2 text-sm">Loading pending students…</p>
                                     </td>
                                 </tr>
@@ -352,8 +352,8 @@ export default function StudentApprovalsPage() {
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${student.gender === 'MALE' ? 'bg-cyan-100' : 'bg-pink-100'}`}>
-                                                    <User className={`w-5 h-5 ${student.gender === 'MALE' ? 'text-cyan-600' : 'text-pink-600'}`} />
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${student.gender === 'MALE' ? 'bg-cyan-100' : 'bg-teal-100'}`}>
+                                                    <User className={`w-5 h-5 ${student.gender === 'MALE' ? 'text-cyan-600' : 'text-teal-600'}`} />
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-gray-900">{student.name}</p>
@@ -392,7 +392,7 @@ export default function StudentApprovalsPage() {
                                                 </button>
                                                 <button
                                                     onClick={() => openRejectModal(student)}
-                                                    className="p-2 hover:bg-gradient-to-br from-red-500 to-rose-600 rounded-lg text-red-600 hover:text-red-300 transition-colors"
+                                                    className="p-2 hover:bg-gradient-to-br from-red-500 to-teal-600 rounded-lg text-red-600 hover:text-red-300 transition-colors"
                                                     title="Reject"
                                                 >
                                                     <XCircle className="w-4 h-4" />
@@ -455,12 +455,12 @@ export default function StudentApprovalsPage() {
                             {/* Modal Header */}
                             <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white z-10">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${viewingStudent.gender === 'MALE' ? 'bg-cyan-100' : 'bg-pink-100'}`}>
-                                        <User className={`w-7 h-7 ${viewingStudent.gender === 'MALE' ? 'text-cyan-600' : 'text-pink-600'}`} />
+                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${viewingStudent.gender === 'MALE' ? 'bg-cyan-100' : 'bg-teal-100'}`}>
+                                        <User className={`w-7 h-7 ${viewingStudent.gender === 'MALE' ? 'text-cyan-600' : 'text-teal-600'}`} />
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-900">{viewingStudent.name}</h2>
-                                        <p className="text-blue-600 font-mono text-sm">{viewingStudent.ssfi_id}</p>
+                                        <p className="text-emerald-600 font-mono text-sm">{viewingStudent.ssfi_id}</p>
                                     </div>
                                 </div>
                                 <button onClick={() => setViewingStudent(null)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500">

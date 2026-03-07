@@ -4,7 +4,7 @@ import axios from 'axios';
 async function main() {
     try {
         // Login first to get token (using the fixed user credentials)
-        const loginRes = await axios.post('http://localhost:5001/api/v1/auth/login', {
+        const loginRes = await axios.post('https://api.ssfiskate.com/api/v1/auth/login', {
             phone: '7892641107',
             password: '7892641107'
         });
@@ -13,7 +13,7 @@ async function main() {
         console.log('Got token:', token ? 'Yes' : 'No');
 
         // Fetch districts with registeredOnly=true
-        const res = await axios.get('http://localhost:5001/api/v1/districts', {
+        const res = await axios.get('https://api.ssfiskate.com/api/v1/districts', {
             params: { registeredOnly: 'true' },
             headers: { Authorization: `Bearer ${token}` }
         });

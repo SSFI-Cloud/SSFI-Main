@@ -125,10 +125,46 @@ export interface PaginatedResponse<T = any> extends ApiResponse<T> {
   };
 }
 
+// ── GET request deduplication + short-lived cache ──
+// Identical GET requests within the TTL window share one network call.
+// This eliminates duplicate /stats/public and /registration-windows calls.
+const _getCache = new Map<string, { data: any; ts: number }>();
+const _inflight = new Map<string, Promise<any>>();
+const GET_CACHE_TTL = 60_000; // 60 seconds
+
+function cachedGet<T = any>(url: string, config?: AxiosRequestConfig) {
+  const key = url + (config?.params ? JSON.stringify(config.params) : '');
+
+  // Return cached response if still fresh
+  const cached = _getCache.get(key);
+  if (cached && Date.now() - cached.ts < GET_CACHE_TTL) {
+    return Promise.resolve(cached.data);
+  }
+
+  // Deduplicate: reuse in-flight request for the same URL
+  const inflight = _inflight.get(key);
+  if (inflight) return inflight;
+
+  const promise = apiClient
+    .get<ApiResponse<T>>(url, config)
+    .then((res) => {
+      _getCache.set(key, { data: res, ts: Date.now() });
+      _inflight.delete(key);
+      return res;
+    })
+    .catch((err) => {
+      _inflight.delete(key);
+      throw err;
+    });
+
+  _inflight.set(key, promise);
+  return promise;
+}
+
 // Generic API methods
 export const api = {
   get: <T = any>(url: string, config?: AxiosRequestConfig) =>
-    apiClient.get<ApiResponse<T>>(url, config),
+    cachedGet<T>(url, config),
 
   post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig) =>
     apiClient.post<ApiResponse<T>>(url, data, config),

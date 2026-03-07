@@ -43,7 +43,7 @@ export default function StatePortalPage() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
             </div>
         );
     }
@@ -53,7 +53,7 @@ export default function StatePortalPage() {
             <div className="min-h-screen py-20 px-4 text-center">
                 <h1 className="text-2xl font-bold text-slate-800">State Not Found</h1>
                 <p className="text-slate-600 mt-2">{error || 'The requested state portal does not exist.'}</p>
-                <Link href="/" className="mt-4 inline-block text-blue-600 hover:underline">Return Home</Link>
+                <Link href="/" className="mt-4 inline-block text-emerald-600 hover:underline">Return Home</Link>
             </div>
         );
     }
@@ -62,7 +62,7 @@ export default function StatePortalPage() {
         <main className="min-h-screen bg-slate-50 pb-20">
             {/* Hero Section */}
             <section className="relative bg-slate-900 text-white py-24 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-indigo-900 opacity-90" />
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-900 to-teal-900 opacity-90" />
                 <div className="absolute inset-0 bg-[url('/images/pattern.png')] opacity-10" />
 
                 <div className="container mx-auto px-4 relative z-10">
@@ -80,7 +80,7 @@ export default function StatePortalPage() {
                         )}
                         <div>
                             <div className="flex items-center gap-3 mb-2">
-                                <span className="bg-blue-500/20 text-blue-200 px-3 py-1 rounded-full text-sm font-medium border border-blue-500/30">
+                                <span className="bg-emerald-500/20 text-emerald-200 px-3 py-1 rounded-full text-sm font-medium border border-emerald-500/30">
                                     State Portal
                                 </span>
                                 <span className="text-slate-400 font-mono">{state.code}</span>
@@ -91,7 +91,7 @@ export default function StatePortalPage() {
                                     href={state.website}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 text-blue-300 hover:text-white transition-colors"
+                                    className="flex items-center gap-2 text-emerald-300 hover:text-white transition-colors"
                                 >
                                     <ExternalLink size={16} />
                                     Visit Official Website
@@ -125,17 +125,17 @@ export default function StatePortalPage() {
                             <Link
                                 key={district.id}
                                 href={`/district/${district.id}`}
-                                className="group bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 hover:border-blue-100"
+                                className="group bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all border border-slate-100 hover:border-emerald-100"
                             >
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+                                        <h3 className="text-lg font-semibold text-slate-800 group-hover:text-emerald-600 transition-colors">
                                             {district.district_name}
                                         </h3>
                                         <p className="text-slate-500 text-sm mt-1">Code: {district.code}</p>
                                     </div>
-                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                                        <ChevronRight size={16} className="text-slate-400 group-hover:text-blue-600" />
+                                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
+                                        <ChevronRight size={16} className="text-slate-400 group-hover:text-emerald-600" />
                                     </div>
                                 </div>
                                 <div className="mt-6 flex items-center justify-between text-sm text-slate-500 pt-4 border-t border-slate-50">
@@ -160,7 +160,7 @@ export default function StatePortalPage() {
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+            <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                 {icon}
             </div>
             <div>

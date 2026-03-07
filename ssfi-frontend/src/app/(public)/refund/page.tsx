@@ -34,7 +34,7 @@ export default function RefundPolicyPage() {
               <p>
                 The Speed Skating Federation of India (SSFI) strives to ensure a fair and
                 transparent process for all transactions made through{' '}
-                <span className="text-blue-400">www.ssfiskate.com</span>. Please read this policy
+                <span className="text-emerald-400">www.ssfiskate.com</span>. Please read this policy
                 carefully before making any payments.
               </p>
             </section>

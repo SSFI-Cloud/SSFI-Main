@@ -17,7 +17,7 @@ import {
     School,
     Heart
 } from 'lucide-react';
-import axios from 'axios';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Link from 'next/link';
 
@@ -88,8 +88,8 @@ export default function StudentRegistrationWizard() {
         const fetchData = async () => {
             try {
                 const [clubsRes, statesRes] = await Promise.all([
-                    axios.get('/api/clubs', { headers: { Authorization: `Bearer ${token}` } }),
-                    axios.get('/api/states', { headers: { Authorization: `Bearer ${token}` } })
+                    api.get('/clubs'),
+                    api.get('/states')
                 ]);
 
                 if (clubsRes.data.status === 'success') setClubs(clubsRes.data.data.clubs || []);
@@ -106,9 +106,7 @@ export default function StudentRegistrationWizard() {
 
         const fetchDistricts = async () => {
             try {
-                const res = await axios.get(`/api/districts?stateId=${formData.stateId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get('/districts', { params: { stateId: formData.stateId } });
                 if (res.data.status === 'success') setDistricts(res.data.data || []);
             } catch (err) {
                 console.error('Failed to fetch districts', err);
@@ -131,13 +129,11 @@ export default function StudentRegistrationWizard() {
         setError(null);
 
         try {
-            await axios.post('/api/students', {
+            await api.post('/students', {
                 ...formData,
                 clubId: Number(formData.clubId),
                 stateId: Number(formData.stateId),
                 districtId: Number(formData.districtId),
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
             });
 
             setSuccess(true);
@@ -183,7 +179,7 @@ export default function StudentRegistrationWizard() {
                                         className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${isCompleted
                                                 ? 'bg-green-500 text-white'
                                                 : isActive
-                                                    ? 'bg-blue-500 text-white ring-4 ring-blue-500/20'
+                                                    ? 'bg-emerald-500 text-white ring-4 ring-emerald-500/20'
                                                     : 'bg-gray-100 text-gray-500'
                                             }`}
                                     >
@@ -194,7 +190,7 @@ export default function StudentRegistrationWizard() {
                                         )}
                                     </div>
                                     <span
-                                        className={`text-xs mt-2 font-medium ${isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-600'
+                                        className={`text-xs mt-2 font-medium ${isActive ? 'text-emerald-600' : isCompleted ? 'text-green-600' : 'text-gray-600'
                                             }`}
                                     >
                                         {step.title}
@@ -259,7 +255,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.firstName}
                                             onChange={(e) => updateField('firstName', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -269,7 +265,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.lastName}
                                             onChange={(e) => updateField('lastName', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -279,7 +275,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.dateOfBirth}
                                             onChange={(e) => updateField('dateOfBirth', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -288,7 +284,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.gender}
                                             onChange={(e) => updateField('gender', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         >
                                             <option value="MALE">Male</option>
                                             <option value="FEMALE">Female</option>
@@ -301,7 +297,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.bloodGroup}
                                             onChange={(e) => updateField('bloodGroup', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         >
                                             <option value="">Select</option>
                                             <option value="A+">A+</option>
@@ -322,7 +318,7 @@ export default function StudentRegistrationWizard() {
                                             value={formData.phone}
                                             onChange={(e) => updateField('phone', e.target.value)}
                                             maxLength={10}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div className="md:col-span-2">
@@ -331,7 +327,7 @@ export default function StudentRegistrationWizard() {
                                             type="email"
                                             value={formData.email}
                                             onChange={(e) => updateField('email', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                 </div>
@@ -349,7 +345,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.fatherName}
                                             onChange={(e) => updateField('fatherName', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -358,7 +354,7 @@ export default function StudentRegistrationWizard() {
                                             type="text"
                                             value={formData.motherName}
                                             onChange={(e) => updateField('motherName', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -368,7 +364,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.schoolName}
                                             onChange={(e) => updateField('schoolName', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -377,7 +373,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.academicBoard}
                                             onChange={(e) => updateField('academicBoard', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         >
                                             <option value="STATE">State Board</option>
                                             <option value="CBSE">CBSE</option>
@@ -392,7 +388,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.className}
                                             onChange={(e) => updateField('className', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                 </div>
@@ -410,7 +406,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.nomineeName}
                                             onChange={(e) => updateField('nomineeName', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -421,7 +417,7 @@ export default function StudentRegistrationWizard() {
                                             min={18}
                                             value={formData.nomineeAge}
                                             onChange={(e) => updateField('nomineeAge', Number(e.target.value))}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -430,7 +426,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.nomineeRelation}
                                             onChange={(e) => updateField('nomineeRelation', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         >
                                             <option value="FATHER">Father</option>
                                             <option value="MOTHER">Mother</option>
@@ -445,7 +441,7 @@ export default function StudentRegistrationWizard() {
                                             value={formData.nomineePhone}
                                             onChange={(e) => updateField('nomineePhone', e.target.value)}
                                             maxLength={10}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                 </div>
@@ -462,7 +458,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.clubId}
                                             onChange={(e) => updateField('clubId', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         >
                                             <option value="">Select Club</option>
                                             {clubs.map((club) => (
@@ -479,7 +475,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.coachName}
                                             onChange={(e) => updateField('coachName', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -490,7 +486,7 @@ export default function StudentRegistrationWizard() {
                                             value={formData.coachPhone}
                                             onChange={(e) => updateField('coachPhone', e.target.value)}
                                             maxLength={10}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -499,7 +495,7 @@ export default function StudentRegistrationWizard() {
                                             type="email"
                                             value={formData.coachEmail}
                                             onChange={(e) => updateField('coachEmail', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                 </div>
@@ -517,7 +513,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.addressLine1}
                                             onChange={(e) => updateField('addressLine1', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div className="md:col-span-2">
@@ -526,7 +522,7 @@ export default function StudentRegistrationWizard() {
                                             type="text"
                                             value={formData.addressLine2}
                                             onChange={(e) => updateField('addressLine2', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -536,7 +532,7 @@ export default function StudentRegistrationWizard() {
                                             required
                                             value={formData.city}
                                             onChange={(e) => updateField('city', e.target.value)}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -547,7 +543,7 @@ export default function StudentRegistrationWizard() {
                                             value={formData.pincode}
                                             onChange={(e) => updateField('pincode', e.target.value)}
                                             maxLength={6}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div>
@@ -559,7 +555,7 @@ export default function StudentRegistrationWizard() {
                                                 updateField('stateId', e.target.value);
                                                 updateField('districtId', '');
                                             }}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         >
                                             <option value="">Select State</option>
                                             {states.map((state) => (
@@ -576,7 +572,7 @@ export default function StudentRegistrationWizard() {
                                             value={formData.districtId}
                                             onChange={(e) => updateField('districtId', e.target.value)}
                                             disabled={!formData.stateId}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
                                         >
                                             <option value="">Select District</option>
                                             {districts.map((district) => (
@@ -602,7 +598,7 @@ export default function StudentRegistrationWizard() {
                                             value={formData.aadhaarNumber}
                                             onChange={(e) => updateField('aadhaarNumber', e.target.value)}
                                             maxLength={12}
-                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                         />
                                     </div>
                                     <div className="pt-4 border-t border-gray-200">
@@ -612,7 +608,7 @@ export default function StudentRegistrationWizard() {
                                                 required
                                                 checked={formData.termsAccepted}
                                                 onChange={(e) => updateField('termsAccepted', e.target.checked)}
-                                                className="w-5 h-5 rounded border-gray-200 text-blue-500 focus:ring-blue-500/50"
+                                                className="w-5 h-5 rounded border-gray-200 text-emerald-500 focus:ring-emerald-500/50"
                                             />
                                             <span className="text-gray-700">
                                                 I confirm all information is accurate and accept the terms *
@@ -641,7 +637,7 @@ export default function StudentRegistrationWizard() {
                         <button
                             type="button"
                             onClick={handleNext}
-                            className="flex-1 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium flex items-center justify-center gap-2"
+                            className="flex-1 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-medium flex items-center justify-center gap-2"
                         >
                             Next
                             <ArrowRight className="w-4 h-4" />

@@ -30,9 +30,8 @@ const FALLBACK_DEPARTMENTS: Department[] = [
 
 const CARD_COLORS: Record<string, { gradient: string; bg: string; border: string }> = {
   emerald: { gradient: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-  violet: { gradient: 'from-violet-500 to-purple-500', bg: 'bg-violet-50', border: 'border-violet-100' },
-  sky: { gradient: 'from-sky-500 to-blue-500', bg: 'bg-sky-50', border: 'border-sky-100' },
-  amber: { gradient: 'from-amber-500 to-orange-500', bg: 'bg-amber-50', border: 'border-amber-100' },
+  sky: { gradient: 'from-sky-500 to-emerald-500', bg: 'bg-sky-50', border: 'border-sky-100' },
+  teal: { gradient: 'from-teal-500 to-emerald-500', bg: 'bg-teal-50', border: 'border-teal-100' },
 };
 
 interface ContactPageClientProps {
@@ -55,9 +54,9 @@ export default function ContactPageClient({ initialSettings }: ContactPageClient
 
   const contactCards = [
     { icon: MapPin, title: 'Visit Us', details: [address], color: 'emerald' },
-    { icon: Phone, title: 'Call Us', details: [phone1, phone2].filter(Boolean), color: 'violet' },
+    { icon: Phone, title: 'Call Us', details: [phone1, phone2].filter(Boolean), color: 'emerald' },
     { icon: Mail, title: 'Email Us', details: [email], color: 'sky' },
-    { icon: Clock, title: 'Office Hours', details: [weekdays, saturday], color: 'amber' },
+    { icon: Clock, title: 'Office Hours', details: [weekdays, saturday], color: 'teal' },
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -99,9 +98,9 @@ export default function ContactPageClient({ initialSettings }: ContactPageClient
               <p className="text-white/50 text-lg md:text-xl max-w-xl">Have questions about events, registration, or coaching? We&apos;re here to help.</p>
             </motion.div>
             <div className="hidden lg:block lg:w-[400px] xl:w-[460px] flex-shrink-0 self-end relative">
-              <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-violet-500/8 via-transparent to-transparent blur-3xl pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-emerald-500/8 via-transparent to-transparent blur-3xl pointer-events-none" />
               <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}>
-                <motion.div animate={{ y: [0, -20, 0], rotate: [-0.5, 1.5, -0.5] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ filter: 'drop-shadow(0 40px 55px rgba(0,0,0,0.55)) drop-shadow(0 12px 24px rgba(139,92,246,0.3))' }}>
+                <motion.div animate={{ y: [0, -20, 0], rotate: [-0.5, 1.5, -0.5] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} style={{ filter: 'drop-shadow(0 40px 55px rgba(0,0,0,0.55)) drop-shadow(0 12px 24px rgba(16,185,129,0.3))' }}>
                   <div className="relative w-full h-[420px] xl:h-[460px]">
                     <Image src="/images/mascot/13.webp" alt="SSFI Mascot" fill className="object-contain object-bottom" sizes="460px" priority />
                   </div>
