@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { X, Bell } from 'lucide-react';
-import { api } from '@/lib/api/client';
+import axios from 'axios';
 import Link from 'next/link';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 interface Notification {
   id: string;
@@ -20,7 +22,9 @@ export default function NotificationRibbon() {
   useEffect(() => {
     const fetchNotification = async () => {
       try {
-        const res = await api.get('/notifications/public/active');
+        // Use raw axios to bypass global interceptor (avoids "Resource not found" toast
+        // when the notifications endpoint doesn't exist yet)
+        const res = await axios.get(`${API_BASE}/notifications/public/active`, { timeout: 5000 });
         const data = res.data?.data;
         if (data && (Array.isArray(data) ? data.length > 0 : data.message)) {
           setNotification(Array.isArray(data) ? data[0] : data);
