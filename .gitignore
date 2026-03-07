@@ -28,6 +28,8 @@ build
 .env
 .env.local
 .env*
+!.env.production
+!.env.example
 *.pem
 
 # Vercel

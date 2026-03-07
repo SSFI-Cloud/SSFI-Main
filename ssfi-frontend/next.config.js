@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   images: {
     // Disable server-side image optimization — it uses Sharp which spawns
     // threads and kills Hostinger's 200 process limit. Images are already
