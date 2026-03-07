@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+export const dynamic = 'force-dynamic';
 import AboutPageClient from './AboutPageClient';
 import { OrganizationSchema, BreadcrumbSchema } from '@/components/seo/StructuredData';
 

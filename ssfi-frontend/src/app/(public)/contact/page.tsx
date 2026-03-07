@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+export const dynamic = 'force-dynamic';
 import ContactPageClient from './ContactPageClient';
 import { BreadcrumbSchema } from '@/components/seo/StructuredData';
 
