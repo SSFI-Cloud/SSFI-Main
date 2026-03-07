@@ -71,6 +71,28 @@ export const registerBeginner = asyncHandler(async (req: Request, res: Response)
   return successResponse(res, { statusCode: 201, message: 'Registration successful', data: registration });
 });
 
+export const initiateRegistration = asyncHandler(async (req: Request, res: Response) => {
+  const data = beginnerRegistrationSchema.parse(req.body);
+  const files: { photo?: string; aadhaarCard?: string; birthCertificate?: string } = {};
+  if (req.files && typeof req.files === 'object') {
+    const f = req.files as { [key: string]: Express.Multer.File[] };
+    if (f.photo?.[0]) files.photo = f.photo[0].path;
+    if (f.aadhaarCard?.[0]) files.aadhaarCard = f.aadhaarCard[0].path;
+    if (f.birthCertificate?.[0]) files.birthCertificate = f.birthCertificate[0].path;
+  }
+  const result = await beginnerCertService.initiateRegistration(data, files);
+  return successResponse(res, { statusCode: 201, message: 'Registration initiated. Please complete payment.', data: result });
+});
+
+export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ success: false, message: 'Missing payment details' });
+  }
+  const result = await beginnerCertService.verifyPayment({ razorpay_order_id, razorpay_payment_id, razorpay_signature });
+  return successResponse(res, { message: result.message, data: result });
+});
+
 export const getProgramRegistrations = asyncHandler(async (req: AuthRequest, res: Response) => {
   const programId = parseInt(req.params.id);
   const query = registrationsQuerySchema.parse(req.query);
@@ -155,6 +177,6 @@ export const updateRegistrationStatus = asyncHandler(async (req: AuthRequest, re
 
 export default {
   createProgram, updateProgram, deleteProgram, getProgram, listPrograms, getActivePrograms,
-  lookupStudent, registerBeginner, getProgramRegistrations, exportRegistrations,
-  markComplete, updateRegistrationStatus,
+  lookupStudent, registerBeginner, initiateRegistration, verifyPayment, getProgramRegistrations,
+  exportRegistrations, markComplete, updateRegistrationStatus,
 };

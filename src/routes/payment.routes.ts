@@ -37,6 +37,9 @@ router.get('/status/:orderId', paymentController.getPaymentStatus);
 // Get user's payments
 router.get('/', paymentController.getPayments);
 
+// Get payment receipt / details
+router.get('/:id/receipt', paymentController.getReceipt);
+
 // ========================================
 // Admin Routes (TODO: Add admin middleware)
 // ========================================

@@ -17,6 +17,8 @@ const beginnerUpload = uploadFields([
 router.get('/programs/active', ctrl.getActivePrograms);
 router.get('/lookup-student', ctrl.lookupStudent);
 router.post('/register', beginnerUpload, ctrl.registerBeginner);
+router.post('/initiate', beginnerUpload, ctrl.initiateRegistration);
+router.post('/verify-payment', ctrl.verifyPayment);
 
 // ────────── ADMIN ROUTES ──────────
 

@@ -2,7 +2,7 @@
 
 export type PaymentStatus = 'pending' | 'processing' | 'captured' | 'failed' | 'refunded';
 
-export type PaymentType = 'STUDENT_REGISTRATION' | 'CLUB_AFFILIATION' | 'EVENT_REGISTRATION' | 'MEMBERSHIP_RENEWAL';
+export type PaymentType = 'STUDENT_REGISTRATION' | 'CLUB_AFFILIATION' | 'EVENT_REGISTRATION' | 'MEMBERSHIP_RENEWAL' | 'COACH_CERTIFICATION' | 'BEGINNER_CERTIFICATION';
 
 export interface CreateOrderRequest {
     amount: number; // In paise

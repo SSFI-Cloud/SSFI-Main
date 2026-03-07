@@ -15,6 +15,8 @@ const coachUpload = uploadFields([
 
 router.get('/programs/active', ctrl.getActivePrograms);
 router.post('/register', coachUpload, ctrl.registerCoach);
+router.post('/initiate', coachUpload, ctrl.initiateRegistration);
+router.post('/verify-payment', ctrl.verifyPayment);
 router.get('/certified-coaches', ctrl.getCertifiedCoaches);
 
 // ══════════ ADMIN ROUTES ══════════

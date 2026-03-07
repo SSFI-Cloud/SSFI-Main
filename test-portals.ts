@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 
 const prisma = new PrismaClient();
-const API_URL = 'http://localhost:5000/api/v1';
+const API_URL = process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api/v1` : 'https://api.ssfiskate.com/api/v1';
 
 async function verifyPortals() {
     console.log('🚀 Starting Portal Verification...');
