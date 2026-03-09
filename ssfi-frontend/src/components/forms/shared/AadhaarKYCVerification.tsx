@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Shield, CheckCircle2, AlertCircle, Loader2, RotateCcw, Smartphone, User, Camera, Upload } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Shield, CheckCircle2, AlertCircle, Loader2, RotateCcw, ExternalLink, Camera, Upload } from 'lucide-react';
 import { useKYC, KycResult } from '@/lib/hooks/useKYC';
 
 interface AadhaarKYCVerificationProps {
@@ -45,8 +45,6 @@ const COLOR_MAP = {
   },
 };
 
-const OTP_COUNTDOWN_SECONDS = 120; // 2 minutes
-
 export default function AadhaarKYCVerification({
   onVerified,
   onProfilePhotoChoice,
@@ -55,45 +53,11 @@ export default function AadhaarKYCVerification({
   initialResult = null,
 }: AadhaarKYCVerificationProps) {
   const colors = COLOR_MAP[colorScheme];
-  const { step, result, error, isLoading, otpAttempts, generateOtp, verifyOtp, reset, resendOtp } = useKYC();
+  const { step, result, error, isLoading, initializeDigilocker, reopenDigilocker, reset } = useKYC();
 
   // Local state
-  const [aadhaarInput, setAadhaarInput] = useState('');
-  const [otpInput, setOtpInput] = useState('');
-  const [countdown, setCountdown] = useState(0);
   const [profilePhotoChosen, setProfilePhotoChosen] = useState(false);
-  const otpInputRef = useRef<HTMLInputElement>(null);
-
-  // If initial result is provided (re-render), use it
   const [preVerified, setPreVerified] = useState<KycResult | null>(initialResult);
-
-  // Countdown timer for OTP resend
-  useEffect(() => {
-    if (step === 'otp_sent' && countdown <= 0) {
-      setCountdown(OTP_COUNTDOWN_SECONDS);
-    }
-  }, [step]);
-
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [countdown]);
-
-  // Auto-focus OTP input when OTP is sent
-  useEffect(() => {
-    if (step === 'otp_sent' && otpInputRef.current) {
-      otpInputRef.current.focus();
-    }
-  }, [step]);
 
   // Notify parent when verified
   useEffect(() => {
@@ -102,38 +66,8 @@ export default function AadhaarKYCVerification({
     }
   }, [result, onVerified]);
 
-  // Aadhaar input masking: show as "XXXX XXXX 1234" while typing
-  const handleAadhaarChange = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 12);
-    setAadhaarInput(digits);
-  };
-
-  const maskedAadhaar = aadhaarInput.length === 12
-    ? `XXXX XXXX ${aadhaarInput.slice(-4)}`
-    : aadhaarInput.replace(/(\d{4})(?=\d)/g, '$1 ');
-
-  const handleGenerateOtp = async () => {
-    if (aadhaarInput.length !== 12) return;
-    await generateOtp(aadhaarInput);
-    setOtpInput('');
-  };
-
-  const handleVerifyOtp = async () => {
-    if (otpInput.length !== 6) return;
-    await verifyOtp(otpInput);
-  };
-
-  const handleResendOtp = async () => {
-    setOtpInput('');
-    setCountdown(0);
-    await resendOtp();
-  };
-
   const handleReset = () => {
     reset();
-    setAadhaarInput('');
-    setOtpInput('');
-    setCountdown(0);
     setPreVerified(null);
     setProfilePhotoChosen(false);
   };
@@ -144,9 +78,9 @@ export default function AadhaarKYCVerification({
     onProfilePhotoChoice?.(useAadhaar, useAadhaar ? activeResult?.profileImage : undefined);
   }, [result, preVerified, onProfilePhotoChoice]);
 
-  // ── Pre-verified state ──
+  // ── Pre-verified / Verified state ──
   const activeResult = result || preVerified;
-  if (activeResult?.verified && step !== 'otp_sent' && step !== 'verifying') {
+  if (activeResult?.verified && step !== 'polling' && step !== 'initializing') {
     return (
       <div className={`rounded-xl ${colors.bg} ${colors.border} border p-5`}>
         <div className="flex items-start gap-4">
@@ -216,15 +150,15 @@ export default function AadhaarKYCVerification({
     );
   }
 
-  // ── Error state (max retries exceeded) ──
-  if (step === 'error' && otpAttempts >= 3) {
+  // ── Error state ──
+  if (step === 'error') {
     return (
       <div className="rounded-xl bg-red-50 border border-red-200 p-5">
         <div className="flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-red-800">Verification attempts exceeded</p>
-            <p className="text-xs text-red-600 mt-1">{error || 'Please wait a few minutes and try again.'}</p>
+            <p className="text-sm font-medium text-red-800">Verification failed</p>
+            <p className="text-xs text-red-600 mt-1">{error || 'Something went wrong. Please try again.'}</p>
             <button
               type="button"
               onClick={handleReset}
@@ -238,135 +172,76 @@ export default function AadhaarKYCVerification({
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {/* Step 1: Aadhaar Number Input */}
-      {(step === 'idle' || step === 'error' || step === 'entering_aadhaar') && (
-        <div className={`rounded-xl border ${colors.border} p-5`}>
-          <div className="flex items-center gap-2 mb-3">
-            <Shield className={`w-4 h-4 ${colors.icon}`} />
-            <span className="text-sm font-semibold text-gray-900">Aadhaar KYC Verification</span>
-          </div>
-          <p className="text-xs text-gray-500 mb-4">
-            Enter your 12-digit Aadhaar number. An OTP will be sent to your Aadhaar-linked mobile number.
-          </p>
-
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="Enter 12-digit Aadhaar number"
-                value={aadhaarInput.replace(/(\d{4})(?=\d)/g, '$1 ')}
-                onChange={(e) => handleAadhaarChange(e.target.value)}
-                maxLength={14} // 12 digits + 2 spaces
-                className={`w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-900 bg-white placeholder-gray-400 ${colors.ring} focus:ring-2 focus:border-transparent outline-none`}
-                disabled={isLoading}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleGenerateOtp}
-              disabled={aadhaarInput.length !== 12 || isLoading}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium text-white ${colors.btn} disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap`}
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Smartphone className="w-4 h-4" />
-              )}
-              Send OTP
-            </button>
-          </div>
-
-          {error && step === 'error' && otpAttempts < 3 && (
-            <div className="mt-3 flex items-start gap-2 text-xs text-red-600">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
+  // ── Waiting for user / Polling state ──
+  if (step === 'waiting_for_user' || step === 'polling') {
+    return (
+      <div className={`rounded-xl border ${colors.border} p-5`}>
+        <div className="flex items-center gap-2 mb-3">
+          <Shield className={`w-4 h-4 ${colors.icon}`} />
+          <span className="text-sm font-semibold text-gray-900">Digilocker Verification</span>
         </div>
-      )}
 
-      {/* Step 2: OTP Entry */}
-      {(step === 'otp_sent' || step === 'verifying') && (
-        <div className={`rounded-xl border ${colors.border} p-5`}>
-          <div className="flex items-center gap-2 mb-1">
-            <Smartphone className={`w-4 h-4 ${colors.icon}`} />
-            <span className="text-sm font-semibold text-gray-900">Enter OTP</span>
+        <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <Loader2 className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-blue-900">
+              Waiting for Digilocker authentication...
+            </p>
+            <p className="text-xs text-blue-600 mt-1">
+              Complete the verification in the Digilocker popup window. This page will update automatically.
+            </p>
           </div>
-          <p className="text-xs text-gray-500 mb-4">
-            OTP sent to mobile number linked with Aadhaar {maskedAadhaar}
-          </p>
+        </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <input
-                ref={otpInputRef}
-                type="text"
-                inputMode="numeric"
-                placeholder="Enter 6-digit OTP"
-                value={otpInput}
-                onChange={(e) => {
-                  const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  setOtpInput(digits);
-                }}
-                maxLength={6}
-                className={`w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-900 bg-white placeholder-gray-400 text-center tracking-[0.3em] font-mono ${colors.ring} focus:ring-2 focus:border-transparent outline-none`}
-                disabled={isLoading}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && otpInput.length === 6) handleVerifyOtp();
-                }}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleVerifyOtp}
-              disabled={otpInput.length !== 6 || isLoading}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium text-white ${colors.btn} disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <CheckCircle2 className="w-4 h-4" />
-              )}
-              Verify
-            </button>
-          </div>
+        <div className="mt-3 flex items-center justify-between text-xs">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="text-gray-400 hover:text-gray-600 underline"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={reopenDigilocker}
+            className={`${colors.text} hover:underline font-medium flex items-center gap-1`}
+          >
+            <ExternalLink className="w-3 h-3" /> Reopen Digilocker
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-          {/* Error + retry info */}
-          {error && (
-            <div className="mt-3 flex items-start gap-2 text-xs text-red-600">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-              <span>{error} {otpAttempts < 3 && `(${3 - otpAttempts} attempt${3 - otpAttempts !== 1 ? 's' : ''} remaining)`}</span>
-            </div>
-          )}
+  // ── Idle / Initial state — "Verify with Digilocker" button ──
+  return (
+    <div className={`rounded-xl border ${colors.border} p-5`}>
+      <div className="flex items-center gap-2 mb-3">
+        <Shield className={`w-4 h-4 ${colors.icon}`} />
+        <span className="text-sm font-semibold text-gray-900">Aadhaar KYC Verification</span>
+      </div>
+      <p className="text-xs text-gray-500 mb-4">
+        Verify your identity using Digilocker. A popup will open where you can authenticate with your Aadhaar-linked mobile number.
+      </p>
 
-          {/* Resend / Back controls */}
-          <div className="mt-3 flex items-center justify-between text-xs">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="text-gray-400 hover:text-gray-600 underline"
-            >
-              Change Aadhaar
-            </button>
-            {countdown > 0 ? (
-              <span className="text-gray-400">
-                Resend OTP in {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={handleResendOtp}
-                disabled={isLoading}
-                className={`${colors.text} hover:underline font-medium`}
-              >
-                Resend OTP
-              </button>
-            )}
-          </div>
+      <button
+        type="button"
+        onClick={initializeDigilocker}
+        disabled={isLoading}
+        className={`w-full px-5 py-3 rounded-lg text-sm font-medium text-white ${colors.btn} disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+      >
+        {isLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Shield className="w-4 h-4" />
+        )}
+        {isLoading ? 'Starting verification...' : 'Verify with Digilocker'}
+      </button>
+
+      {error && (
+        <div className="mt-3 flex items-start gap-2 text-xs text-red-600">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
         </div>
       )}
     </div>
