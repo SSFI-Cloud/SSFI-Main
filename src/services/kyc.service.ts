@@ -8,7 +8,7 @@ import logger from '../utils/logger.util';
 export interface KycVerificationResult {
   verified: boolean;
   fullName: string;
-  dob: string;             // YYYY-MM-DD or DD-MM-YYYY from SurePass
+  dob: string;             // YYYY-MM-DD
   gender: string;          // M / F / T
   maskedAadhaar: string;   // "XXXX XXXX 1234"
   profileImage?: string;   // base64-encoded photo from Aadhaar
@@ -27,24 +27,28 @@ export interface KycVerificationResult {
   careOf?: string;         // "S/O: Father Name"
 }
 
-interface OtpSession {
-  aadhaarNumber: string;
+export interface DigilockerInitResult {
   clientId: string;
-  createdAt: number;
-  otpAttempts: number;
+  url: string;             // URL user opens to authenticate with Digilocker
+  expirySeconds: number;
 }
 
-// ── In-memory OTP session store ──
+interface DigilockerSession {
+  clientId: string;
+  createdAt: number;
+}
 
-const otpSessions = new Map<string, OtpSession>();
+// ── In-memory session store ──
+
+const digilockerSessions = new Map<string, DigilockerSession>();
 
 // Cleanup expired sessions every 2 minutes
 setInterval(() => {
   const now = Date.now();
-  const ttl = surepassConfig.otpTtlSeconds * 1000;
-  for (const [key, session] of otpSessions.entries()) {
+  const ttl = surepassConfig.sessionTtlSeconds * 1000;
+  for (const [key, session] of digilockerSessions.entries()) {
     if (now - session.createdAt > ttl) {
-      otpSessions.delete(key);
+      digilockerSessions.delete(key);
     }
   }
 }, 2 * 60 * 1000);
@@ -63,27 +67,36 @@ const surepassApi = axios.create({
 // ── Service Functions ──
 
 /**
- * Step 1: Generate OTP for Aadhaar verification
- * Sends OTP to the mobile number linked with the Aadhaar
+ * Step 1: Initialize Digilocker session
+ * Returns a URL that the user opens in a popup/new tab to authenticate
  */
-export const generateAadhaarOtp = async (
-  aadhaarNumber: string
-): Promise<{ clientId: string; success: boolean }> => {
+export const initializeDigilocker = async (
+  redirectUrl: string
+): Promise<DigilockerInitResult> => {
   if (!isSurepassConfigured()) {
     throw new AppError('KYC verification service is not configured', 503);
   }
 
   try {
-    const response = await surepassApi.post(surepassConfig.endpoints.generateOtp, {
-      id_number: aadhaarNumber,
+    const response = await surepassApi.post(surepassConfig.endpoints.initialize, {
+      data: {
+        redirect_url: redirectUrl,
+        expiry_minutes: 10,
+        send_sms: false,
+        send_email: false,
+        verify_phone: false,
+        verify_email: false,
+        skip_main_screen: false,
+        signup_flow: false,
+      },
     });
 
     const data = response.data;
 
-    if (!data.success || !data.data?.client_id) {
-      logger.warn('SurePass generate-otp failed:', data);
+    if (!data.success || !data.data?.client_id || !data.data?.url) {
+      logger.warn('SurePass digilocker/initialize failed:', data);
       throw new AppError(
-        data.message || 'Failed to generate OTP. Please check your Aadhaar number.',
+        data.message || 'Failed to initialize Digilocker verification.',
         400
       );
     }
@@ -91,152 +104,18 @@ export const generateAadhaarOtp = async (
     const clientId = data.data.client_id;
 
     // Store session for tracking
-    otpSessions.set(clientId, {
-      aadhaarNumber,
+    digilockerSessions.set(clientId, {
       clientId,
       createdAt: Date.now(),
-      otpAttempts: 0,
     });
 
-    logger.info(`KYC OTP generated for Aadhaar ending ${aadhaarNumber.slice(-4)}`);
+    logger.info(`Digilocker session initialized: ${clientId}`);
 
-    return { clientId, success: true };
-  } catch (error) {
-    if (error instanceof AppError) throw error;
-
-    const axiosErr = error as AxiosError<{ message?: string; data?: any }>;
-    const status = axiosErr.response?.status;
-    const msg = axiosErr.response?.data?.message;
-
-    if (status === 422 || status === 400) {
-      throw new AppError(
-        msg || 'Invalid Aadhaar number or Aadhaar not linked to mobile number.',
-        400
-      );
-    }
-
-    if (status === 429) {
-      throw new AppError(
-        'Too many verification requests. Please try again after some time.',
-        429
-      );
-    }
-
-    logger.error('SurePass generate-otp error:', error);
-    throw new AppError(
-      'KYC verification service is temporarily unavailable. Please try again later.',
-      503
-    );
-  }
-};
-
-/**
- * Step 2: Verify OTP and get Aadhaar details
- * Returns verified identity data on success
- */
-export const verifyAadhaarOtp = async (
-  clientId: string,
-  otp: string
-): Promise<KycVerificationResult> => {
-  if (!isSurepassConfigured()) {
-    throw new AppError('KYC verification service is not configured', 503);
-  }
-
-  // Validate session
-  const session = otpSessions.get(clientId);
-  if (!session) {
-    throw new AppError(
-      'OTP session expired or invalid. Please generate a new OTP.',
-      400
-    );
-  }
-
-  // Check TTL
-  const elapsed = Date.now() - session.createdAt;
-  if (elapsed > surepassConfig.otpTtlSeconds * 1000) {
-    otpSessions.delete(clientId);
-    throw new AppError('OTP has expired. Please generate a new OTP.', 400);
-  }
-
-  // Check attempts
-  if (session.otpAttempts >= surepassConfig.maxOtpRetries) {
-    otpSessions.delete(clientId);
-    throw new AppError(
-      'Maximum OTP attempts exceeded. Please generate a new OTP.',
-      429
-    );
-  }
-
-  // Increment attempt counter
-  session.otpAttempts += 1;
-
-  try {
-    const response = await surepassApi.post(surepassConfig.endpoints.submitOtp, {
-      client_id: clientId,
-      otp,
-    });
-
-    const data = response.data;
-
-    if (!data.success || !data.data?.full_name) {
-      logger.warn('SurePass submit-otp failed:', data);
-      throw new AppError(
-        data.message || 'OTP verification failed. Please try again.',
-        400
-      );
-    }
-
-    const d = data.data;
-
-    // Parse DOB — SurePass may return DD-MM-YYYY or YYYY-MM-DD
-    let dob = d.dob || '';
-    if (dob && /^\d{2}-\d{2}-\d{4}$/.test(dob)) {
-      // Convert DD-MM-YYYY to YYYY-MM-DD
-      const [day, month, year] = dob.split('-');
-      dob = `${year}-${month}-${day}`;
-    }
-
-    // Build address string
-    const addrParts = [
-      d.address?.house,
-      d.address?.street,
-      d.address?.landmark,
-      d.address?.loc || d.address?.locality,
-      d.address?.vtc,
-      d.address?.subdist,
-      d.address?.dist,
-      d.address?.state,
-      d.zip || d.address?.zip,
-    ].filter(Boolean);
-
-    const result: KycVerificationResult = {
-      verified: true,
-      fullName: d.full_name,
-      dob,
-      gender: d.gender || '',
-      maskedAadhaar: d.aadhaar_number || `XXXX XXXX ${session.aadhaarNumber.slice(-4)}`,
-      profileImage: d.profile_image || undefined,
-      address: {
-        house: d.address?.house || d.split_address?.house,
-        street: d.address?.street || d.split_address?.street,
-        landmark: d.address?.landmark || d.split_address?.landmark,
-        locality: d.address?.loc || d.address?.locality || d.split_address?.loc,
-        vtc: d.address?.vtc || d.split_address?.vtc,
-        district: d.address?.dist || d.split_address?.dist,
-        state: d.address?.state || d.split_address?.state,
-        pincode: d.zip || d.address?.zip || d.split_address?.zip,
-        country: d.address?.country || 'India',
-        fullAddress: addrParts.join(', '),
-      },
-      careOf: d.care_of,
+    return {
+      clientId,
+      url: data.data.url,
+      expirySeconds: data.data.expiry_seconds || 600,
     };
-
-    // Clean up session on success
-    otpSessions.delete(clientId);
-
-    logger.info(`KYC verified for Aadhaar ending ${session.aadhaarNumber.slice(-4)}: ${d.full_name}`);
-
-    return result;
   } catch (error) {
     if (error instanceof AppError) throw error;
 
@@ -244,12 +123,9 @@ export const verifyAadhaarOtp = async (
     const status = axiosErr.response?.status;
     const msg = axiosErr.response?.data?.message;
 
-    if (status === 422 || status === 400) {
-      const remaining = surepassConfig.maxOtpRetries - session.otpAttempts;
-      throw new AppError(
-        msg || `Incorrect OTP. ${remaining > 0 ? `${remaining} attempt(s) remaining.` : 'Please generate a new OTP.'}`,
-        400
-      );
+    if (status === 401) {
+      logger.error('SurePass authentication failed - check API token');
+      throw new AppError('KYC verification service authentication failed.', 503);
     }
 
     if (status === 429) {
@@ -259,15 +135,181 @@ export const verifyAadhaarOtp = async (
       );
     }
 
-    logger.error('SurePass submit-otp error:', error);
+    logger.error('SurePass digilocker/initialize error:', error);
     throw new AppError(
-      'KYC verification service is temporarily unavailable. Please try again later.',
+      msg || 'KYC verification service is temporarily unavailable. Please try again later.',
+      503
+    );
+  }
+};
+
+/**
+ * Step 2: Check Digilocker session status
+ * Returns the current status + verified data when completed
+ */
+export const getDigilockerStatus = async (
+  clientId: string
+): Promise<{
+  completed: boolean;
+  failed: boolean;
+  status: string;
+  aadhaarLinked: boolean;
+  data?: KycVerificationResult;
+}> => {
+  if (!isSurepassConfigured()) {
+    throw new AppError('KYC verification service is not configured', 503);
+  }
+
+  // Validate session exists (optional — SurePass tracks it anyway)
+  const session = digilockerSessions.get(clientId);
+  if (session) {
+    const elapsed = Date.now() - session.createdAt;
+    if (elapsed > surepassConfig.sessionTtlSeconds * 1000) {
+      digilockerSessions.delete(clientId);
+      throw new AppError('Digilocker session expired. Please start again.', 400);
+    }
+  }
+
+  try {
+    const response = await surepassApi.get(
+      `${surepassConfig.endpoints.status}/${clientId}`
+    );
+
+    const data = response.data;
+
+    if (!data.success) {
+      logger.warn('SurePass digilocker/status failed:', data);
+      throw new AppError(
+        data.message || 'Failed to check verification status.',
+        400
+      );
+    }
+
+    const d = data.data;
+
+    const result: {
+      completed: boolean;
+      failed: boolean;
+      status: string;
+      aadhaarLinked: boolean;
+      data?: KycVerificationResult;
+    } = {
+      completed: !!d.completed,
+      failed: !!d.failed,
+      status: d.status || 'unknown',
+      aadhaarLinked: !!d.aadhaar_linked,
+    };
+
+    // If completed and has aadhaar data, extract it
+    if (d.completed && d.aadhaar_linked && d.aadhaar_data) {
+      const ad = d.aadhaar_data;
+
+      // Parse DOB — SurePass may return DD-MM-YYYY or YYYY-MM-DD
+      let dob = ad.dob || '';
+      if (dob && /^\d{2}-\d{2}-\d{4}$/.test(dob)) {
+        const [day, month, year] = dob.split('-');
+        dob = `${year}-${month}-${day}`;
+      }
+
+      // Build address string
+      const addrParts = [
+        ad.address?.house,
+        ad.address?.street,
+        ad.address?.landmark,
+        ad.address?.loc || ad.address?.locality,
+        ad.address?.vtc,
+        ad.address?.subdist,
+        ad.address?.dist,
+        ad.address?.state,
+        ad.zip || ad.address?.zip,
+      ].filter(Boolean);
+
+      result.data = {
+        verified: true,
+        fullName: ad.full_name || ad.name || '',
+        dob,
+        gender: ad.gender || '',
+        maskedAadhaar: ad.aadhaar_number || ad.masked_aadhaar || '',
+        profileImage: ad.profile_image || ad.photo || undefined,
+        address: {
+          house: ad.address?.house || ad.split_address?.house,
+          street: ad.address?.street || ad.split_address?.street,
+          landmark: ad.address?.landmark || ad.split_address?.landmark,
+          locality: ad.address?.loc || ad.address?.locality || ad.split_address?.loc,
+          vtc: ad.address?.vtc || ad.split_address?.vtc,
+          district: ad.address?.dist || ad.split_address?.dist,
+          state: ad.address?.state || ad.split_address?.state,
+          pincode: ad.zip || ad.address?.zip || ad.split_address?.zip,
+          country: ad.address?.country || 'India',
+          fullAddress: addrParts.join(', '),
+        },
+        careOf: ad.care_of,
+      };
+
+      // Clean up session on success
+      digilockerSessions.delete(clientId);
+      logger.info(`Digilocker KYC verified: ${result.data.fullName}`);
+    }
+
+    // If completed but no aadhaar data, check for flat fields
+    if (d.completed && !result.data && (d.full_name || d.name)) {
+      let dob = d.dob || '';
+      if (dob && /^\d{2}-\d{2}-\d{4}$/.test(dob)) {
+        const [day, month, year] = dob.split('-');
+        dob = `${year}-${month}-${day}`;
+      }
+
+      result.data = {
+        verified: true,
+        fullName: d.full_name || d.name || '',
+        dob,
+        gender: d.gender || '',
+        maskedAadhaar: d.aadhaar_number || d.masked_aadhaar || '',
+        profileImage: d.profile_image || d.photo || undefined,
+        address: d.address ? {
+          house: d.address?.house,
+          street: d.address?.street,
+          district: d.address?.dist,
+          state: d.address?.state,
+          pincode: d.zip || d.address?.zip,
+          country: 'India',
+        } : undefined,
+        careOf: d.care_of,
+      };
+
+      digilockerSessions.delete(clientId);
+      logger.info(`Digilocker KYC verified (flat): ${result.data.fullName}`);
+    }
+
+    if (d.failed) {
+      digilockerSessions.delete(clientId);
+      logger.warn(`Digilocker verification failed for ${clientId}: ${d.error_description || 'unknown'}`);
+    }
+
+    return result;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+
+    const axiosErr = error as AxiosError<{ message?: string }>;
+    const status = axiosErr.response?.status;
+
+    if (status === 401) {
+      throw new AppError('KYC verification service authentication failed.', 503);
+    }
+
+    if (status === 429) {
+      throw new AppError('Too many requests. Please try again later.', 429);
+    }
+
+    logger.error('SurePass digilocker/status error:', error);
+    throw new AppError(
+      'KYC verification service is temporarily unavailable.',
       503
     );
   }
 };
 
 export default {
-  generateAadhaarOtp,
-  verifyAadhaarOtp,
+  initializeDigilocker,
+  getDigilockerStatus,
 };

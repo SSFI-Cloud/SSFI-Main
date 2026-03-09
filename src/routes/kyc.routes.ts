@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { generateOtp, verifyOtp } from '../controllers/kyc.controller';
+import { initialize, status } from '../controllers/kyc.controller';
 
 const router = Router();
 
@@ -16,12 +16,22 @@ const kycLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.use(kycLimiter);
+// Status polling can be more frequent
+const statusLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,   // 1 minute
+  max: 30,                     // 30 polls per minute
+  message: {
+    success: false,
+    message: 'Too many status checks. Please slow down.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-// POST /api/v1/kyc/aadhaar/generate-otp
-router.post('/aadhaar/generate-otp', generateOtp);
+// POST /api/v1/kyc/digilocker/initialize
+router.post('/digilocker/initialize', kycLimiter, initialize);
 
-// POST /api/v1/kyc/aadhaar/verify-otp
-router.post('/aadhaar/verify-otp', verifyOtp);
+// GET /api/v1/kyc/digilocker/status/:clientId
+router.get('/digilocker/status/:clientId', statusLimiter, status);
 
 export default router;
