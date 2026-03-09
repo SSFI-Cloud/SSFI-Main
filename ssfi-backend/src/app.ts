@@ -103,7 +103,7 @@ app.use(cors(corsOptions));
 
 // Ensure CDN caches different responses per Origin (prevents CORS header mismatch)
 app.use((_req: Request, res: Response, next: NextFunction) => {
-  res.setHeader('Vary', 'Origin');
+  res.vary('Origin');
   next();
 });
 
