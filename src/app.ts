@@ -9,7 +9,11 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 // Load environment variables
+// Try project root first, then Hostinger's .builds/config path
 dotenv.config();
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: path.resolve(__dirname, '../../public_html/.builds/config/.env') });
+}
 
 // ── Process/thread limits (Hostinger has a 200 process cap) ──
 // UV_THREADPOOL_SIZE must be set BEFORE any async I/O — controls libuv threads
@@ -209,6 +213,12 @@ app.use(`/api/${API_VERSION}/beginner-cert`, beginnerCertRoutes);
 app.use(`/api/${API_VERSION}/team-members`, teamRoutes);
 app.use(`/api/${API_VERSION}/milestones`, milestoneRoutes);
 app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
+
+// Public notification ribbon — returns active site-wide notification (if any)
+// For now returns empty until an admin notification system is built
+app.get(`/api/${API_VERSION}/notifications/public/active`, (_req: Request, res: Response) => {
+  res.json({ success: true, data: null });
+});
 
 // Welcome Route
 app.get('/', (req: Request, res: Response) => {
