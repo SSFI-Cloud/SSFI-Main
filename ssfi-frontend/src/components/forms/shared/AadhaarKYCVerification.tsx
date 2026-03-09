@@ -261,7 +261,7 @@ export default function AadhaarKYCVerification({
                 value={aadhaarInput.replace(/(\d{4})(?=\d)/g, '$1 ')}
                 onChange={(e) => handleAadhaarChange(e.target.value)}
                 maxLength={14} // 12 digits + 2 spaces
-                className={`w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm ${colors.ring} focus:ring-2 focus:border-transparent outline-none`}
+                className={`w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-900 bg-white placeholder-gray-400 ${colors.ring} focus:ring-2 focus:border-transparent outline-none`}
                 disabled={isLoading}
               />
             </div>
@@ -313,7 +313,7 @@ export default function AadhaarKYCVerification({
                   setOtpInput(digits);
                 }}
                 maxLength={6}
-                className={`w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm text-center tracking-[0.3em] font-mono ${colors.ring} focus:ring-2 focus:border-transparent outline-none`}
+                className={`w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-900 bg-white placeholder-gray-400 text-center tracking-[0.3em] font-mono ${colors.ring} focus:ring-2 focus:border-transparent outline-none`}
                 disabled={isLoading}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && otpInput.length === 6) handleVerifyOtp();
