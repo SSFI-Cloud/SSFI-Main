@@ -101,6 +101,12 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// Ensure CDN caches different responses per Origin (prevents CORS header mismatch)
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Vary', 'Origin');
+  next();
+});
+
 // Rate Limiting - tuned for 100-150 concurrent users
 // Each page load triggers 5-10 API calls, so 100/15min is far too low
 const limiter = rateLimit({
