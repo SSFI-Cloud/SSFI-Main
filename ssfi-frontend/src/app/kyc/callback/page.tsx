@@ -11,16 +11,18 @@ import { CheckCircle2 } from 'lucide-react';
  */
 export default function KycCallbackPage() {
   useEffect(() => {
-    // Attempt to close this popup after a short delay
-    const timer = setTimeout(() => {
-      try {
-        window.close();
-      } catch {
-        // Browser may block window.close() if not opened by script
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
+    // Only auto-close if opened as a popup by the KYC verification flow
+    const isPopup = window.opener && window.opener !== window;
+    if (isPopup) {
+      const timer = setTimeout(() => {
+        try {
+          window.close();
+        } catch {
+          // Browser may block window.close() if not opened by script
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   return (
