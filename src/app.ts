@@ -274,8 +274,22 @@ app.get(`/api/${API_VERSION}/notifications/public/active`, async (_req: Request,
       });
     }
 
+    // Fallback: env-based static notification (set NOTIFICATION_MESSAGE in Hostinger panel)
+    if (notifications.length === 0 && process.env.NOTIFICATION_MESSAGE) {
+      notifications.push({
+        id: 'env-1',
+        message: process.env.NOTIFICATION_MESSAGE,
+        link: process.env.NOTIFICATION_LINK || '/events',
+        type: 'info',
+      });
+    }
+
     res.json({ success: true, data: notifications.length > 0 ? notifications : null });
   } catch {
+    // Fallback on error: still try env-based notification
+    if (process.env.NOTIFICATION_MESSAGE) {
+      return res.json({ success: true, data: [{ id: 'env-1', message: process.env.NOTIFICATION_MESSAGE, link: process.env.NOTIFICATION_LINK || '/events', type: 'info' }] });
+    }
     res.json({ success: true, data: null });
   }
 });
