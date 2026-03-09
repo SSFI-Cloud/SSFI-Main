@@ -269,6 +269,14 @@ model Club {
   website  String?
   isActive Boolean @default(true)
 
+  // Contact Person KYC (SurePass Aadhaar OTP)
+  contactPersonAadhaar String? // Encrypted Aadhaar of contact person
+  kycVerified          Boolean   @default(false)
+  kycVerifiedAt        DateTime?
+  kycVerifiedName      String?
+  kycVerifiedDob       String?
+  kycProfileImage      String?   @db.Text
+
   // Approval Workflow
   registrationWindowId String?
   status               String    @default("PENDING") // PENDING, APPROVED
@@ -378,8 +386,15 @@ model Student {
   pincode      String
 
   // Documents
-  aadhaarCard  String // File path (encrypted storage)
+  aadhaarCard  String? // File path (legacy — replaced by KYC OTP verification)
   profilePhoto String?
+
+  // KYC Verification (SurePass Aadhaar OTP)
+  kycVerified     Boolean   @default(false)
+  kycVerifiedAt   DateTime?
+  kycVerifiedName String?
+  kycVerifiedDob  String?
+  kycProfileImage String?   @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -926,13 +941,21 @@ model StateSecretary {
   stateId              Int
   state                State     @relation(fields: [stateId], references: [id], onDelete: Restrict)
   residentialAddress   String
-  identityProof        String
+  identityProof        String? // Legacy — now optional since KYC replaces it
   profilePhoto         String?
   registrationWindowId String
   status               String    @default("PENDING") // PENDING, APPROVED, REJECTED
   approvedAt           DateTime?
   approvedBy           String?
   rejectionRemarks     String?
+
+  // KYC Verification (SurePass Aadhaar OTP)
+  kycVerified     Boolean   @default(false)
+  kycVerifiedAt   DateTime?
+  kycVerifiedName String?
+  kycVerifiedDob  String?
+  kycProfileImage String?   @db.Text
+
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -956,13 +979,21 @@ model DistrictSecretary {
   districtId           Int
   district             District  @relation(fields: [districtId], references: [id], onDelete: Restrict)
   residentialAddress   String
-  identityProof        String
+  identityProof        String? // Legacy — now optional since KYC replaces it
   profilePhoto         String?
   registrationWindowId String
   status               String    @default("PENDING")
   approvedAt           DateTime?
   approvedBy           String?
   rejectionRemarks     String?
+
+  // KYC Verification (SurePass Aadhaar OTP)
+  kycVerified     Boolean   @default(false)
+  kycVerifiedAt   DateTime?
+  kycVerifiedName String?
+  kycVerifiedDob  String?
+  kycProfileImage String?   @db.Text
+
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 

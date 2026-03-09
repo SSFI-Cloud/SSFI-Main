@@ -9,7 +9,11 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 // Load environment variables
+// Try project root first, then Hostinger's .builds/config path
 dotenv.config();
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: path.resolve(__dirname, '../../public_html/.builds/config/.env') });
+}
 
 // ── Process/thread limits (Hostinger has a 200 process cap) ──
 // UV_THREADPOOL_SIZE must be set BEFORE any async I/O — controls libuv threads
@@ -96,6 +100,12 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
+
+// Ensure CDN caches different responses per Origin (prevents CORS header mismatch)
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  res.vary('Origin');
+  next();
+});
 
 // Rate Limiting - tuned for 100-150 concurrent users
 // Each page load triggers 5-10 API calls, so 100/15min is far too low
@@ -198,6 +208,8 @@ app.use(`/api/${API_VERSION}/results`, resultRoutes);
 import certificateRoutes from './routes/certificate.routes';
 app.use(`/api/${API_VERSION}/certificates`, certificateRoutes);
 app.use(`/api/${API_VERSION}/renewal`, renewalRoutes);
+import kycRoutes from './routes/kyc.routes';
+app.use(`/api/${API_VERSION}/kyc`, kycRoutes);
 import coachCertRoutes from './routes/coach-cert.routes';
 app.use(`/api/${API_VERSION}/coach-cert`, coachCertRoutes);
 // app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
@@ -209,6 +221,80 @@ app.use(`/api/${API_VERSION}/beginner-cert`, beginnerCertRoutes);
 app.use(`/api/${API_VERSION}/team-members`, teamRoutes);
 app.use(`/api/${API_VERSION}/milestones`, milestoneRoutes);
 app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
+
+// Public notification ribbon — returns array of active registrations/programs
+app.get(`/api/${API_VERSION}/notifications/public/active`, async (_req: Request, res: Response) => {
+  try {
+    const { default: prisma } = await import('./config/prisma');
+    const now = new Date();
+    const notifications: { id: string; message: string; link: string; type: string }[] = [];
+
+    // Active registration windows
+    const windows = await prisma.registrationWindow.findMany({
+      where: { startDate: { lte: now }, endDate: { gte: now }, isPaused: false },
+      select: { id: true, type: true, title: true, endDate: true },
+    }).catch(() => []);
+
+    for (const w of windows) {
+      const label = w.title || `${w.type.charAt(0).toUpperCase() + w.type.slice(1).toLowerCase()} Registration`;
+      const linkMap: Record<string, string> = { student: '/register/student', club: '/register/club', state: '/register/state', district: '/register/district' };
+      notifications.push({
+        id: `rw-${w.id}`,
+        message: `${label} is now open — Register before ${new Date(w.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}!`,
+        link: linkMap[w.type.toLowerCase()] || '/events',
+        type: 'info',
+      });
+    }
+
+    // Active beginner certification programs
+    const beginnerProgs = await prisma.beginnerCertProgram.findMany({
+      where: { isActive: true, status: { in: ['PUBLISHED', 'REGISTRATION_OPEN'] } },
+      select: { id: true, title: true, lastDateToApply: true },
+    }).catch(() => []);
+
+    for (const p of beginnerProgs) {
+      notifications.push({
+        id: `bc-${p.id}`,
+        message: `${p.title} — Enroll before ${new Date(p.lastDateToApply).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}!`,
+        link: '/beginner-certification',
+        type: 'info',
+      });
+    }
+
+    // Active coach certification programs
+    const coachProgs = await prisma.coachCertProgram.findMany({
+      where: { isActive: true, status: { in: ['PUBLISHED', 'REGISTRATION_OPEN'] } },
+      select: { id: true, title: true, lastDateToApply: true },
+    }).catch(() => []);
+
+    for (const p of coachProgs) {
+      notifications.push({
+        id: `cc-${p.id}`,
+        message: `${p.title} — Enroll before ${new Date(p.lastDateToApply).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}!`,
+        link: '/coach-certification',
+        type: 'info',
+      });
+    }
+
+    // Fallback: env-based static notification (set NOTIFICATION_MESSAGE in Hostinger panel)
+    if (notifications.length === 0 && process.env.NOTIFICATION_MESSAGE) {
+      notifications.push({
+        id: 'env-1',
+        message: process.env.NOTIFICATION_MESSAGE,
+        link: process.env.NOTIFICATION_LINK || '/events',
+        type: 'info',
+      });
+    }
+
+    res.json({ success: true, data: notifications.length > 0 ? notifications : null });
+  } catch {
+    // Fallback on error: still try env-based notification
+    if (process.env.NOTIFICATION_MESSAGE) {
+      return res.json({ success: true, data: [{ id: 'env-1', message: process.env.NOTIFICATION_MESSAGE, link: process.env.NOTIFICATION_LINK || '/events', type: 'info' }] });
+    }
+    res.json({ success: true, data: null });
+  }
+});
 
 // Welcome Route
 app.get('/', (req: Request, res: Response) => {

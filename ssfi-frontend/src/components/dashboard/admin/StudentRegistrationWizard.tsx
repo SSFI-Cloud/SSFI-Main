@@ -72,7 +72,11 @@ export default function StudentRegistrationWizard() {
         pincode: '',
         // Step 6
         aadhaarNumber: '',
-        aadhaarCardImage: '',
+        kycVerified: false,
+        kycVerifiedName: '',
+        kycVerifiedDob: '',
+        kycVerifiedGender: '',
+        kycProfileImage: '',
         profilePhoto: '',
         birthCertificate: '',
         termsAccepted: false,

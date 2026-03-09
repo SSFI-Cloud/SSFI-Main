@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -9,13 +9,15 @@ import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import {
   Users, User, Mail, Phone, MapPin, Hash,
-  Calendar, Upload, ChevronLeft, Check, Loader2, X, RefreshCw,
+  Calendar, Upload, ChevronLeft, Check, Loader2, X, RefreshCw, Shield,
 } from 'lucide-react';
 
 import { useClubRegistration } from '@/lib/hooks/useAffiliation';
 import { useStates, useDistricts } from '@/lib/hooks/useStudent';
 import { useRenewal, type MemberLookupResult } from '@/lib/hooks/useAffiliationLookup';
 import AffiliationLookupStep from './AffiliationLookupStep';
+import AadhaarKYCVerification from '@/components/forms/shared/AadhaarKYCVerification';
+import type { KycResult } from '@/lib/hooks/useKYC';
 import type { ClubFormData } from '@/types/affiliation';
 
 const formSchema = z.object({
@@ -29,6 +31,12 @@ const formSchema = z.object({
   districtId: z.string().min(1, 'Please select a district'),
   address: z.string().min(10, 'Address must be at least 10 characters').max(500),
   clubLogo: z.string().optional(),
+  // Contact Person KYC
+  contactPersonAadhaar: z.string().regex(/^\d{12}$/, 'Aadhaar must be 12 digits'),
+  kycVerified: z.literal(true, { message: 'Contact person KYC verification is required' }),
+  kycVerifiedName: z.string().min(1, 'KYC verified name is required'),
+  kycVerifiedDob: z.string().optional(),
+  kycProfileImage: z.string().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
   termsAccepted: z.boolean().refine((v) => v === true, 'You must accept the terms'),
 });
@@ -62,6 +70,16 @@ export default function ClubRegistrationForm() {
     if (selectedStateId) { fetchDistricts(selectedStateId); setValue('districtId', ''); }
     else clearDistricts();
   }, [selectedStateId, fetchDistricts, clearDistricts, setValue]);
+
+  // KYC Verified handler for contact person
+  const handleKycVerified = useCallback((result: KycResult) => {
+    const rawAadhaar = result.maskedAadhaar?.replace(/\s/g, '').replace(/X/g, '0') || '';
+    setValue('contactPersonAadhaar', rawAadhaar, { shouldValidate: true });
+    setValue('kycVerified', true as any, { shouldValidate: true });
+    setValue('kycVerifiedName', result.fullName, { shouldValidate: true });
+    setValue('kycVerifiedDob', result.dob || '', { shouldValidate: true });
+    setValue('kycProfileImage', result.profileImage || '', { shouldValidate: true });
+  }, [setValue]);
 
   const handleLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -304,6 +322,27 @@ export default function ClubRegistrationForm() {
                       </div>
                       {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
                     </div>
+                  </div>
+                </div>
+
+                {/* Contact Person KYC Verification */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-teal-500" />
+                    <h2 className="font-semibold text-gray-900">Contact Person KYC Verification</h2>
+                  </div>
+                  <div className="p-6">
+                    <p className="text-xs text-gray-500 mb-4">
+                      Verify the contact person&apos;s identity using their Aadhaar number via OTP.
+                    </p>
+                    <AadhaarKYCVerification
+                      onVerified={handleKycVerified}
+                      showProfilePhotoChoice={false}
+                      colorScheme="teal"
+                    />
+                    {errors.kycVerified && (
+                      <p className="mt-3 text-xs text-red-500">{errors.kycVerified.message}</p>
+                    )}
                   </div>
                 </div>
 

@@ -29,7 +29,7 @@ const STEPS = [
   { id: 3, title: 'Nominee', icon: Shield, description: 'Insurance nominee' },
   { id: 4, title: 'Club & Coach', icon: Users, description: 'Training details' },
   { id: 5, title: 'Address', icon: MapPin, description: 'Location details' },
-  { id: 6, title: 'Documents', icon: FileText, description: 'Upload & verify' },
+  { id: 6, title: 'Verify & Submit', icon: FileText, description: 'KYC & documents' },
 ];
 
 type Mode = 'choose' | 'renew' | 'new';

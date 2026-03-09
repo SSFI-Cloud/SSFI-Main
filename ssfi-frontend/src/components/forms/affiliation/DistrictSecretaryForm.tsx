@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -8,14 +8,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import {
-  User, Mail, Phone, MapPin, CreditCard, Upload, Camera,
-  ChevronLeft, Check, Loader2, X, RefreshCw, FileText, Building2,
+  User, Mail, Phone, MapPin, Camera,
+  ChevronLeft, Check, Loader2, X, RefreshCw, Building2, Shield,
 } from 'lucide-react';
 
 import { useDistrictSecretaryRegistration } from '@/lib/hooks/useAffiliation';
 import { useStates, useDistricts } from '@/lib/hooks/useStudent';
 import { useRenewal, type MemberLookupResult } from '@/lib/hooks/useAffiliationLookup';
 import AffiliationLookupStep from './AffiliationLookupStep';
+import AadhaarKYCVerification from '@/components/forms/shared/AadhaarKYCVerification';
+import type { KycResult } from '@/lib/hooks/useKYC';
 import type { DistrictSecretaryFormData } from '@/types/affiliation';
 import { GENDERS } from '@/types/affiliation';
 
@@ -28,7 +30,10 @@ const formSchema = z.object({
   stateId: z.string().min(1, 'Please select a state'),
   districtId: z.string().min(1, 'Please select a district'),
   residentialAddress: z.string().min(10, 'Address must be at least 10 characters').max(500),
-  identityProof: z.string().min(1, 'Identity proof is required'),
+  kycVerified: z.literal(true, { message: 'Aadhaar KYC verification is required' }),
+  kycVerifiedName: z.string().min(1, 'KYC verified name is required'),
+  kycVerifiedDob: z.string().optional(),
+  kycProfileImage: z.string().optional(),
   profilePhoto: z.string().min(1, 'Profile photo is required'),
   termsAccepted: z.boolean().refine((v) => v === true, 'You must accept the terms'),
 });
@@ -42,9 +47,7 @@ export default function DistrictSecretaryRegistrationForm() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('choose');
   const [renewMember, setRenewMember] = useState<MemberLookupResult | null>(null);
-  const [identityPreview, setIdentityPreview] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const identityRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
 
   const { initiate, verify, isLoading } = useDistrictSecretaryRegistration();
@@ -62,16 +65,40 @@ export default function DistrictSecretaryRegistrationForm() {
   useEffect(() => { fetchStates(); }, [fetchStates]);
   useEffect(() => { if (selectedStateId) fetchDistricts(selectedStateId); }, [selectedStateId, fetchDistricts]);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>, field: 'identityProof' | 'profilePhoto', setPreview: (v: string | null) => void) => {
+  // KYC Verified handler
+  const handleKycVerified = useCallback((result: KycResult) => {
+    const rawAadhaar = result.maskedAadhaar?.replace(/\s/g, '').replace(/X/g, '0') || '';
+    setValue('aadhaarNumber', rawAadhaar, { shouldValidate: true });
+    setValue('kycVerified', true as any, { shouldValidate: true });
+    setValue('kycVerifiedName', result.fullName, { shouldValidate: true });
+    setValue('kycVerifiedDob', result.dob || '', { shouldValidate: true });
+    setValue('kycProfileImage', result.profileImage || '', { shouldValidate: true });
+  }, [setValue]);
+
+  // Profile photo choice from KYC
+  const handleProfilePhotoChoice = useCallback((useAadhaar: boolean, base64?: string) => {
+    if (useAadhaar && base64) {
+      const dataUri = `data:image/jpeg;base64,${base64}`;
+      setPhotoPreview(dataUri);
+      setValue('profilePhoto', dataUri, { shouldValidate: true });
+    }
+  }, [setValue]);
+
+  const handlePhotoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onloadend = () => { setPreview(reader.result as string); setValue(field, reader.result as string); };
+    reader.onloadend = () => {
+      const b64 = reader.result as string;
+      setPhotoPreview(b64);
+      setValue('profilePhoto', b64, { shouldValidate: true });
+    };
     reader.readAsDataURL(file);
   };
 
-  const removeFile = (field: 'identityProof' | 'profilePhoto', setPreview: (v: string | null) => void) => {
-    setPreview(null); setValue(field, '');
+  const removePhoto = () => {
+    setPhotoPreview(null);
+    setValue('profilePhoto', '');
   };
 
   const openRazorpay = (order: any, onVerify: (r: any) => Promise<void>) => {
@@ -280,15 +307,6 @@ export default function DistrictSecretaryRegistrationForm() {
                       {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>}
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Aadhaar Number <span className="text-red-400">*</span></label>
-                      <div className="relative">
-                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input {...register('aadhaarNumber')} type="text" maxLength={12} placeholder="12-digit number" className={`${inputCls(!!errors.aadhaarNumber)} pl-9`} />
-                      </div>
-                      {errors.aadhaarNumber && <p className="mt-1 text-xs text-red-500">{errors.aadhaarNumber.message}</p>}
-                    </div>
-
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Residential Address <span className="text-red-400">*</span></label>
                       <div className="relative">
@@ -300,54 +318,50 @@ export default function DistrictSecretaryRegistrationForm() {
                   </div>
                 </div>
 
-                {/* Documents */}
+                {/* Aadhaar KYC Verification */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-teal-500" />
-                    <h2 className="font-semibold text-gray-900">Documents</h2>
+                    <Shield className="w-4 h-4 text-teal-500" />
+                    <h2 className="font-semibold text-gray-900">Aadhaar KYC Verification</h2>
                   </div>
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {/* Identity Proof */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Identity Proof <span className="text-red-400">*</span></label>
-                      {identityPreview ? (
-                        <div className="relative aspect-video rounded-xl overflow-hidden border border-gray-200">
-                          <img src={identityPreview} alt="Identity" className="w-full h-full object-cover" />
-                          <button type="button" onClick={() => removeFile('identityProof', setIdentityPreview)} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div onClick={() => identityRef.current?.click()} className={`aspect-video rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.identityProof ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
-                          <Upload className="w-7 h-7 text-gray-400" />
-                          <span className="text-sm text-gray-500">Aadhaar / Voter ID</span>
-                          <span className="text-xs text-gray-400">JPG, PNG up to 5MB</span>
-                        </div>
-                      )}
-                      <input ref={identityRef} type="file" accept="image/*" onChange={(e) => handleFile(e, 'identityProof', setIdentityPreview)} className="hidden" />
-                      {errors.identityProof && <p className="mt-1 text-xs text-red-500">{errors.identityProof.message}</p>}
-                    </div>
+                  <div className="p-6">
+                    <AadhaarKYCVerification
+                      onVerified={handleKycVerified}
+                      onProfilePhotoChoice={handleProfilePhotoChoice}
+                      showProfilePhotoChoice={true}
+                      colorScheme="teal"
+                    />
+                    {errors.kycVerified && (
+                      <p className="mt-3 text-xs text-red-500">{errors.kycVerified.message}</p>
+                    )}
+                  </div>
+                </div>
 
-                    {/* Profile Photo */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo <span className="text-red-400">*</span></label>
+                {/* Profile Photo */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-teal-500" />
+                    <h2 className="font-semibold text-gray-900">Profile Photo</h2>
+                  </div>
+                  <div className="p-6">
+                    <div className="w-40">
                       {photoPreview ? (
-                        <div className="relative aspect-video rounded-xl overflow-hidden border border-gray-200">
+                        <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
                           <img src={photoPreview} alt="Photo" className="w-full h-full object-cover" />
-                          <button type="button" onClick={() => removeFile('profilePhoto', setPhotoPreview)} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
+                          <button type="button" onClick={removePhoto} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ) : (
-                        <div onClick={() => photoRef.current?.click()} className={`aspect-video rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.profilePhoto ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
+                        <div onClick={() => photoRef.current?.click()} className={`aspect-square rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.profilePhoto ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
                           <Camera className="w-7 h-7 text-gray-400" />
-                          <span className="text-sm text-gray-500">Passport-size photo</span>
+                          <span className="text-xs text-gray-500 text-center">Passport photo</span>
                           <span className="text-xs text-gray-400">JPG, PNG up to 5MB</span>
                         </div>
                       )}
-                      <input ref={photoRef} type="file" accept="image/*" onChange={(e) => handleFile(e, 'profilePhoto', setPhotoPreview)} className="hidden" />
-                      {errors.profilePhoto && <p className="mt-1 text-xs text-red-500">{errors.profilePhoto.message}</p>}
+                      <input ref={photoRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" />
                     </div>
+                    {errors.profilePhoto && <p className="mt-2 text-xs text-red-500">{errors.profilePhoto.message}</p>}
                   </div>
                 </div>
 

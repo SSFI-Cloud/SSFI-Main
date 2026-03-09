@@ -30,7 +30,11 @@ const defaultFormData: Partial<StudentRegistrationData> = {
   districtId: '',
   pincode: '',
   aadhaarNumber: '',
-  aadhaarCardImage: '',
+  kycVerified: false,
+  kycVerifiedName: '',
+  kycVerifiedDob: '',
+  kycVerifiedGender: '',
+  kycProfileImage: '',
   profilePhoto: '',
   birthCertificate: '',
   termsAccepted: false,
@@ -52,7 +56,6 @@ interface RegistrationState {
   // File previews
   previews: {
     profilePhoto: string | null;
-    aadhaarCard: string | null;
     birthCertificate: string | null;
   };
 
@@ -91,7 +94,6 @@ export const useRegistrationStore = create<RegistrationState>()(
       studentUid: null,
       previews: {
         profilePhoto: null,
-        aadhaarCard: null,
         birthCertificate: null,
       },
 
@@ -165,7 +167,6 @@ export const useRegistrationStore = create<RegistrationState>()(
           studentUid: null,
           previews: {
             profilePhoto: null,
-            aadhaarCard: null,
             birthCertificate: null,
           },
         });
@@ -242,7 +243,11 @@ export const useAddressData = () =>
 export const useDocumentsData = () =>
   useRegistrationStore((state) => ({
     aadhaarNumber: state.formData.aadhaarNumber,
-    aadhaarCardImage: state.formData.aadhaarCardImage,
+    kycVerified: state.formData.kycVerified,
+    kycVerifiedName: state.formData.kycVerifiedName,
+    kycVerifiedDob: state.formData.kycVerifiedDob,
+    kycVerifiedGender: state.formData.kycVerifiedGender,
+    kycProfileImage: state.formData.kycProfileImage,
     profilePhoto: state.formData.profilePhoto,
     birthCertificate: state.formData.birthCertificate,
     termsAccepted: state.formData.termsAccepted,

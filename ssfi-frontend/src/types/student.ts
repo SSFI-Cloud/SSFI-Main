@@ -19,6 +19,11 @@ export interface Student {
     email?: string;
     aadhaarNumber?: string;
 
+    // KYC
+    kycVerified?: boolean;
+    kycVerifiedName?: string;
+    kycVerifiedDob?: string;
+
     // Family
     fatherName: string;
     motherName: string;
@@ -96,14 +101,19 @@ export interface StudentRegistrationData {
     addressLine2?: string;
     pincode: string;
 
+    // KYC Verification fields (from Aadhaar OTP)
+    kycVerified?: boolean;
+    kycVerifiedName?: string;
+    kycVerifiedDob?: string;
+    kycVerifiedGender?: string;
+    kycProfileImage?: string;
+
     // File paths/URLs for preview/storage
-    aadhaarCardImage?: string;
     profilePhoto?: string;
     birthCertificate?: string;
 
     // File objects for upload
     photoFile?: File;
-    aadhaarFile?: File;
     birthCertificateFile?: File;
     termsAccepted: boolean;
 }
