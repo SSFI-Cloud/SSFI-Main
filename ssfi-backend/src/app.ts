@@ -227,8 +227,8 @@ app.get(`/api/${API_VERSION}/notifications/public/active`, (_req: Request, res: 
     success: true,
     data: {
       id: '1',
-      message: 'Registration open for National Championship 2026 — Register before the deadline!',
-      link: '/events',
+      message: 'Beginner Certification Program is now live — Enroll today!',
+      link: '/beginner-certification',
       type: 'info'
     }
   });
