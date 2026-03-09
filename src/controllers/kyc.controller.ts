@@ -1,47 +1,52 @@
 import { Request, Response } from 'express';
-import { generateOtpSchema, verifyOtpSchema } from '../validators/kyc.validator';
-import { generateAadhaarOtp, verifyAadhaarOtp } from '../services/kyc.service';
+import { initializeDigilockerSchema, checkStatusSchema } from '../validators/kyc.validator';
+import { initializeDigilocker, getDigilockerStatus } from '../services/kyc.service';
 import { successResponse } from '../utils/response.util';
 import { asyncHandler } from '../utils/asyncHandler';
 
 /**
- * @desc    Generate OTP for Aadhaar verification
- * @route   POST /api/v1/kyc/aadhaar/generate-otp
+ * @desc    Initialize Digilocker session — returns URL for user to authenticate
+ * @route   POST /api/v1/kyc/digilocker/initialize
  * @access  Public
  */
-export const generateOtp = asyncHandler(async (req: Request, res: Response) => {
-  const { aadhaarNumber } = generateOtpSchema.parse(req.body);
+export const initialize = asyncHandler(async (req: Request, res: Response) => {
+  const { redirectUrl } = initializeDigilockerSchema.parse(req.body);
 
-  const result = await generateAadhaarOtp(aadhaarNumber);
+  const result = await initializeDigilocker(redirectUrl);
 
   return successResponse(res, {
     statusCode: 200,
-    message: 'OTP sent to Aadhaar-linked mobile number.',
+    message: 'Digilocker session initialized.',
     data: {
       clientId: result.clientId,
-      otpSent: result.success,
+      url: result.url,
+      expirySeconds: result.expirySeconds,
     },
   });
 });
 
 /**
- * @desc    Verify OTP and get Aadhaar details
- * @route   POST /api/v1/kyc/aadhaar/verify-otp
+ * @desc    Check Digilocker session status and get verified data
+ * @route   GET /api/v1/kyc/digilocker/status/:clientId
  * @access  Public
  */
-export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
-  const { clientId, otp } = verifyOtpSchema.parse(req.body);
+export const status = asyncHandler(async (req: Request, res: Response) => {
+  const { clientId } = checkStatusSchema.parse({ clientId: req.params.clientId });
 
-  const result = await verifyAadhaarOtp(clientId, otp);
+  const result = await getDigilockerStatus(clientId);
 
   return successResponse(res, {
     statusCode: 200,
-    message: 'Aadhaar verified successfully.',
+    message: result.completed
+      ? 'Verification complete.'
+      : result.failed
+        ? 'Verification failed.'
+        : 'Verification in progress.',
     data: result,
   });
 });
 
 export default {
-  generateOtp,
-  verifyOtp,
+  initialize,
+  status,
 };

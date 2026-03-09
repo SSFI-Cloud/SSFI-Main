@@ -1,22 +1,17 @@
 import { z } from 'zod';
 
-// Aadhaar number: exactly 12 digits
-const aadhaarRegex = /^\d{12}$/;
-
-export const generateOtpSchema = z.object({
-  aadhaarNumber: z
+export const initializeDigilockerSchema = z.object({
+  redirectUrl: z
     .string()
-    .regex(aadhaarRegex, 'Aadhaar number must be exactly 12 digits'),
+    .url('Redirect URL must be a valid URL')
+    .startsWith('https', 'Redirect URL must use HTTPS'),
 });
 
-export const verifyOtpSchema = z.object({
+export const checkStatusSchema = z.object({
   clientId: z
     .string()
     .min(1, 'Client ID is required'),
-  otp: z
-    .string()
-    .regex(/^\d{6}$/, 'OTP must be exactly 6 digits'),
 });
 
-export type GenerateOtpInput = z.infer<typeof generateOtpSchema>;
-export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
+export type InitializeDigilockerInput = z.infer<typeof initializeDigilockerSchema>;
+export type CheckStatusInput = z.infer<typeof checkStatusSchema>;
