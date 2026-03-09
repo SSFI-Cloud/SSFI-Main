@@ -220,18 +220,67 @@ app.use(`/api/${API_VERSION}/team-members`, teamRoutes);
 app.use(`/api/${API_VERSION}/milestones`, milestoneRoutes);
 app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
 
-// Public notification ribbon — returns active site-wide notification (if any)
-// TODO: Replace with database-driven notifications via admin panel
-app.get(`/api/${API_VERSION}/notifications/public/active`, (_req: Request, res: Response) => {
-  res.json({
-    success: true,
-    data: {
-      id: '1',
-      message: 'Beginner Certification Program is now live — Enroll today!',
-      link: '/beginner-certification',
-      type: 'info'
+// Public notification ribbon — dynamically shows open registrations/programs
+app.get(`/api/${API_VERSION}/notifications/public/active`, async (_req: Request, res: Response) => {
+  try {
+    const { default: prisma } = await import('./config/prisma');
+    const now = new Date();
+    const parts: string[] = [];
+    let link = '/events';
+
+    // Check active registration windows
+    const windows = await prisma.registrationWindow.findMany({
+      where: { startDate: { lte: now }, endDate: { gte: now }, isPaused: false },
+      select: { type: true, title: true },
+    }).catch(() => []);
+
+    for (const w of windows) {
+      parts.push(w.title || `${w.type} Registration`);
     }
-  });
+
+    // Check active beginner certification programs
+    const beginnerProgs = await prisma.beginnerCertProgram.findMany({
+      where: { isActive: true, status: { in: ['PUBLISHED', 'REGISTRATION_OPEN'] } },
+      select: { title: true },
+    }).catch(() => []);
+
+    if (beginnerProgs.length > 0) {
+      parts.push('Beginner Certification');
+      link = '/beginner-certification';
+    }
+
+    // Check active coach certification programs
+    const coachProgs = await prisma.coachCertProgram.findMany({
+      where: { isActive: true, status: { in: ['PUBLISHED', 'REGISTRATION_OPEN'] } },
+      select: { title: true },
+    }).catch(() => []);
+
+    if (coachProgs.length > 0) {
+      parts.push('Coach Certification');
+      if (!beginnerProgs.length) link = '/coach-certification';
+    }
+
+    if (parts.length === 0) {
+      return res.json({ success: true, data: null });
+    }
+
+    // Build message: "Beginner Certification & Student Registration are now open!"
+    const joined = parts.length <= 2
+      ? parts.join(' & ')
+      : parts.slice(0, -1).join(', ') + ' & ' + parts[parts.length - 1];
+
+    res.json({
+      success: true,
+      data: {
+        id: 'auto',
+        message: `${joined} — Registration is now open!`,
+        link: parts.length > 1 ? '/events' : link,
+        type: 'info'
+      }
+    });
+  } catch {
+    res.json({ success: true, data: null });
+  }
 });
 
 // Welcome Route
