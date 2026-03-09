@@ -114,12 +114,19 @@ export const studentAddressSchema = z.object({
     .regex(/^\d{6}$/, 'Pincode must be 6 digits'),
 });
 
-// Step 6: Document Information
+// Step 6: KYC Verification & Documents
 export const studentDocumentSchema = z.object({
   aadhaarNumber: z.string()
     .regex(aadhaarRegex, 'Aadhaar number must be 12 digits'),
-  aadhaarCardImage: z.string()
-    .min(1, 'Aadhaar card image is required'),
+  // KYC verification fields (from SurePass Aadhaar OTP)
+  kycVerified: z.literal(true, {
+    errorMap: () => ({ message: 'Aadhaar KYC verification is required' }),
+  }),
+  kycVerifiedName: z.string().min(1, 'KYC verified name is required'),
+  kycVerifiedDob: z.string().min(1, 'KYC verified date of birth is required'),
+  kycVerifiedGender: z.string().optional(),
+  kycProfileImage: z.string().optional().or(z.literal('')),
+  // Documents
   profilePhoto: z.string()
     .min(1, 'Profile photo is required'),
   birthCertificate: z.string()

@@ -24,9 +24,14 @@ const LOCATIONS_API = '/locations';
 /** Helper: build student registration FormData from typed data */
 const buildStudentFormData = (data: StudentRegistrationData): FormData => {
   const formData = new FormData();
+  // Fields that are file uploads (base64 data URIs or File objects)
+  const fileFields = ['profilePhoto', 'birthCertificate'];
+  // Fields to skip entirely (not sent to backend)
+  const skipFields = ['termsAccepted', 'photoFile', 'birthCertificateFile'];
+
   Object.entries(data).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && key !== 'termsAccepted') {
-      if (key === 'profilePhoto' || key === 'aadhaarCardImage' || key === 'birthCertificate') {
+    if (value !== undefined && value !== null && !skipFields.includes(key)) {
+      if (fileFields.includes(key)) {
         if (value instanceof File) {
           formData.append(key, value);
         } else if (typeof value === 'string' && value.startsWith('data:')) {
@@ -39,8 +44,8 @@ const buildStudentFormData = (data: StudentRegistrationData): FormData => {
           }
           const blob = new Blob([ab], { type: mimeString });
           formData.append(key, blob, `${key}.${mimeString.split('/')[1]}`);
-        } else {
-          formData.append(key, value as string);
+        } else if (typeof value === 'string' && value) {
+          formData.append(key, value);
         }
       } else {
         formData.append(key, String(value));

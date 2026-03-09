@@ -103,7 +103,7 @@ export const useStateSecretaryRegistration = () => {
     setError(null);
 
     try {
-      const formData = createFormData(data, ['identityProof', 'profilePhoto']);
+      const formData = createFormData(data, ['profilePhoto']);
 
       const response = await apiClient.post<{ data: PaymentInitiationResponse }>(
         `${STATE_SECRETARY_API}/initiate`,
@@ -165,7 +165,7 @@ export const useDistrictSecretaryRegistration = () => {
     setError(null);
 
     try {
-      const formData = createFormData(data, ['identityProof', 'profilePhoto']);
+      const formData = createFormData(data, ['profilePhoto']);
 
       const response = await apiClient.post<{
         data: {

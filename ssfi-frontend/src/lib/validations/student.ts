@@ -50,10 +50,14 @@ const addressSchema = z.object({
     pincode: z.string().length(6, 'Pincode must be 6 digits'),
 });
 
-// Documents Schema
+// Documents & KYC Schema
 const documentsSchema = z.object({
+    kycVerified: z.boolean().refine((val) => val === true, 'Aadhaar KYC verification is required'),
+    kycVerifiedName: z.string().min(1, 'KYC verified name is required').optional(),
+    kycVerifiedDob: z.string().optional(),
+    kycVerifiedGender: z.string().optional(),
+    kycProfileImage: z.string().optional(),
     photoFile: z.any().optional(),
-    aadhaarFile: z.any().optional(),
     birthCertificateFile: z.any().optional(),
     termsAccepted: z.boolean().refine((val) => val === true, 'You must accept terms'),
 });

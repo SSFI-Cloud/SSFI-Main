@@ -406,10 +406,16 @@ export const initiateStateSecretaryRegistration = async (
       aadhaarNumber: encryptedAadhaar,
       stateId: data.stateId,
       residentialAddress: data.residentialAddress,
-      identityProof: data.identityProof,
-      profilePhoto: data.profilePhoto,
+      identityProof: data.identityProof || null,
+      profilePhoto: data.profilePhoto || data.kycProfileImage || null,
       registrationWindowId: windowId,
       status: 'PAYMENT_PENDING',
+      // KYC verification data
+      kycVerified: data.kycVerified || false,
+      kycVerifiedAt: data.kycVerified ? new Date() : null,
+      kycVerifiedName: data.kycVerifiedName || null,
+      kycVerifiedDob: data.kycVerifiedDob || null,
+      kycProfileImage: data.kycProfileImage || null,
     },
     include: {
       state: { select: { id: true, name: true, code: true } },
@@ -789,10 +795,16 @@ export const initiateDistrictSecretaryRegistration = async (
           stateId: data.stateId,
           districtId: data.districtId,
           residentialAddress: data.residentialAddress,
-          identityProof: data.identityProof,
-          profilePhoto: data.profilePhoto,
+          identityProof: data.identityProof || null,
+          profilePhoto: data.profilePhoto || data.kycProfileImage || null,
           registrationWindowId: String(windowId),
-          status: 'PAYMENT_PENDING'
+          status: 'PAYMENT_PENDING',
+          // KYC verification data
+          kycVerified: data.kycVerified || false,
+          kycVerifiedAt: data.kycVerified ? new Date() : null,
+          kycVerifiedName: data.kycVerifiedName || null,
+          kycVerifiedDob: data.kycVerifiedDob || null,
+          kycProfileImage: data.kycProfileImage || null,
         },
       });
 
@@ -864,10 +876,16 @@ export const initiateDistrictSecretaryRegistration = async (
       stateId: data.stateId,
       districtId: data.districtId,
       residentialAddress: data.residentialAddress,
-      identityProof: data.identityProof,
-      profilePhoto: data.profilePhoto,
+      identityProof: data.identityProof || null,
+      profilePhoto: data.profilePhoto || data.kycProfileImage || null,
       registrationWindowId: String(windowId),
-      status: 'PAYMENT_PENDING'
+      status: 'PAYMENT_PENDING',
+      // KYC verification data
+      kycVerified: data.kycVerified || false,
+      kycVerifiedAt: data.kycVerified ? new Date() : null,
+      kycVerifiedName: data.kycVerifiedName || null,
+      kycVerifiedDob: data.kycVerifiedDob || null,
+      kycProfileImage: data.kycProfileImage || null,
     },
   });
 
@@ -1239,6 +1257,13 @@ export const initiateClubRegistration = async (
       logo: data.clubLogo || null,
       registrationWindowId: windowId,
       status: 'PAYMENT_PENDING',
+      // Contact Person KYC verification data
+      contactPersonAadhaar: data.contactPersonAadhaar || null,
+      kycVerified: data.kycVerified || false,
+      kycVerifiedAt: data.kycVerified ? new Date() : null,
+      kycVerifiedName: data.kycVerifiedName || null,
+      kycVerifiedDob: data.kycVerifiedDob || null,
+      kycProfileImage: data.kycProfileImage || null,
     },
     include: {
       state: { select: { id: true, name: true, code: true } },
@@ -1815,7 +1840,19 @@ export const registerStudent = async (
       }
     );
 
-    // 5. Create Student Record
+    // 5. DOB cross-verification with Aadhaar KYC
+    if (data.kycVerifiedDob) {
+      const formDob = new Date(data.dateOfBirth).toISOString().split('T')[0]; // YYYY-MM-DD
+      const kycDob = data.kycVerifiedDob; // Already YYYY-MM-DD from KYC service
+      if (formDob !== kycDob) {
+        throw new AppError(
+          `Date of birth mismatch: you entered ${formDob} but your Aadhaar records show ${kycDob}. Please correct your date of birth.`,
+          400
+        );
+      }
+    }
+
+    // 6. Create Student Record
     const student = await tx.student.create({
       data: {
         userId,
@@ -1847,8 +1884,15 @@ export const registerStudent = async (
         city: data.city,
         pincode: data.pincode,
 
-        aadhaarCard: data.aadhaarCardImage,
+        aadhaarCard: null, // Legacy — no longer uploading Aadhaar image (KYC OTP replaces it)
         profilePhoto: data.profilePhoto,
+
+        // KYC verification data
+        kycVerified: data.kycVerified || false,
+        kycVerifiedAt: data.kycVerified ? new Date() : null,
+        kycVerifiedName: data.kycVerifiedName || null,
+        kycVerifiedDob: data.kycVerifiedDob || null,
+        kycProfileImage: data.kycProfileImage || null,
 
         verified: 0,
       },

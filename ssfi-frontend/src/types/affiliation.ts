@@ -107,8 +107,13 @@ export interface StateSecretaryFormData {
   aadhaarNumber: string;
   stateId: string;
   residentialAddress: string;
-  identityProof: string;
+  identityProof?: string;
   profilePhoto: string;
+  // KYC fields
+  kycVerified: boolean;
+  kycVerifiedName: string;
+  kycVerifiedDob?: string;
+  kycProfileImage?: string;
   termsAccepted: boolean;
 }
 
@@ -121,8 +126,13 @@ export interface DistrictSecretaryFormData {
   stateId: string;
   districtId: string;
   residentialAddress: string;
-  identityProof: string;
+  identityProof?: string;
   profilePhoto: string;
+  // KYC fields
+  kycVerified: boolean;
+  kycVerifiedName: string;
+  kycVerifiedDob?: string;
+  kycProfileImage?: string;
   termsAccepted: boolean;
 }
 
@@ -137,6 +147,12 @@ export interface ClubFormData {
   districtId: string;
   address: string;
   clubLogo?: string;
+  // Contact Person KYC
+  contactPersonAadhaar: string;
+  kycVerified: boolean;
+  kycVerifiedName: string;
+  kycVerifiedDob?: string;
+  kycProfileImage?: string;
   status: 'ACTIVE' | 'INACTIVE';
   termsAccepted: boolean;
 }

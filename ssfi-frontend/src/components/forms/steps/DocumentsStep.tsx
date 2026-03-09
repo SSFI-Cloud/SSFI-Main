@@ -1,21 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Camera, X, Check, Loader2, CreditCard } from 'lucide-react';
+import { FileText, Camera, X, Check, Loader2, AlertTriangle } from 'lucide-react';
 import { useRegistrationStore } from '@/lib/store/registrationStore';
 import { StudentRegistrationData } from '@/types/student';
-
-const formSchema = z.object({
-  photoFile: z.any().optional(),
-  aadhaarFile: z.any().optional(),
-  birthCertificateFile: z.any().optional(),
-  termsAccepted: z.boolean().refine((v) => v === true, 'You must accept terms'),
-});
-type FormData = z.infer<typeof formSchema>;
+import AadhaarKYCVerification from '@/components/forms/shared/AadhaarKYCVerification';
+import type { KycResult } from '@/lib/hooks/useKYC';
 
 interface DocumentsStepProps {
   onComplete: (data: Partial<StudentRegistrationData>) => void;
@@ -25,18 +16,68 @@ interface DocumentsStepProps {
 
 export default function DocumentsStep({ onComplete, onSubmit, isSubmitting }: DocumentsStepProps) {
   const { formData, updateFormData, setPreview, previews } = useRegistrationStore();
+
+  // KYC state
+  const [kycResult, setKycResult] = useState<KycResult | null>(
+    formData.kycVerified
+      ? {
+          verified: true,
+          fullName: formData.kycVerifiedName || '',
+          dob: formData.kycVerifiedDob || '',
+          gender: formData.kycVerifiedGender || '',
+          maskedAadhaar: formData.aadhaarNumber ? `XXXX XXXX ${formData.aadhaarNumber.slice(-4)}` : '',
+          profileImage: formData.kycProfileImage,
+        }
+      : null
+  );
+  const [dobMismatch, setDobMismatch] = useState(false);
+
+  // File state
   const [termsAccepted, setTermsAccepted] = useState(formData.termsAccepted || false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(previews.profilePhoto || null);
-  const [aadhaarPreview, setAadhaarPreview] = useState<string | null>(previews.aadhaarCard || null);
   const [certPreview, setCertPreview] = useState<string | null>(previews.birthCertificate || null);
+  const [useAadhaarPhoto, setUseAadhaarPhoto] = useState(false);
 
-  const { handleSubmit, setValue } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { termsAccepted: false },
-  });
+  // ── KYC Verified Handler ──
+  const handleKycVerified = useCallback((result: KycResult) => {
+    setKycResult(result);
 
+    // Cross-check DOB with form data (Step 1)
+    if (result.dob && formData.dateOfBirth) {
+      const formDob = new Date(formData.dateOfBirth).toISOString().split('T')[0];
+      const kycDob = result.dob; // already in YYYY-MM-DD
+      if (formDob !== kycDob) {
+        setDobMismatch(true);
+      } else {
+        setDobMismatch(false);
+      }
+    }
+
+    // Store KYC data in form
+    updateFormData({
+      aadhaarNumber: result.maskedAadhaar?.replace(/\s/g, '').replace(/X/g, '0') || '', // Will be overridden by backend
+      kycVerified: true,
+      kycVerifiedName: result.fullName,
+      kycVerifiedDob: result.dob,
+      kycVerifiedGender: result.gender,
+      kycProfileImage: result.profileImage || '',
+    });
+  }, [formData.dateOfBirth, updateFormData]);
+
+  // ── Profile Photo Choice from KYC ──
+  const handleProfilePhotoChoice = useCallback((useAadhaar: boolean, base64?: string) => {
+    setUseAadhaarPhoto(useAadhaar);
+    if (useAadhaar && base64) {
+      const dataUri = `data:image/jpeg;base64,${base64}`;
+      setPhotoPreview(dataUri);
+      setPreview('profilePhoto', dataUri);
+      updateFormData({ profilePhoto: dataUri });
+    }
+  }, [setPreview, updateFormData]);
+
+  // ── File Handling ──
   const handleFileSelect = (
-    field: 'photoFile' | 'aadhaarFile' | 'birthCertificateFile',
+    field: 'profilePhoto' | 'birthCertificate',
     setPreviewFn: (url: string | null) => void
   ) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,30 +86,20 @@ export default function DocumentsStep({ onComplete, onSubmit, isSubmitting }: Do
     reader.onloadend = () => {
       const b64 = reader.result as string;
       setPreviewFn(b64);
-      setValue(field, b64);
-      const storeField = field === 'photoFile' ? 'profilePhoto' : field === 'aadhaarFile' ? 'aadhaarCard' : 'birthCertificate';
-      setPreview(storeField as keyof typeof previews, b64);
+      setPreview(field as keyof typeof previews, b64);
+      updateFormData({ [field]: b64 });
     };
     reader.readAsDataURL(file);
   };
 
-  const removeFile = (field: 'photoFile' | 'aadhaarFile' | 'birthCertificateFile', setPreviewFn: (url: string | null) => void) => {
-    setPreviewFn(null); setValue(field, undefined);
-    const storeField = field === 'photoFile' ? 'profilePhoto' : field === 'aadhaarFile' ? 'aadhaarCard' : 'birthCertificate';
-    setPreview(storeField as keyof typeof previews, null);
+  const removeFile = (field: 'profilePhoto' | 'birthCertificate', setPreviewFn: (url: string | null) => void) => {
+    setPreviewFn(null);
+    setPreview(field as keyof typeof previews, null);
+    updateFormData({ [field]: '' });
+    if (field === 'profilePhoto') setUseAadhaarPhoto(false);
   };
 
-  const onFormSubmit = (data: FormData) => {
-    if (!termsAccepted) return;
-    const mappedData: Partial<StudentRegistrationData> = {
-      ...data, profilePhoto: data.photoFile, aadhaarCardImage: data.aadhaarFile,
-      birthCertificate: data.birthCertificateFile, termsAccepted: true,
-    };
-    updateFormData({ termsAccepted: true });
-    onComplete(mappedData);
-    onSubmit();
-  };
-
+  // ── Upload Box Component ──
   const uploadBox = (
     preview: string | null,
     onRemove: () => void,
@@ -95,54 +126,157 @@ export default function DocumentsStep({ onComplete, onSubmit, isSubmitting }: Do
     </div>
   );
 
+  // ── Submit ──
+  const canSubmit = kycResult?.verified && !dobMismatch && termsAccepted && !isSubmitting;
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+
+    const mappedData: Partial<StudentRegistrationData> = {
+      profilePhoto: photoPreview || formData.profilePhoto || '',
+      birthCertificate: certPreview || formData.birthCertificate || '',
+      kycVerified: true,
+      kycVerifiedName: kycResult?.fullName || '',
+      kycVerifiedDob: kycResult?.dob || '',
+      kycVerifiedGender: kycResult?.gender || '',
+      kycProfileImage: kycResult?.profileImage || '',
+      termsAccepted: true,
+    };
+
+    updateFormData({ termsAccepted: true });
+    onComplete(mappedData);
+    onSubmit();
+  };
+
   return (
-    <form id="step-6-form" onSubmit={handleSubmit(onFormSubmit)} className="space-y-5">
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Profile Photo <span className="text-red-400">*</span></label>
-          {uploadBox(photoPreview, () => removeFile('photoFile', setPhotoPreview), handleFileSelect('photoFile', setPhotoPreview), 'image/*', <Camera className="w-7 h-7" />, 'Passport photo')}
+    <form id="step-6-form" onSubmit={handleFormSubmit} className="space-y-5">
+      {/* Step 1: Aadhaar KYC Verification */}
+      <AadhaarKYCVerification
+        onVerified={handleKycVerified}
+        onProfilePhotoChoice={handleProfilePhotoChoice}
+        showProfilePhotoChoice={true}
+        colorScheme="green"
+        initialResult={kycResult}
+      />
+
+      {/* DOB Mismatch Warning */}
+      {dobMismatch && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-red-800">Date of Birth Mismatch</p>
+            <p className="text-xs text-red-600 mt-1">
+              The date of birth you entered in Step 1 ({formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-IN') : '—'}) does not match your Aadhaar records ({kycResult?.dob ? new Date(kycResult.dob).toLocaleDateString('en-IN') : '—'}).
+            </p>
+            <p className="text-xs text-red-600 mt-1 font-medium">
+              Please go back to Step 1 and correct your date of birth before submitting.
+            </p>
+          </div>
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Aadhaar Card <span className="text-red-400">*</span></label>
-          {uploadBox(aadhaarPreview, () => removeFile('aadhaarFile', setAadhaarPreview), handleFileSelect('aadhaarFile', setAadhaarPreview), 'image/*,application/pdf', <CreditCard className="w-7 h-7" />, 'Aadhaar card')}
+      )}
+
+      {/* Step 2: Document Uploads (Profile Photo + Birth Certificate) */}
+      {kycResult?.verified && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                Profile Photo <span className="text-red-400">*</span>
+                {useAadhaarPhoto && <span className="text-green-600 ml-1">(from Aadhaar)</span>}
+              </label>
+              {uploadBox(
+                photoPreview,
+                () => removeFile('profilePhoto', setPhotoPreview),
+                handleFileSelect('profilePhoto', setPhotoPreview),
+                'image/*',
+                <Camera className="w-7 h-7" />,
+                'Passport photo'
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                Birth Certificate <span className="text-gray-400">(Optional)</span>
+              </label>
+              {uploadBox(
+                certPreview,
+                () => removeFile('birthCertificate', setCertPreview),
+                handleFileSelect('birthCertificate', setCertPreview),
+                'image/*,application/pdf',
+                <FileText className="w-7 h-7" />,
+                'Birth cert'
+              )}
+            </div>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <p className="text-xs font-medium text-amber-800 mb-1">Photo Guidelines</p>
+            <ul className="text-xs text-amber-700 space-y-0.5">
+              <li>• Passport-size photo with plain background</li>
+              <li>• Max 5MB per file</li>
+            </ul>
+          </div>
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Birth Certificate <span className="text-gray-400">(Optional)</span></label>
-          {uploadBox(certPreview, () => removeFile('birthCertificateFile', setCertPreview), handleFileSelect('birthCertificateFile', setCertPreview), 'image/*,application/pdf', <FileText className="w-7 h-7" />, 'Birth cert')}
+      )}
+
+      {/* Step 3: Terms & Conditions */}
+      {kycResult?.verified && (
+        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => {
+                setTermsAccepted(e.target.checked);
+                updateFormData({ termsAccepted: e.target.checked });
+              }}
+              className="mt-0.5 w-4 h-4 rounded border-gray-300 text-green-500 focus:ring-green-500/20"
+            />
+            <p className="text-sm text-gray-700">
+              I hereby declare that all information provided is true and correct. I agree to the{' '}
+              <a href="/terms" className="text-green-600 hover:underline">Terms &amp; Conditions</a> and{' '}
+              <a href="/privacy" className="text-green-600 hover:underline">Privacy Policy</a> of SSFI.
+            </p>
+          </label>
         </div>
-      </div>
+      )}
 
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-        <p className="text-xs font-medium text-amber-800 mb-1">Photo Guidelines</p>
-        <ul className="text-xs text-amber-700 space-y-0.5">
-          <li>• Passport-size photo with plain background</li>
-          <li>• Aadhaar: clear scan with all details visible</li>
-          <li>• Max 5MB per file</li>
-        </ul>
-      </div>
+      {/* Submit Button */}
+      {kycResult?.verified && (
+        <>
+          <motion.button
+            type="submit"
+            disabled={!canSubmit}
+            whileHover={{ scale: canSubmit ? 1.01 : 1 }}
+            className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
+              canSubmit
+                ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" /> Submitting...
+              </>
+            ) : (
+              <>
+                <Check className="w-5 h-5" /> Submit Registration
+              </>
+            )}
+          </motion.button>
 
-      <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input type="checkbox" checked={termsAccepted}
-            onChange={(e) => { setTermsAccepted(e.target.checked); setValue('termsAccepted', e.target.checked); updateFormData({ termsAccepted: e.target.checked }); }}
-            className="mt-0.5 w-4 h-4 rounded border-gray-300 text-green-500 focus:ring-green-500/20" />
-          <p className="text-sm text-gray-700">
-            I hereby declare that all information provided is true and correct. I agree to the{' '}
-            <a href="/terms" className="text-green-600 hover:underline">Terms &amp; Conditions</a> and{' '}
-            <a href="/privacy" className="text-green-600 hover:underline">Privacy Policy</a> of SSFI.
-          </p>
-        </label>
-      </div>
-
-      <motion.button type="submit" disabled={!termsAccepted || isSubmitting}
-        whileHover={{ scale: termsAccepted && !isSubmitting ? 1.01 : 1 }}
-        className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${termsAccepted && !isSubmitting
-          ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25'
-          : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}>
-        {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Submitting...</> : <><Check className="w-5 h-5" /> Submit Registration</>}
-      </motion.button>
-
-      {!termsAccepted && <p className="text-center text-xs text-amber-600">Please accept the terms and conditions to submit</p>}
+          {dobMismatch && (
+            <p className="text-center text-xs text-red-600 font-medium">
+              Fix the date of birth mismatch before submitting
+            </p>
+          )}
+          {!termsAccepted && !dobMismatch && (
+            <p className="text-center text-xs text-amber-600">
+              Please accept the terms and conditions to submit
+            </p>
+          )}
+        </>
+      )}
     </form>
   );
 }
