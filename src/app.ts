@@ -220,64 +220,61 @@ app.use(`/api/${API_VERSION}/team-members`, teamRoutes);
 app.use(`/api/${API_VERSION}/milestones`, milestoneRoutes);
 app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
 
-// Public notification ribbon — dynamically shows open registrations/programs
+// Public notification ribbon — returns array of active registrations/programs
 app.get(`/api/${API_VERSION}/notifications/public/active`, async (_req: Request, res: Response) => {
   try {
     const { default: prisma } = await import('./config/prisma');
     const now = new Date();
-    const parts: string[] = [];
-    let link = '/events';
+    const notifications: { id: string; message: string; link: string; type: string }[] = [];
 
-    // Check active registration windows
+    // Active registration windows
     const windows = await prisma.registrationWindow.findMany({
       where: { startDate: { lte: now }, endDate: { gte: now }, isPaused: false },
-      select: { type: true, title: true },
+      select: { id: true, type: true, title: true, endDate: true },
     }).catch(() => []);
 
     for (const w of windows) {
-      parts.push(w.title || `${w.type} Registration`);
+      const label = w.title || `${w.type.charAt(0).toUpperCase() + w.type.slice(1).toLowerCase()} Registration`;
+      const linkMap: Record<string, string> = { student: '/register/student', club: '/register/club', state: '/register/state', district: '/register/district' };
+      notifications.push({
+        id: `rw-${w.id}`,
+        message: `${label} is now open — Register before ${new Date(w.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}!`,
+        link: linkMap[w.type.toLowerCase()] || '/events',
+        type: 'info',
+      });
     }
 
-    // Check active beginner certification programs
+    // Active beginner certification programs
     const beginnerProgs = await prisma.beginnerCertProgram.findMany({
       where: { isActive: true, status: { in: ['PUBLISHED', 'REGISTRATION_OPEN'] } },
-      select: { title: true },
+      select: { id: true, title: true, lastDateToApply: true },
     }).catch(() => []);
 
-    if (beginnerProgs.length > 0) {
-      parts.push('Beginner Certification');
-      link = '/beginner-certification';
+    for (const p of beginnerProgs) {
+      notifications.push({
+        id: `bc-${p.id}`,
+        message: `${p.title} — Enroll before ${new Date(p.lastDateToApply).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}!`,
+        link: '/beginner-certification',
+        type: 'info',
+      });
     }
 
-    // Check active coach certification programs
+    // Active coach certification programs
     const coachProgs = await prisma.coachCertProgram.findMany({
       where: { isActive: true, status: { in: ['PUBLISHED', 'REGISTRATION_OPEN'] } },
-      select: { title: true },
+      select: { id: true, title: true, lastDateToApply: true },
     }).catch(() => []);
 
-    if (coachProgs.length > 0) {
-      parts.push('Coach Certification');
-      if (!beginnerProgs.length) link = '/coach-certification';
+    for (const p of coachProgs) {
+      notifications.push({
+        id: `cc-${p.id}`,
+        message: `${p.title} — Enroll before ${new Date(p.lastDateToApply).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}!`,
+        link: '/coach-certification',
+        type: 'info',
+      });
     }
 
-    if (parts.length === 0) {
-      return res.json({ success: true, data: null });
-    }
-
-    // Build message: "Beginner Certification & Student Registration are now open!"
-    const joined = parts.length <= 2
-      ? parts.join(' & ')
-      : parts.slice(0, -1).join(', ') + ' & ' + parts[parts.length - 1];
-
-    res.json({
-      success: true,
-      data: {
-        id: 'auto',
-        message: `${joined} — Registration is now open!`,
-        link: parts.length > 1 ? '/events' : link,
-        type: 'info'
-      }
-    });
+    res.json({ success: true, data: notifications.length > 0 ? notifications : null });
   } catch {
     res.json({ success: true, data: null });
   }
