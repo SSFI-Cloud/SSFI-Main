@@ -221,9 +221,17 @@ app.use(`/api/${API_VERSION}/milestones`, milestoneRoutes);
 app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
 
 // Public notification ribbon — returns active site-wide notification (if any)
-// For now returns empty until an admin notification system is built
+// TODO: Replace with database-driven notifications via admin panel
 app.get(`/api/${API_VERSION}/notifications/public/active`, (_req: Request, res: Response) => {
-  res.json({ success: true, data: null });
+  res.json({
+    success: true,
+    data: {
+      id: '1',
+      message: 'Registration open for National Championship 2026 — Register before the deadline!',
+      link: '/events',
+      type: 'info'
+    }
+  });
 });
 
 // Welcome Route
