@@ -68,8 +68,8 @@ router.post('/club', clubUpload, affiliationController.registerClub);
 
 const studentUpload = uploadFields([
   { name: 'profilePhoto', maxCount: 1 },
-  { name: 'aadhaarCardImage', maxCount: 1 },
   { name: 'birthCertificate', maxCount: 1 },
+  // Note: aadhaarCardImage removed — KYC OTP verification replaces document upload
 ]);
 
 /**

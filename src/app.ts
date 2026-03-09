@@ -208,6 +208,8 @@ app.use(`/api/${API_VERSION}/results`, resultRoutes);
 import certificateRoutes from './routes/certificate.routes';
 app.use(`/api/${API_VERSION}/certificates`, certificateRoutes);
 app.use(`/api/${API_VERSION}/renewal`, renewalRoutes);
+import kycRoutes from './routes/kyc.routes';
+app.use(`/api/${API_VERSION}/kyc`, kycRoutes);
 import coachCertRoutes from './routes/coach-cert.routes';
 app.use(`/api/${API_VERSION}/coach-cert`, coachCertRoutes);
 // app.use(`/api/${API_VERSION}/payments`, paymentRoutes);

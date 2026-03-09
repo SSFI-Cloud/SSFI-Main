@@ -152,7 +152,14 @@ export const getAllRegistrationStatuses = asyncHandler(async (req: Request, res:
  * @access  Public (when registration is open)
  */
 export const registerStateSecretary = asyncHandler(async (req: Request, res: Response) => {
-  const validatedData = stateSecretaryRegistrationSchema.parse(req.body);
+  const body = { ...req.body };
+  if (body.kycVerified === 'true') body.kycVerified = true;
+  // Handle file uploads if present (profilePhoto still supported)
+  if (req.files) {
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    if (files.profilePhoto?.[0]) body.profilePhoto = files.profilePhoto[0].path;
+  }
+  const validatedData = stateSecretaryRegistrationSchema.parse(body);
 
   // Get active window
   const { isOpen, window, message } = await affiliationService.isRegistrationOpen('STATE_SECRETARY');
@@ -233,20 +240,10 @@ export const updateStateSecretaryStatus = asyncHandler(async (req: AuthRequest, 
  * @access  Public (when registration is open)
  */
 export const initiateDistrictSecretaryRegistration = asyncHandler(async (req: Request, res: Response) => {
-  // Validate request body
-  // Note: req.body might contain file fields if multipart/form-data is used, but z.parse handles it?
-  // Zod expects strings, but files are in req.files
-  // The validator `districtSecretaryRegistrationSchema` expects `identityProof` and `profilePhoto` as strings (paths or base64?)
-  // The `upload.middleware` handles file upload and puts files in `req.files`.
-  // We need to map `req.files` to `req.body` paths usually.
-
-  // Helper to attach file paths to body
   const body = { ...req.body };
+  if (body.kycVerified === 'true') body.kycVerified = true;
   if (req.files) {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    if (files.identityProof?.[0]) {
-      body.identityProof = files.identityProof[0].path;
-    }
     if (files.profilePhoto?.[0]) {
       body.profilePhoto = files.profilePhoto[0].path;
     }
@@ -358,7 +355,9 @@ export const updateDistrictSecretaryStatus = asyncHandler(async (req: AuthReques
  * @access  Public (when registration is open)
  */
 export const registerClub = asyncHandler(async (req: Request, res: Response) => {
-  const validatedData = clubRegistrationSchema.parse(req.body);
+  const body = { ...req.body };
+  if (body.kycVerified === 'true') body.kycVerified = true;
+  const validatedData = clubRegistrationSchema.parse(body);
 
   // Get active window
   const { isOpen, window, message } = await affiliationService.isRegistrationOpen('CLUB');
@@ -455,9 +454,6 @@ export const registerStudent = asyncHandler(async (req: Request, res: Response) 
     if (files.profilePhoto?.[0]) {
       body.profilePhoto = files.profilePhoto[0].path;
     }
-    if (files.aadhaarCardImage?.[0]) {
-      body.aadhaarCardImage = files.aadhaarCardImage[0].path;
-    }
     if (files.birthCertificate?.[0]) {
       body.birthCertificate = files.birthCertificate[0].path;
     }
@@ -465,6 +461,7 @@ export const registerStudent = asyncHandler(async (req: Request, res: Response) 
 
   // Handle number/boolean parsing from FormData
   if (body.termsAccepted === 'true') body.termsAccepted = true;
+  if (body.kycVerified === 'true') body.kycVerified = true;
   if (body.nomineeAge) body.nomineeAge = Number(body.nomineeAge);
 
   const validatedData = studentRegistrationSchema.parse(body);
@@ -503,11 +500,11 @@ export const initiateStudentRegistration = asyncHandler(async (req: Request, res
   if (req.files) {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     if (files.profilePhoto?.[0]) body.profilePhoto = files.profilePhoto[0].path;
-    if (files.aadhaarCardImage?.[0]) body.aadhaarCardImage = files.aadhaarCardImage[0].path;
     if (files.birthCertificate?.[0]) body.birthCertificate = files.birthCertificate[0].path;
   }
 
   if (body.termsAccepted === 'true') body.termsAccepted = true;
+  if (body.kycVerified === 'true') body.kycVerified = true;
   if (body.nomineeAge) body.nomineeAge = Number(body.nomineeAge);
 
   const validatedData = studentRegistrationSchema.parse(body);
