@@ -4,6 +4,7 @@ import { authenticate as protect, requireRole as restrictTo } from '../middlewar
 import { UserRole } from '@prisma/client';
 
 import { uploadFields } from '../middleware/upload.middleware';
+import { optimizeUploadedImages } from '../middleware/imageOptimize.middleware';
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ const secretaryUpload = uploadFields([
 ]);
 
 // Public Routes - Registration
-router.post('/initiate', secretaryUpload, controller.initiateRegistration);
+router.post('/initiate', secretaryUpload, optimizeUploadedImages, controller.initiateRegistration);
 router.post('/verify', controller.verifyPayment);
 
 // Protected Routes - Admin Only

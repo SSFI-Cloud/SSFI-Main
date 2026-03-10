@@ -24,14 +24,7 @@ interface GalleryAlbum {
     items?: { id: string; url: string; title?: string }[]; _count?: { items: number }; createdAt: string;
 }
 
-const placeholderAlbums: GalleryAlbum[] = [
-    { id: '1', title: 'National Championship 2025', slug: 'national-championship-2025', description: 'Highlights from the annual SSFI National Speed Skating Championship.', coverImage: '', category: 'Championship', event: { id: 1, name: 'National Championship 2025', eventDate: '2025-12-15', venue: 'Chennai' }, _count: { items: 24 }, createdAt: '2025-12-15' },
-    { id: '2', title: 'State Level Qualifying Rounds', slug: 'state-level-qualifying-rounds', description: 'State-level qualifiers across multiple states.', coverImage: '', category: 'Championship', event: { id: 2, name: 'State Qualifiers 2025', eventDate: '2025-10-20', venue: 'Multiple States' }, _count: { items: 18 }, createdAt: '2025-10-20' },
-    { id: '3', title: 'Coaching Workshop 2025', slug: 'coaching-workshop-2025', description: 'Level 2 coaching certification program highlights.', coverImage: '', category: 'Workshop', event: { id: 3, name: 'Coaching Workshop', eventDate: '2025-08-10', venue: 'Mumbai' }, _count: { items: 12 }, createdAt: '2025-08-10' },
-    { id: '4', title: 'Grassroots Skating Camp', slug: 'grassroots-skating-camp', description: 'Introducing skating to young athletes across rural India.', coverImage: '', category: 'Camp', event: { id: 4, name: 'Grassroots Camp', eventDate: '2025-07-05', venue: 'Various Locations' }, _count: { items: 30 }, createdAt: '2025-07-05' },
-    { id: '5', title: 'International Exhibition Match', slug: 'international-exhibition-match', description: 'Exhibition matches with international skating athletes.', coverImage: '', category: 'Exhibition', event: { id: 5, name: 'International Exhibition', eventDate: '2025-06-20', venue: 'New Delhi' }, _count: { items: 15 }, createdAt: '2025-06-20' },
-    { id: '6', title: 'Annual Award Ceremony', slug: 'annual-award-ceremony', description: 'Celebrating the achievements of top skaters and coaches.', coverImage: '', category: 'Ceremony', event: { id: 6, name: 'Award Ceremony 2025', eventDate: '2025-05-01', venue: 'Hyderabad' }, _count: { items: 20 }, createdAt: '2025-05-01' },
-];
+// No placeholder/demo data — gallery shows only real published albums from the API
 
 const CARD_ACCENTS = [
     { gradient: 'from-emerald-400 to-teal-500', bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100', border: 'hover:border-emerald-200', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
@@ -54,11 +47,11 @@ function getCardTransform(offset: number) {
 
 export default function GalleryPageClient() {
     const { fetchPublicAlbums, data: apiAlbums, isLoading } = usePublicGalleryAlbums();
-    const [albums, setAlbums] = useState<GalleryAlbum[]>(placeholderAlbums);
+    const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
     const [activeIndex, setActiveIndex] = useState(0);
 
     useEffect(() => {
-        fetchPublicAlbums().then((r: GalleryAlbum[]) => { if (r?.length) setAlbums(r); }).catch(() => {});
+        fetchPublicAlbums().then((r: GalleryAlbum[]) => { setAlbums(r || []); }).catch(() => { setAlbums([]); });
     }, [fetchPublicAlbums]);
 
     const goTo = useCallback((i: number) => { if (i >= 0 && i < albums.length) setActiveIndex(i); }, [albums.length]);
@@ -101,9 +94,9 @@ export default function GalleryPageClient() {
                     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                         className="flex flex-wrap justify-center gap-3 mt-10">
                         {[
-                            { icon: Layers, label: 'Albums', value: `${albums.length}+` },
-                            { icon: ImageIcon, label: 'Photos', value: '120+' },
-                            { icon: Eye, label: 'Views', value: '15K+' },
+                            { icon: Layers, label: 'Albums', value: `${albums.length || 0}` },
+                            { icon: ImageIcon, label: 'Photos', value: `${albums.reduce((sum, a) => sum + (a._count?.items || 0), 0)}` },
+                            { icon: Eye, label: 'Events', value: `${albums.filter(a => a.eventId).length}` },
                         ].map((s, i) => (
                             <div key={i} className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.08] backdrop-blur-sm">
                                 <s.icon className="w-4 h-4 text-emerald-400" />
@@ -138,6 +131,16 @@ export default function GalleryPageClient() {
                                 <div className="absolute inset-0 rounded-full border-[3px] border-t-emerald-500 animate-spin" />
                             </div>
                             <p className="text-gray-400 text-sm">Loading gallery…</p>
+                        </div>
+                    ) : albums.length === 0 ? (
+                        <div className="text-center py-20">
+                            <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-5">
+                                <Camera className="w-10 h-10 text-gray-300" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Gallery Coming Soon</h3>
+                            <p className="text-gray-500 text-sm max-w-md mx-auto">
+                                Event photos and gallery albums will appear here once published. Check back after upcoming events!
+                            </p>
                         </div>
                     ) : (
                         <>

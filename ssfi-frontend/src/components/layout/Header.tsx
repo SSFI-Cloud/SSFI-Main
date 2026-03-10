@@ -51,7 +51,13 @@ const navLinks = [
   { href: '/gallery', label: 'Gallery' },
   { href: '/news', label: 'News' },
   { href: '/affiliated-coaches', label: 'Coaches' },
-  { href: '/beginner-program', label: 'Programs' },
+  {
+    label: 'Programs',
+    children: [
+      { href: '/beginner-certification', label: 'Beginner Certification' },
+      { href: '/coach-certification', label: 'Coach Certification' },
+    ],
+  },
   { href: '/contact', label: 'Contact' },
 ];
 
@@ -164,7 +170,13 @@ const Header = () => {
 
             {/* Desktop Navigation - Tubelight Style */}
             <TubelightNavbar
-              items={navLinks.map(link => ({ name: link.label, url: link.href }))}
+              items={navLinks.map(link => ({
+                name: link.label,
+                ...('href' in link && { url: link.href }),
+                ...('children' in link && link.children && {
+                  children: link.children.map(c => ({ name: c.label, url: c.href })),
+                }),
+              }))}
               className="hidden lg:flex"
             />
 
@@ -355,19 +367,41 @@ const Header = () => {
               className="lg:hidden border-t border-white/10 bg-dark-900/95 backdrop-blur-xl"
             >
               <div className="container mx-auto px-4 py-6 space-y-2">
-                {navLinks.map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block px-4 py-3 rounded-lg text-sm font-semibold transition-colors ${pathname === item.href
-                      ? 'bg-primary-500/10 text-primary-400'
-                      : 'text-gray-300 hover:bg-white/5 hover:text-white'
-                      }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {navLinks.map((item) => {
+                  if ('children' in item && item.children) {
+                    return (
+                      <div key={item.label}>
+                        <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{item.label}</p>
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.label}
+                            href={child.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`block px-6 py-3 rounded-lg text-sm font-semibold transition-colors ${pathname === child.href
+                              ? 'bg-primary-500/10 text-primary-400'
+                              : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                              }`}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return (
+                    <Link
+                      key={item.label}
+                      href={'href' in item ? item.href : '/'}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`block px-4 py-3 rounded-lg text-sm font-semibold transition-colors ${'href' in item && pathname === item.href
+                        ? 'bg-primary-500/10 text-primary-400'
+                        : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                        }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
 
                 {/* Mobile Auth Links */}
                 {!user && (

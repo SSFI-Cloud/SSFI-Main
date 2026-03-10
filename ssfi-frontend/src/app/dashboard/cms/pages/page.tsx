@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Search, FileText, Edit, Trash2, Eye, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Plus, Search, FileText, Edit, Trash2, Eye, Link as LinkIcon, Loader2, DatabaseZap } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { usePages } from '@/lib/hooks/useCMS';
@@ -14,6 +14,7 @@ export default function PagesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   const load = async () => {
     try {
@@ -48,10 +49,30 @@ export default function PagesPage() {
           <h2 className="text-2xl font-bold text-gray-900">Static Pages</h2>
           <p className="text-gray-500 text-sm">Manage static content like About Us, Privacy Policy, etc.</p>
         </div>
-        <Link href="/dashboard/cms/pages/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
-          <Plus className="w-4 h-4" /> Create Page
-        </Link>
+        <div className="flex items-center gap-2">
+          {pages.length === 0 && !isLoading && (
+            <button
+              onClick={async () => {
+                setSeeding(true);
+                try {
+                  const res = await apiClient.post('/cms/admin/pages/seed');
+                  toast.success(res.data?.message || 'Pages seeded successfully!');
+                  load();
+                } catch (e: any) { toast.error(e.response?.data?.message || 'Seed failed'); }
+                finally { setSeeding(false); }
+              }}
+              disabled={seeding}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <DatabaseZap className="w-4 h-4" />}
+              {seeding ? 'Seeding...' : 'Seed Website Pages'}
+            </button>
+          )}
+          <Link href="/dashboard/cms/pages/new"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-medium">
+            <Plus className="w-4 h-4" /> Create Page
+          </Link>
+        </div>
       </div>
 
       <div className="relative max-w-sm">
