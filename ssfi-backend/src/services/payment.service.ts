@@ -20,7 +20,33 @@ export class PaymentService {
      * Create a Razorpay order
      */
     async createOrder(request: CreateOrderRequest): Promise<RazorpayOrder> {
-        const { amount, currency = 'INR', receipt, notes, payment_type, entity_id, entity_type, user_id } = request;
+        const {
+            amount, currency = 'INR', receipt, notes, payment_type, entity_id, entity_type, user_id,
+            coachCertRegistrationId, beginnerCertRegistrationId, donationId,
+        } = request;
+
+        // Build common payment data
+        const buildPaymentData = (orderId: string) => {
+            const data: any = {
+                razorpayOrderId: orderId,
+                amount: amount / 100,
+                status: 'PENDING',
+                paymentType: payment_type,
+                userId: user_id || 0,
+                description: `${payment_type} - ${entity_type} #${entity_id}`,
+            };
+            // Link event registration if applicable
+            if (entity_type === 'event_registration' || payment_type === 'EVENT_REGISTRATION') {
+                data.eventRegistrationId = Number(entity_id);
+            }
+            // Link coach cert registration
+            if (coachCertRegistrationId) data.coachCertRegistrationId = coachCertRegistrationId;
+            // Link beginner cert registration
+            if (beginnerCertRegistrationId) data.beginnerCertRegistrationId = beginnerCertRegistrationId;
+            // Link donation
+            if (donationId) data.donationId = donationId;
+            return data;
+        };
 
         // Check if Razorpay is configured or Mock Mode is enabled
         const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
@@ -30,19 +56,7 @@ export class PaymentService {
             console.warn('Using Mock Payment Order');
             const mockOrder = this.createMockOrder(amount, currency, receipt || `receipt_${Date.now()}`, notes || {});
 
-            // Persist mock order to DB so verification works
-            await prisma.payment.create({
-                data: {
-                    razorpayOrderId: mockOrder.id,
-                    amount: amount / 100,
-                    status: 'PENDING',
-                    paymentType: payment_type,
-                    userId: user_id!,
-                    description: `${payment_type} - ${entity_type} #${entity_id}`,
-                    eventRegistrationId: (entity_type === 'event_registration' || payment_type === 'EVENT_REGISTRATION') ? Number(entity_id) : undefined
-                },
-            });
-
+            await prisma.payment.create({ data: buildPaymentData(mockOrder.id) });
             return mockOrder;
         }
 
@@ -60,25 +74,7 @@ export class PaymentService {
                 },
             }) as RazorpayOrder;
 
-            // Store order in database
-            const paymentData: any = {
-                razorpayOrderId: order.id,
-                amount: amount / 100, // Convert from paise to rupees
-                status: 'PENDING',
-                paymentType: payment_type,
-                userId: user_id!,
-                description: `${payment_type} - ${entity_type} #${entity_id}`,
-            };
-
-            // Link event registration if applicable
-            if (entity_type === 'event_registration' || payment_type === 'EVENT_REGISTRATION') {
-                paymentData.eventRegistrationId = Number(entity_id);
-            }
-
-            await prisma.payment.create({
-                data: paymentData,
-            });
-
+            await prisma.payment.create({ data: buildPaymentData(order.id) });
             return order;
         } catch (error) {
             console.error('Error creating Razorpay order:', error);
@@ -212,40 +208,136 @@ export class PaymentService {
     }
 
     /**
-     * Process post-payment actions based on payment type
+     * Process post-payment actions based on payment type.
+     * Handles both frontend-verified and webhook-captured payments.
+     * Some services (affiliation, coach-cert, beginner-cert) also have their own
+     * verifyPayment() that does entity updates — these act as fallback/webhook handlers.
      */
     private async processPostPaymentActions(payment: any): Promise<void> {
         const paymentType = payment.paymentType;
         const eventRegId = payment.eventRegistrationId;
 
-        switch (paymentType) {
-            case 'STUDENT_REGISTRATION':
-                // Student verification is usually manual, but could auto-mark as paid
-                break;
-
-            case 'CLUB_AFFILIATION':
-                // Club affiliation post-payment
-                break;
-
-            case 'EVENT_REGISTRATION':
-                if (eventRegId) {
-                    await prisma.eventRegistration.update({
-                        where: { id: eventRegId },
-                        data: {
-                            paymentStatus: 'PAID',
-                            status: 'CONFIRMED',
-                        },
-                    });
+        try {
+            switch (paymentType) {
+                case 'STUDENT_REGISTRATION': {
+                    const studentId = this.extractEntityId(payment.description);
+                    if (studentId) {
+                        console.log(`[PostPayment] Student #${studentId} payment captured`);
+                    }
+                    break;
                 }
-                break;
 
-            case 'MEMBERSHIP_RENEWAL':
-                // Handle membership renewal
-                break;
+                case 'AFFILIATION_FEE':
+                case 'CLUB_AFFILIATION': {
+                    const entityType = this.extractEntityType(payment.description);
+                    const entityIdStr = this.extractEntityIdStr(payment.description);
+                    if (!entityIdStr || !entityType) {
+                        console.warn(`[PostPayment] Could not parse entity from: ${payment.description}`);
+                        break;
+                    }
+                    if (entityType === 'STATE_SECRETARY') {
+                        await prisma.stateSecretary.update({
+                            where: { id: entityIdStr },
+                            data: { status: 'PENDING' },
+                        });
+                        console.log(`[PostPayment] StateSecretary ${entityIdStr} → PENDING (paid)`);
+                    } else if (entityType === 'DISTRICT_SECRETARY') {
+                        await prisma.districtSecretary.update({
+                            where: { id: entityIdStr },
+                            data: { status: 'PENDING' },
+                        });
+                        console.log(`[PostPayment] DistrictSecretary ${entityIdStr} → PENDING (paid)`);
+                    } else if (entityType === 'CLUB') {
+                        await prisma.club.update({
+                            where: { id: Number(entityIdStr) },
+                            data: { isActive: true },
+                        });
+                        console.log(`[PostPayment] Club #${entityIdStr} activated`);
+                    }
+                    break;
+                }
 
-            default:
-                console.log(`Unknown payment type: ${paymentType}`);
+                case 'EVENT_REGISTRATION':
+                    if (eventRegId) {
+                        await prisma.eventRegistration.update({
+                            where: { id: eventRegId },
+                            data: {
+                                paymentStatus: 'PAID',
+                                status: 'CONFIRMED',
+                            },
+                        });
+                        console.log(`[PostPayment] EventRegistration #${eventRegId} confirmed`);
+                    }
+                    break;
+
+                case 'COACH_CERTIFICATION': {
+                    const coachRegId = payment.coachCertRegistrationId || this.extractEntityId(payment.description);
+                    if (coachRegId) {
+                        await prisma.coachCertRegistration.update({
+                            where: { id: coachRegId },
+                            data: { paymentStatus: 'PAID' },
+                        });
+                        console.log(`[PostPayment] CoachCertRegistration #${coachRegId} → PAID`);
+                    }
+                    break;
+                }
+
+                case 'BEGINNER_CERTIFICATION': {
+                    const beginnerRegId = payment.beginnerCertRegistrationId || this.extractEntityId(payment.description);
+                    if (beginnerRegId) {
+                        await prisma.beginnerCertRegistration.update({
+                            where: { id: beginnerRegId },
+                            data: { paymentStatus: 'PAID' },
+                        });
+                        console.log(`[PostPayment] BeginnerCertRegistration #${beginnerRegId} → PAID`);
+                    }
+                    break;
+                }
+
+                case 'DONATION': {
+                    if (payment.donationId) {
+                        await prisma.donation.update({
+                            where: { id: payment.donationId },
+                            data: { status: 'COMPLETED' },
+                        });
+                        console.log(`[PostPayment] Donation #${payment.donationId} → COMPLETED`);
+                    }
+                    break;
+                }
+
+                case 'MEMBERSHIP_RENEWAL': {
+                    const renewalEntityId = this.extractEntityId(payment.description);
+                    console.log(`[PostPayment] Membership renewal captured for entity #${renewalEntityId}`);
+                    break;
+                }
+
+                default:
+                    console.log(`[PostPayment] Unhandled payment type: ${paymentType}`);
+            }
+        } catch (error) {
+            console.error(`[PostPayment] Error processing ${paymentType}:`, error);
         }
+    }
+
+    /** Extract numeric entity ID from description: "TYPE - ENTITY #123" */
+    private extractEntityId(description: string | null): number | null {
+        if (!description) return null;
+        const match = description.match(/#(\d+)\s*$/);
+        return match ? parseInt(match[1], 10) : null;
+    }
+
+    /** Extract entity ID as string (for cuid IDs): "TYPE - ENTITY #cuid123" */
+    private extractEntityIdStr(description: string | null): string | null {
+        if (!description) return null;
+        const match = description.match(/#(\S+)\s*$/);
+        return match ? match[1] : null;
+    }
+
+    /** Extract entity type from description: "TYPE - ENTITY_TYPE #id" */
+    private extractEntityType(description: string | null): string | null {
+        if (!description) return null;
+        const match = description.match(/- (\S+) #/);
+        return match ? match[1] : null;
     }
 
     /**

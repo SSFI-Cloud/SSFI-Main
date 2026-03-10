@@ -10,7 +10,7 @@ interface PaymentButtonProps {
     amount: number;
     paymentType: PaymentType;
     entityId: number;
-    entityType: 'skater' | 'club' | 'event_registration';
+    entityType: string;
     prefill?: {
         name?: string;
         email?: string;
@@ -86,6 +86,10 @@ export default function PaymentButton({
             CLUB_AFFILIATION: 'Club Affiliation',
             EVENT_REGISTRATION: 'Event Registration',
             MEMBERSHIP_RENEWAL: 'Membership Renewal',
+            COACH_CERTIFICATION: 'Coach Certification',
+            BEGINNER_CERTIFICATION: 'Beginner Certification',
+            AFFILIATION_FEE: 'Registration Fee',
+            DONATION: 'Donation',
         };
         return names[type] || type;
     };

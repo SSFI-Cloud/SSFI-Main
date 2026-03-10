@@ -618,7 +618,7 @@ model Payment {
   // Payment Details
   amount      Decimal       @db.Decimal(10, 2)
   currency    String        @default("INR")
-  paymentType String // REGISTRATION, RENEWAL, EVENT
+  paymentType String // REGISTRATION, RENEWAL, EVENT, DONATION, AFFILIATION_FEE
   status      PaymentStatus @default(PENDING)
 
   // Gateway Details
@@ -630,12 +630,20 @@ model Payment {
   description         String?
   eventRegistrationId Int?    @unique
 
+  // FK links for all payment types
+  coachCertRegistrationId    Int? @unique
+  beginnerCertRegistrationId Int? @unique
+  donationId                 Int? @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  user              User               @relation(fields: [userId], references: [id])
-  eventRegistration EventRegistration? @relation(fields: [eventRegistrationId], references: [id])
+  user                     User                      @relation(fields: [userId], references: [id])
+  eventRegistration        EventRegistration?         @relation(fields: [eventRegistrationId], references: [id])
+  coachCertRegistration    CoachCertRegistration?     @relation(fields: [coachCertRegistrationId], references: [id])
+  beginnerCertRegistration BeginnerCertRegistration?  @relation(fields: [beginnerCertRegistrationId], references: [id])
+  donation                 Donation?                  @relation(fields: [donationId], references: [id])
 
   @@index([status])
   @@index([paymentType])
@@ -1447,6 +1455,7 @@ model CoachCertRegistration {
 
   // Relations
   program CoachCertProgram @relation(fields: [programId], references: [id])
+  payment Payment?
 
   @@unique([programId, phone])
   @@unique([programId, aadhaarNumber])
@@ -1640,6 +1649,7 @@ model BeginnerCertRegistration {
 
   // Relations
   program BeginnerCertProgram @relation(fields: [programId], references: [id])
+  payment Payment?
 
   @@unique([programId, phone])
   @@unique([programId, aadhaarNumber])
@@ -1647,4 +1657,27 @@ model BeginnerCertRegistration {
   @@index([status])
   @@index([isCompleted])
   @@map("beginner_cert_registrations")
+}
+
+// Donations
+model Donation {
+  id          Int       @id @default(autoincrement())
+  donorName   String
+  donorEmail  String
+  donorPhone  String?
+  amount      Decimal   @db.Decimal(10, 2)
+  currency    String    @default("INR")
+  message     String?   @db.Text
+  isAnonymous Boolean   @default(false)
+  status      String    @default("PENDING") // PENDING, COMPLETED, FAILED, REFUNDED
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  payment     Payment?
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("donations")
 }

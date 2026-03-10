@@ -215,7 +215,7 @@ class BeginnerCertService {
       if (user) userId = user.id;
     }
 
-    // 3. Create Razorpay order
+    // 3. Create Razorpay order (with FK link for post-payment actions)
     const order = await paymentService.createOrder({
       amount: Number(registration.amount) * 100, // convert to paise
       currency: 'INR',
@@ -223,6 +223,7 @@ class BeginnerCertService {
       entity_id: registration.id,
       entity_type: 'beginner_certification',
       user_id: userId,
+      beginnerCertRegistrationId: registration.id,
       notes: {
         registration_number: registration.registrationNumber,
         name: data.fullName,

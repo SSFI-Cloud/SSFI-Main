@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Building2, MapPin, Trophy, Calendar, CreditCard,
   FileText, Settings, Bell, LogOut, Menu, X, ChevronDown, Globe, UserPlus,
-  ClipboardList, Clock, GraduationCap, Award, Medal, ChevronRight,
+  ClipboardList, Clock, GraduationCap, Award, Medal, ChevronRight, Heart,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
   { label: 'Coach Certification', href: '/dashboard/coach-certification', icon: Award, roles: ['GLOBAL_ADMIN'] },
   { label: 'Beginner Certification', href: '/dashboard/beginner-certification', icon: Medal, roles: ['GLOBAL_ADMIN'] },
   { label: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY', 'CLUB_OWNER'] },
+  { label: 'Donations', href: '/dashboard/donations', icon: Heart, roles: ['GLOBAL_ADMIN'] },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'] },
   { label: 'Renewals', href: '/dashboard/renewals', icon: Clock, roles: ['GLOBAL_ADMIN'] },
   { label: 'Content Management', href: '/dashboard/cms', icon: Globe, roles: ['GLOBAL_ADMIN'] },

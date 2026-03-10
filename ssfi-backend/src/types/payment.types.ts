@@ -2,7 +2,7 @@
 
 export type PaymentStatus = 'pending' | 'processing' | 'captured' | 'failed' | 'refunded';
 
-export type PaymentType = 'STUDENT_REGISTRATION' | 'CLUB_AFFILIATION' | 'EVENT_REGISTRATION' | 'MEMBERSHIP_RENEWAL' | 'COACH_CERTIFICATION' | 'BEGINNER_CERTIFICATION';
+export type PaymentType = 'STUDENT_REGISTRATION' | 'CLUB_AFFILIATION' | 'EVENT_REGISTRATION' | 'MEMBERSHIP_RENEWAL' | 'COACH_CERTIFICATION' | 'BEGINNER_CERTIFICATION' | 'AFFILIATION_FEE' | 'DONATION';
 
 export interface CreateOrderRequest {
     amount: number; // In paise
@@ -13,6 +13,10 @@ export interface CreateOrderRequest {
     entity_id: number;
     entity_type: string;
     user_id?: number;
+    // Optional FK links for direct entity association
+    coachCertRegistrationId?: number;
+    beginnerCertRegistrationId?: number;
+    donationId?: number;
 }
 
 export interface RazorpayOrder {

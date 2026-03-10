@@ -1,5 +1,5 @@
 // Payment Types for Frontend
-export type PaymentType = 'STUDENT_REGISTRATION' | 'CLUB_AFFILIATION' | 'EVENT_REGISTRATION' | 'MEMBERSHIP_RENEWAL';
+export type PaymentType = 'STUDENT_REGISTRATION' | 'CLUB_AFFILIATION' | 'EVENT_REGISTRATION' | 'MEMBERSHIP_RENEWAL' | 'COACH_CERTIFICATION' | 'BEGINNER_CERTIFICATION' | 'AFFILIATION_FEE' | 'DONATION';
 
 export interface CreateOrderPayload {
     amount: number; // In rupees (will be converted to paise)

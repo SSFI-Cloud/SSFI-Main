@@ -111,6 +111,10 @@ export default function PaymentModal({
             CLUB_AFFILIATION: 'Club Affiliation Fee',
             EVENT_REGISTRATION: 'Event Registration Fee',
             MEMBERSHIP_RENEWAL: 'Membership Renewal Fee',
+            COACH_CERTIFICATION: 'Coach Certification Fee',
+            BEGINNER_CERTIFICATION: 'Beginner Certification Fee',
+            AFFILIATION_FEE: 'Registration Fee',
+            DONATION: 'Donation',
         };
         return names[type] || type;
     };

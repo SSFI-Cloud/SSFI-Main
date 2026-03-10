@@ -69,6 +69,10 @@ export default function PaymentSuccessPage() {
             CLUB_AFFILIATION: 'Club Affiliation',
             EVENT_REGISTRATION: 'Event Registration',
             MEMBERSHIP_RENEWAL: 'Membership Renewal',
+            COACH_CERTIFICATION: 'Coach Certification',
+            BEGINNER_CERTIFICATION: 'Beginner Certification',
+            AFFILIATION_FEE: 'Registration Fee',
+            DONATION: 'Donation',
             REGISTRATION: 'Registration',
         };
         return names[type] || type;
