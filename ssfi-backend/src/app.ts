@@ -63,6 +63,9 @@ import logger from './utils/logger.util';
 
 const app: Application = express();
 
+// Trust Hostinger/Cloudflare reverse proxy headers
+app.set('trust proxy', 1);
+
 // Security Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
