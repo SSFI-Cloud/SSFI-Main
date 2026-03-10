@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as ctrl from '../controllers/coach-cert.controller';
 import { authenticate, requireRole } from '../middleware/auth.middleware';
 import { uploadFields } from '../middleware/upload.middleware';
+import { optimizeUploadedImages } from '../middleware/imageOptimize.middleware';
 import { UserRole } from '@prisma/client';
 
 const router = Router();
@@ -14,8 +15,8 @@ const coachUpload = uploadFields([
 // ══════════ PUBLIC ROUTES ══════════
 
 router.get('/programs/active', ctrl.getActivePrograms);
-router.post('/register', coachUpload, ctrl.registerCoach);
-router.post('/initiate', coachUpload, ctrl.initiateRegistration);
+router.post('/register', coachUpload, optimizeUploadedImages, ctrl.registerCoach);
+router.post('/initiate', coachUpload, optimizeUploadedImages, ctrl.initiateRegistration);
 router.post('/verify-payment', ctrl.verifyPayment);
 router.get('/certified-coaches', ctrl.getCertifiedCoaches);
 

@@ -7,7 +7,11 @@ import { cacheMiddleware } from '../utils/cache.util';
 const router = express.Router();
 
 // Public routes with caching (1 hour TTL)
-router.get('/public', cacheMiddleware(3600), districtController.getDistricts);
+// Inject publicOnly flag so service only returns districts with actual clubs/skaters
+router.get('/public', cacheMiddleware(3600), (req, _res, next) => {
+    req.query.publicOnly = 'true';
+    next();
+}, districtController.getDistricts);
 router.get('/public/:id', cacheMiddleware(3600), districtController.getDistrict);
 
 // Protected routes with scope filtering

@@ -12,6 +12,7 @@ import {
 import { successResponse } from '../utils/response.util';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AuthRequest } from '../types';
+import { seedCmsPages } from '../services/cms-seed.service';
 
 // ==========================================
 // PAGE CONTROLLERS
@@ -328,9 +329,22 @@ export const updateSiteSettings = asyncHandler(async (req: AuthRequest, res: Res
   });
 });
 
+// ==========================================
+// SEED PAGES CONTROLLER
+// ==========================================
+
+export const seedPages = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const result = await seedCmsPages(req.user!.id.toString());
+
+  return successResponse(res, {
+    message: `CMS pages seeded: ${result.created} created, ${result.skipped} skipped`,
+    data: result,
+  });
+});
+
 export default {
   // Pages
-  createPage, updatePage, getPageBySlug, getPageById, listPages, deletePage,
+  createPage, updatePage, getPageBySlug, getPageById, listPages, deletePage, seedPages,
   // Banners
   createBanner, updateBanner, getBanners, deleteBanner,
   // News
