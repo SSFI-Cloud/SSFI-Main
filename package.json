@@ -5,8 +5,8 @@
   "main": "dist/app.js",
   "scripts": {
     "dev": "nodemon src/app.ts",
-    "build": "prisma migrate deploy && prisma generate && tsc",
-    "start": "UV_THREADPOOL_SIZE=2 VIPS_CONCURRENCY=1 node --max-old-space-size=256 dist/app.js",
+    "build": "prisma generate && tsc",
+    "start": "prisma migrate deploy && UV_THREADPOOL_SIZE=2 VIPS_CONCURRENCY=1 node --max-old-space-size=256 dist/app.js",
     "start:pm2": "pm2 start ecosystem.config.js",
     "stop:pm2": "pm2 stop ecosystem.config.js",
     "restart:pm2": "pm2 restart ecosystem.config.js",
