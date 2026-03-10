@@ -126,7 +126,7 @@ class CoachCertService {
     // 1. Register coach using existing logic
     const registration = await this.registerCoach(data, files);
 
-    // 2. Create Razorpay order
+    // 2. Create Razorpay order (with FK link for post-payment actions)
     const order = await paymentService.createOrder({
       amount: Number(registration.amount) * 100, // convert to paise
       currency: 'INR',
@@ -134,6 +134,7 @@ class CoachCertService {
       entity_id: registration.id,
       entity_type: 'coach_certification',
       user_id: 1, // public registration, no user
+      coachCertRegistrationId: registration.id,
       notes: {
         registration_number: registration.registrationNumber,
         name: data.fullName,

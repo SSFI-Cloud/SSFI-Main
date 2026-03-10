@@ -221,6 +221,8 @@ app.use(`/api/${API_VERSION}/beginner-cert`, beginnerCertRoutes);
 app.use(`/api/${API_VERSION}/team-members`, teamRoutes);
 app.use(`/api/${API_VERSION}/milestones`, milestoneRoutes);
 app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
+import donationRoutes from './routes/donation.routes';
+app.use(`/api/${API_VERSION}/donations`, donationRoutes);
 
 // Public notification ribbon — returns array of active registrations/programs
 app.get(`/api/${API_VERSION}/notifications/public/active`, async (_req: Request, res: Response) => {

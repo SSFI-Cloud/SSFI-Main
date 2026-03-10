@@ -58,6 +58,16 @@ export const razorpayConfig = {
             baseAmount: 0, // Variable - depends on program
             description: 'SSFI Beginner Certification Fee',
         },
+        AFFILIATION_FEE: {
+            name: 'Affiliation Fee',
+            baseAmount: 0, // Variable - depends on registration window
+            description: 'SSFI Affiliation / Registration Fee',
+        },
+        DONATION: {
+            name: 'Donation',
+            baseAmount: 0, // Variable - donor chooses
+            description: 'Donation to SSFI',
+        },
     },
 
     // Callback URLs
