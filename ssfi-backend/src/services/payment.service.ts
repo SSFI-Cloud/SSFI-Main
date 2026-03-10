@@ -32,7 +32,7 @@ export class PaymentService {
                 amount: amount / 100,
                 status: 'PENDING',
                 paymentType: payment_type,
-                userId: user_id || 0,
+                userId: user_id || null,
                 description: `${payment_type} - ${entity_type} #${entity_id}`,
             };
             // Link event registration if applicable
