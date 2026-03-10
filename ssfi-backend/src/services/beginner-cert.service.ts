@@ -205,31 +205,61 @@ class BeginnerCertService {
   }
 
   async initiateRegistration(data: any, files: { photo?: string; aadhaarCard?: string; birthCertificate?: string }) {
-    // 1. Register using existing logic
-    const registration = await this.registerBeginner(data, files);
+    let registration: any;
+
+    // 1. Check for existing unpaid registration (retry scenario — previous attempt
+    //    may have created the DB record but failed at Razorpay order creation)
+    const existing = await prisma.beginnerCertRegistration.findFirst({
+      where: {
+        programId: data.programId,
+        OR: [{ phone: data.phone }, ...(data.aadhaarNumber ? [{ aadhaarNumber: data.aadhaarNumber }] : [])],
+      },
+      include: { program: { select: { title: true, category: true, price: true, venue: true, city: true, state: true, startDate: true, endDate: true } } },
+    });
+
+    if (existing && existing.paymentStatus === 'PENDING') {
+      // Reuse existing unpaid registration (retry-safe)
+      registration = existing;
+    } else if (existing && existing.paymentStatus === 'PAID') {
+      throw new Error('Already registered and paid for this program');
+    } else {
+      // Fresh registration
+      registration = await this.registerBeginner(data, files);
+    }
 
     // 2. Find user for payment linkage (try by phone)
-    let userId = 1;
+    let userId: number | undefined;
     if (data.phone) {
       const user = await prisma.user.findFirst({ where: { phone: data.phone } });
       if (user) userId = user.id;
     }
 
-    // 3. Create Razorpay order (with FK link for post-payment actions)
-    const order = await paymentService.createOrder({
-      amount: Number(registration.amount) * 100, // convert to paise
-      currency: 'INR',
-      payment_type: 'BEGINNER_CERTIFICATION',
-      entity_id: registration.id,
-      entity_type: 'beginner_certification',
-      user_id: userId,
-      beginnerCertRegistrationId: registration.id,
-      notes: {
-        registration_number: registration.registrationNumber,
-        name: data.fullName,
-        type: 'BEGINNER_CERTIFICATION',
-      },
+    // 3. Check if there's already a PENDING payment for this registration (avoid duplicate orders)
+    const existingPayment = await prisma.payment.findFirst({
+      where: { beginnerCertRegistrationId: registration.id, status: 'PENDING' },
     });
+
+    let order: any;
+    if (existingPayment) {
+      // Reuse existing pending payment/order
+      order = { id: existingPayment.razorpayOrderId };
+    } else {
+      // Create new Razorpay order (with FK link for post-payment actions)
+      order = await paymentService.createOrder({
+        amount: Number(registration.amount) * 100, // convert to paise
+        currency: 'INR',
+        payment_type: 'BEGINNER_CERTIFICATION',
+        entity_id: registration.id,
+        entity_type: 'beginner_certification',
+        user_id: userId,
+        beginnerCertRegistrationId: registration.id,
+        notes: {
+          registration_number: registration.registrationNumber,
+          name: data.fullName,
+          type: 'BEGINNER_CERTIFICATION',
+        },
+      });
+    }
 
     const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
 
