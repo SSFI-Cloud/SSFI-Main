@@ -465,9 +465,22 @@ export class PaymentService {
      * Generate receipt ID
      */
     static generateReceiptId(prefix: string): string {
+        // Razorpay enforces max 40 chars for receipt
+        const shortPrefixMap: Record<string, string> = {
+            BEGINNER_CERTIFICATION: 'BCRT',
+            COACH_CERTIFICATION: 'CCRT',
+            STUDENT_REGISTRATION: 'SREG',
+            CLUB_AFFILIATION: 'CLUB',
+            AFFILIATION_FEE: 'AFFL',
+            EVENT_REGISTRATION: 'EVNT',
+            MEMBERSHIP_RENEWAL: 'RENW',
+            DONATION: 'DOTN',
+        };
+        const short = shortPrefixMap[prefix] || prefix.substring(0, 4).toUpperCase();
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-        return `${prefix}_${timestamp}_${random}`;
+        // e.g. BCRT_1741612345678_A1B2C3 = 25 chars (well under 40)
+        return `${short}_${timestamp}_${random}`;
     }
 
     /**
