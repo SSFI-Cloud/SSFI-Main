@@ -60,7 +60,6 @@ import { requestTimer, requestTimeout, httpCacheHeaders } from './middleware/per
 
 // Import utils
 import logger from './utils/logger.util';
-import { connectWithRetry } from './config/prisma';
 
 const app: Application = express();
 
@@ -321,12 +320,10 @@ const PORT = process.env.PORT || 5001;
 let server: ReturnType<typeof app.listen>;
 
 if (process.env.NODE_ENV !== 'test') {
-  // Connect to database with retry BEFORE serving requests
-  connectWithRetry(3).then(() => {
-    server = app.listen(PORT, () => {
-      logger.info(`SSFI Server running on port ${PORT}`);
-      logger.info(`Environment: ${process.env.NODE_ENV}`);
-      logger.info(`API Version: ${API_VERSION}`);
+  server = app.listen(PORT, () => {
+    logger.info(`SSFI Server running on port ${PORT}`);
+    logger.info(`Environment: ${process.env.NODE_ENV}`);
+    logger.info(`API Version: ${API_VERSION}`);
 
     // ── Daily scheduled tasks (renewal emails + account locking) ──
     const runDailyTasks = async () => {
@@ -348,10 +345,9 @@ if (process.env.NODE_ENV !== 'test') {
     setInterval(runDailyTasks, 24 * 60 * 60 * 1000);
   });
 
-    // Keep-alive timeout: slightly higher than any load balancer / reverse proxy timeout
-    server.keepAliveTimeout = 65000;
-    server.headersTimeout = 66000;
-  });
+  // Keep-alive timeout: slightly higher than any load balancer / reverse proxy timeout
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
 }
 
 // Graceful shutdown handler
