@@ -44,7 +44,8 @@ const endpoints = [
   { name: 'Active Programs',    method: 'GET', url: `${BASE_URL}/api/v1/beginner-cert/programs/active`, weight: 25 },
   { name: 'Events List',        method: 'GET', url: `${BASE_URL}/api/v1/events`,     weight: 20 },
   { name: 'News List',          method: 'GET', url: `${BASE_URL}/api/v1/news`,       weight: 15 },
-  { name: 'Announcements',      method: 'GET', url: `${BASE_URL}/api/v1/announcements`,       weight: 15 },
+  { name: 'Notifications',      method: 'GET', url: `${BASE_URL}/api/v1/notifications/public/active`, weight: 10 },
+  { name: 'Locations',          method: 'GET', url: `${BASE_URL}/api/v1/locations/states`, weight: 5 },
 ];
 
 // ── Stats Tracking ──
