@@ -8,12 +8,14 @@ import {
 import { successResponse } from '../utils/response.util';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AuthRequest } from '../types';
+import { deleteCachePattern } from '../utils/cache.util';
 
 // ══════════ PROGRAMS ══════════
 
 export const createProgram = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data = createProgramSchema.parse(req.body);
   const program = await coachCertService.createProgram(data, req.user!.id.toString());
+  deleteCachePattern('/coach-cert');
   return successResponse(res, { statusCode: 201, message: 'Program created successfully', data: program });
 });
 
@@ -21,12 +23,14 @@ export const updateProgram = asyncHandler(async (req: AuthRequest, res: Response
   const id = parseInt(req.params.id);
   const data = updateProgramSchema.parse(req.body);
   const program = await coachCertService.updateProgram(id, data, req.user!.id.toString());
+  deleteCachePattern('/coach-cert');
   return successResponse(res, { message: 'Program updated successfully', data: program });
 });
 
 export const deleteProgram = asyncHandler(async (req: AuthRequest, res: Response) => {
   const id = parseInt(req.params.id);
   await coachCertService.deleteProgram(id);
+  deleteCachePattern('/coach-cert');
   return successResponse(res, { message: 'Program cancelled successfully' });
 });
 

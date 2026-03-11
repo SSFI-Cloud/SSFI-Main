@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as eventService from '../services/event.service';
+import { deleteCachePattern } from '../utils/cache.util';
 
 export const getEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -20,6 +21,7 @@ export const createEvent = async (req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ status: 'fail', message: 'Unauthorized' });
     }
     const result = await eventService.createEvent(req.body, userId);
+    deleteCachePattern('/events');
     res.status(201).json({
       status: 'success',
       data: result
@@ -57,6 +59,7 @@ export const updateEventStatus = async (req: Request, res: Response, next: NextF
     const { id } = req.params;
     const { status, remarks } = req.body; // status: PUBLISHED, REJECTED, etc.
     const result = await eventService.updateEventStatus(Number(id), status, remarks);
+    deleteCachePattern('/events');
     res.status(200).json({
       status: 'success',
       data: result
@@ -106,6 +109,7 @@ export const updateEvent = async (req: Request, res: Response, next: NextFunctio
     }
 
     const result = await eventService.updateEvent(Number(id), req.body, userId, userRole);
+    deleteCachePattern('/events');
     res.status(200).json({
       status: 'success',
       data: result

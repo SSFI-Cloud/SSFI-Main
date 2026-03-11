@@ -7,6 +7,7 @@
 import { Router, Request, Response } from 'express';
 import { successResponse } from '../utils/response.util';
 import { asyncHandler } from '../utils/asyncHandler';
+import { cacheMiddleware } from '../utils/cache.util';
 
 const router = Router();
 import prisma from '../config/prisma';
@@ -15,7 +16,7 @@ import prisma from '../config/prisma';
  * @desc    Get all states
  * @access  Public
  */
-router.get('/states', asyncHandler(async (req: Request, res: Response) => {
+router.get('/states', cacheMiddleware(3600), asyncHandler(async (req: Request, res: Response) => {
     const states = await prisma.state.findMany({
         where: { isActive: true },
         select: {
@@ -37,7 +38,7 @@ router.get('/states', asyncHandler(async (req: Request, res: Response) => {
  * @desc    Get all districts for a state
  * @access  Public
  */
-router.get('/states/:stateId/districts', asyncHandler(async (req: Request, res: Response) => {
+router.get('/states/:stateId/districts', cacheMiddleware(3600), asyncHandler(async (req: Request, res: Response) => {
     const { stateId } = req.params;
 
     const districts = await prisma.district.findMany({
@@ -62,7 +63,7 @@ router.get('/states/:stateId/districts', asyncHandler(async (req: Request, res: 
  * @desc    Get all clubs for a district
  * @access  Public
  */
-router.get('/districts/:districtId/clubs', asyncHandler(async (req: Request, res: Response) => {
+router.get('/districts/:districtId/clubs', cacheMiddleware(3600), asyncHandler(async (req: Request, res: Response) => {
     const { districtId } = req.params;
 
     const clubs = await prisma.club.findMany({
@@ -90,7 +91,7 @@ router.get('/districts/:districtId/clubs', asyncHandler(async (req: Request, res
  * @desc    Search clubs with optional filters
  * @access  Public
  */
-router.get('/clubs', asyncHandler(async (req: Request, res: Response) => {
+router.get('/clubs', cacheMiddleware(1800), asyncHandler(async (req: Request, res: Response) => {
     const { stateId, districtId, search } = req.query;
 
     const where: any = { isActive: true };

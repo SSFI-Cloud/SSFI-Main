@@ -57,6 +57,7 @@ import renewalRoutes from './routes/renewal.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { notFound } from './middleware/error.middleware';
 import { requestTimer, requestTimeout, httpCacheHeaders } from './middleware/performance.middleware';
+import { cacheMiddleware } from './utils/cache.util';
 
 // Import utils
 import logger from './utils/logger.util';
@@ -182,6 +183,10 @@ app.use(`/api/${API_VERSION}/stats`, publicCache);
 app.use(`/api/${API_VERSION}/results`, publicCache);
 app.use(`/api/${API_VERSION}/team-members`, publicCache);
 app.use(`/api/${API_VERSION}/milestones`, publicCache);
+app.use(`/api/${API_VERSION}/events`, publicCache);
+app.use(`/api/${API_VERSION}/beginner-cert`, publicCache);
+app.use(`/api/${API_VERSION}/coach-cert`, publicCache);
+app.use(`/api/${API_VERSION}/notifications`, publicCache);
 
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 // app.use(`/api/${API_VERSION}/admin`, adminRoutes);
@@ -228,7 +233,7 @@ import donationRoutes from './routes/donation.routes';
 app.use(`/api/${API_VERSION}/donations`, donationRoutes);
 
 // Public notification ribbon — returns array of active registrations/programs
-app.get(`/api/${API_VERSION}/notifications/public/active`, async (_req: Request, res: Response) => {
+app.get(`/api/${API_VERSION}/notifications/public/active`, cacheMiddleware(300), async (_req: Request, res: Response) => {
   try {
     const { default: prisma } = await import('./config/prisma');
     const now = new Date();

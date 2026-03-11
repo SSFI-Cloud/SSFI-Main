@@ -3,6 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { successResponse } from '../utils/response.util';
 import { AppError } from '../utils/errors';
 import { AuthRequest } from '../types';
+import { deleteCachePattern } from '../utils/cache.util';
 
 import prisma from '../config/prisma';
 // Fixed icon set — 10 skating-relevant icons (Lucide icon names)
@@ -81,6 +82,7 @@ export const createMilestone = asyncHandler(async (req: AuthRequest, res: Respon
     },
   });
 
+  deleteCachePattern('/milestones');
   return successResponse(res, { statusCode: 201, message: 'Milestone created', data: milestone });
 });
 
@@ -108,6 +110,7 @@ export const updateMilestone = asyncHandler(async (req: AuthRequest, res: Respon
     },
   });
 
+  deleteCachePattern('/milestones');
   return successResponse(res, { message: 'Milestone updated', data: milestone });
 });
 
@@ -118,6 +121,7 @@ export const deleteMilestone = asyncHandler(async (req: AuthRequest, res: Respon
   if (!existing) throw new AppError('Milestone not found', 404);
 
   await prisma.milestone.delete({ where: { id } });
+  deleteCachePattern('/milestones');
   return successResponse(res, { message: 'Milestone deleted' });
 });
 
@@ -135,6 +139,7 @@ export const reorderMilestones = asyncHandler(async (req: AuthRequest, res: Resp
     )
   );
 
+  deleteCachePattern('/milestones');
   return successResponse(res, { message: 'Order updated' });
 });
 
