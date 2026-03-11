@@ -11,7 +11,7 @@ interface Props {
 async function getEvent(id: string) {
   try {
     const res = await fetch(`${API_URL}/events/${id}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 300 },
     });
     if (!res.ok) return null;
     const json = await res.json();

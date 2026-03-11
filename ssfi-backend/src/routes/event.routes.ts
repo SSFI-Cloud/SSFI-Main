@@ -2,18 +2,19 @@ import express from 'express';
 import * as eventController from '../controllers/event.controller';
 import { authenticate as protect, requireRole as restrictTo, optionalAuth } from '../middleware/auth.middleware';
 import { UserRole } from '@prisma/client';
+import { cacheMiddleware } from '../utils/cache.util';
 
 const router = express.Router();
 
 
 // Public routes (must come first or be ordered correctly)
-router.get('/', optionalAuth, eventController.getEvents);
+router.get('/', optionalAuth, cacheMiddleware(300), eventController.getEvents);
 router.post('/', protect, eventController.createEvent);
 
 // Specific paths before parameterized paths
 router.get('/my-events', protect, eventController.getMyEvents);
-router.get('/upcoming', optionalAuth, eventController.getUpcomingEvents); // Added specific route
-router.get('/:id', eventController.getEvent);
+router.get('/upcoming', optionalAuth, cacheMiddleware(300), eventController.getUpcomingEvents);
+router.get('/:id', cacheMiddleware(600), eventController.getEvent);
 router.put('/:id', protect, eventController.updateEvent); // Added update route
 
 // Protected routes

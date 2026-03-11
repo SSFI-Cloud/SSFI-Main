@@ -13,7 +13,7 @@ interface Props {
 async function getArticle(slug: string) {
   try {
     const res = await fetch(`${API_URL}/cms/news/slug/${slug}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 300 },
     });
     if (!res.ok) return null;
     const json = await res.json();

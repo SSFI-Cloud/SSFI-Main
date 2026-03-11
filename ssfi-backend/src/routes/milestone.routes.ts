@@ -11,12 +11,13 @@ import {
 } from '../controllers/milestone.controller';
 import { authenticate, requireRole } from '../middleware/auth.middleware';
 import { UserRole } from '@prisma/client';
+import { cacheMiddleware } from '../utils/cache.util';
 
 const router = Router();
 
 // ── Public ──────────────────────────────────────────────────────────────────
-router.get('/public', getPublicMilestones);
-router.get('/icons', getMilestoneIcons);
+router.get('/public', cacheMiddleware(600), getPublicMilestones);
+router.get('/icons', cacheMiddleware(86400), getMilestoneIcons);
 
 // ── Admin ────────────────────────────────────────────────────────────────────
 router.use(authenticate, requireRole(UserRole.GLOBAL_ADMIN));

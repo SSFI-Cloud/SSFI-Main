@@ -130,7 +130,7 @@ export interface PaginatedResponse<T = any> extends ApiResponse<T> {
 // This eliminates duplicate /stats/public and /registration-windows calls.
 const _getCache = new Map<string, { data: any; ts: number }>();
 const _inflight = new Map<string, Promise<any>>();
-const GET_CACHE_TTL = 60_000; // 60 seconds
+const GET_CACHE_TTL = 300_000; // 5 minutes – matches backend cacheMiddleware TTL
 
 function cachedGet<T = any>(url: string, config?: AxiosRequestConfig) {
   const key = url + (config?.params ? JSON.stringify(config.params) : '');
