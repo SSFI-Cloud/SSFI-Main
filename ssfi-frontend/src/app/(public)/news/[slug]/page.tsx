@@ -89,7 +89,7 @@ export default async function NewsDetailPage({ params }: Props) {
           />
         </>
       )}
-      <NewsDetailClient />
+      <NewsDetailClient article={article} />
     </>
   );
 }

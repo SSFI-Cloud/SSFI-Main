@@ -44,37 +44,50 @@ function renderContent(md: string): string {
     .replace(/$/, '</p>');
 }
 
-export default function NewsDetailClient() {
+interface NewsDetailClientProps {
+  article?: NewsArticle | null;
+}
+
+export default function NewsDetailClient({ article: serverArticle }: NewsDetailClientProps) {
   const { slug } = useParams<{ slug: string }>();
-  const [article, setArticle] = useState<NewsArticle | null>(null);
+  const [article, setArticle] = useState<NewsArticle | null>(serverArticle ?? null);
   const [related, setRelated] = useState<NewsArticle[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!serverArticle);
   const [notFoundFlag, setNotFoundFlag] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      try {
-        const res = await api.get(`/cms/news/slug/${slug}`);
-        const data = res.data?.data;
-        if (!data) { setNotFoundFlag(true); return; }
-        setArticle(data);
-        // Load related articles from same category
+      // If we already have the article from the server, skip the fetch
+      let currentArticle = serverArticle ?? null;
+
+      if (!currentArticle) {
         try {
-          const params = new URLSearchParams({ limit: '3', status: 'PUBLISHED' });
-          if (data.category) params.set('category', data.category);
-          const relRes = await api.get(`/cms/news?${params}`);
-          const relData = relRes.data?.data;
-          const all: NewsArticle[] = Array.isArray(relData?.data) ? relData.data : Array.isArray(relData) ? relData : [];
-          setRelated(all.filter(a => a.slug !== slug).slice(0, 3));
-        } catch {}
-      } catch {
-        setNotFoundFlag(true);
-      } finally {
-        setLoading(false);
+          const res = await api.get(`/cms/news/slug/${slug}`);
+          const data = res.data?.data;
+          if (!data) { setNotFoundFlag(true); setLoading(false); return; }
+          currentArticle = data;
+          setArticle(data);
+        } catch {
+          setNotFoundFlag(true);
+          setLoading(false);
+          return;
+        }
       }
+
+      // Load related articles from same category
+      try {
+        const params = new URLSearchParams({ limit: '3', status: 'PUBLISHED' });
+        if (currentArticle?.category) params.set('category', currentArticle.category);
+        const relRes = await api.get(`/cms/news?${params}`);
+        const relData = relRes.data?.data;
+        const all: NewsArticle[] = Array.isArray(relData?.data) ? relData.data : Array.isArray(relData) ? relData : [];
+        setRelated(all.filter(a => a.slug !== slug).slice(0, 3));
+      } catch {}
+
+      setLoading(false);
     };
     if (slug) load();
-  }, [slug]);
+  }, [slug, serverArticle]);
 
   const share = (platform: 'twitter' | 'facebook' | 'copy') => {
     const url = window.location.href;
