@@ -8,7 +8,6 @@ import {
   ArrowRight, ChevronLeft, ChevronRight,
   Medal, Calendar, MapPin, Trophy, Loader2,
 } from 'lucide-react';
-import { api } from '@/lib/api/client';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -342,23 +341,23 @@ function ChampionshipCard({ card, index }: { card: EventCardData; index: number 
 
 // ─── Main section ─────────────────────────────────────────────────────────────
 
-export default function RecentResults() {
+interface RecentResultsProps {
+  results?: SlideData[];
+}
+
+export default function RecentResults({ results }: RecentResultsProps) {
   const [cards, setCards]         = useState<EventCardData[]>(PLACEHOLDER_EVENTS);
   const [loading, setLoading]     = useState(true);
   const [isPlaceholder, setIsPlaceholder] = useState(true);
 
+  // Accept results from parent (aggregate endpoint)
   useEffect(() => {
-    api.get('/results/public/recent')
-      .then(res => {
-        const data: SlideData[] = res.data?.data || [];
-        if (data.length > 0) {
-          setCards(groupIntoCards(data));
-          setIsPlaceholder(false);
-        }
-      })
-      .catch(() => { /* silently keep placeholders */ })
-      .finally(() => setLoading(false));
-  }, []);
+    if (Array.isArray(results) && results.length > 0) {
+      setCards(groupIntoCards(results));
+      setIsPlaceholder(false);
+    }
+    setLoading(false);
+  }, [results]);
 
   return (
     <section className="relative py-28 overflow-hidden bg-gray-50">

@@ -7,8 +7,6 @@ import {
   ArrowRight, Calendar, MapPin, Clock,
   CheckCircle2, Sparkles, Users, Medal,
 } from 'lucide-react';
-import { api } from '@/lib/api/client';
-
 const benefits = [
   'Official SSFI Level 1 Beginner Certification',
   'Balance, posture & speed technique training',
@@ -29,48 +27,44 @@ const fallbackBatch = {
   id: null as number | null,
 };
 
-export default function BeginnerCertification() {
+interface BeginnerCertificationProps {
+  programs?: any[];
+}
+
+export default function BeginnerCertification({ programs }: BeginnerCertificationProps) {
   const [batch, setBatch] = useState(fallbackBatch);
 
+  // Accept programs from parent (aggregate endpoint)
   useEffect(() => {
-    const fetchPrograms = async () => {
-      try {
-        const res = await api.get('/beginner-cert/programs/active');
-        const programs = res.data?.data;
-        if (Array.isArray(programs) && programs.length > 0) {
-          const p = programs[0]; // Show first active program
-          setBatch({
-            title: p.title,
-            date:
-              new Date(p.startDate).toLocaleDateString('en-IN', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              }) +
-              ' - ' +
-              new Date(p.endDate).toLocaleDateString('en-IN', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              }),
-            location: p.city + ', ' + p.state,
-            spotsLeft: Math.max(0, p.totalSeats - p.filledSeats),
-            totalSpots: p.totalSeats,
-            fee: '₹' + Number(p.price).toLocaleString(),
-            deadline: new Date(p.lastDateToApply).toLocaleDateString('en-IN', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            }),
-            id: p.id,
-          });
-        }
-      } catch {
-        // Keep fallback
-      }
-    };
-    fetchPrograms();
-  }, []);
+    if (Array.isArray(programs) && programs.length > 0) {
+      const p = programs[0]; // Show first active program
+      setBatch({
+        title: p.title,
+        date:
+          new Date(p.startDate).toLocaleDateString('en-IN', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }) +
+          ' - ' +
+          new Date(p.endDate).toLocaleDateString('en-IN', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+        location: p.city + ', ' + p.state,
+        spotsLeft: Math.max(0, p.totalSeats - p.filledSeats),
+        totalSpots: p.totalSeats,
+        fee: '₹' + Number(p.price).toLocaleString(),
+        deadline: new Date(p.lastDateToApply).toLocaleDateString('en-IN', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+        id: p.id,
+      });
+    }
+  }, [programs]);
 
   const pct =
     batch.totalSpots > 0

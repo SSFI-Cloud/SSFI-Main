@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { api } from '@/lib/api/client';
 import { useInView } from 'framer-motion';
 
 /* ─── Types ─── */
@@ -134,7 +133,12 @@ const heroCSS = `
 `;
 
 /* ─── Component ─── */
-const HeroSection = () => {
+interface HeroSectionProps {
+  banners?: CMSBanner[];
+  stats?: { students?: number; states?: number; clubs?: number; totalEvents?: number; events?: number; certifiedCoaches?: number };
+}
+
+const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [fireLines, setFireLines] = useState(false);
@@ -142,15 +146,12 @@ const HeroSection = () => {
   const [cmsSlides, setCmsSlides] = useState<CMSBanner[] | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load CMS banners
+  // Accept banners from parent prop (aggregate endpoint)
   useEffect(() => {
-    api.get('/cms/banners?position=HOME_HERO&status=PUBLISHED')
-      .then(res => {
-        const data: CMSBanner[] = res.data?.data || [];
-        if (data.length > 0) setCmsSlides(data.sort((a, b) => a.sortOrder - b.sortOrder));
-      })
-      .catch(() => {});
-  }, []);
+    if (banners && banners.length > 0) {
+      setCmsSlides([...banners].sort((a, b) => a.sortOrder - b.sortOrder));
+    }
+  }, [banners]);
 
   const hasCms = cmsSlides && cmsSlides.length > 0;
 
@@ -389,7 +390,7 @@ const HeroSection = () => {
       </section>
 
       {/* ─── Stats Strip (dynamic from backend) ─── */}
-      <StatsStrip />
+      <StatsStrip propStats={propStats} />
 
       {/* ─── Seamless transition: navy → white ─── */}
       <div className="h-40 sm:h-56 lg:h-64" style={{ background: 'linear-gradient(to bottom, #0e1e38 0%, #13243f 12%, #1a3050 24%, #243d5e 36%, #3a5a7a 46%, #5d809e 55%, #8aa8c0 64%, #b0c8d8 72%, #d0dee8 80%, #e4ecf1 87%, #f2f5f7 93%, #ffffff 100%)' }} />
@@ -423,21 +424,15 @@ function AnimatedCounter({ target, suffix = '', duration = 2000 }: { target: num
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
-/* ─── Stats Strip (backend-connected) ─── */
-function StatsStrip() {
-  const [stats, setStats] = useState({ students: 0, states: 0, clubs: 0, events: 0, certifiedCoaches: 0 });
-
-  useEffect(() => {
-    api.get('/stats/public')
-      .then(response => {
-        const payload = (response.data as any);
-        if (payload.success || payload.status === 'success') {
-          const d = payload.data ?? payload;
-          setStats({ students: d.students || 0, states: d.states || 0, clubs: d.clubs || 0, events: d.totalEvents || d.events || 0, certifiedCoaches: d.certifiedCoaches || 0 });
-        }
-      })
-      .catch(() => {});
-  }, []);
+/* ─── Stats Strip (accepts data from parent) ─── */
+function StatsStrip({ propStats }: { propStats?: HeroSectionProps['stats'] }) {
+  const stats = {
+    students: propStats?.students || 0,
+    states: propStats?.states || 0,
+    clubs: propStats?.clubs || 0,
+    events: propStats?.totalEvents || propStats?.events || 0,
+    certifiedCoaches: propStats?.certifiedCoaches || 0,
+  };
 
   const items = [
     { value: stats.students, suffix: '+', label: 'Registered Skaters' },

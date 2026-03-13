@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { api } from '@/lib/api/client';
 import HeroSection from '@/components/home/HeroSection';
 
 // Eagerly loaded — above the fold
@@ -17,28 +19,38 @@ const DonationsSection = dynamic(() => import('@/components/home/DonationsSectio
 const PartnersMarquee = dynamic(() => import('@/components/home/PartnersMarquee'), { ssr: false });
 
 export default function HomePageClient() {
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    api.get('/homepage')
+      .then(res => {
+        if (res.data?.success) setData(res.data.data);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <main className="min-h-screen bg-white">
       {/* 1. Hero — dark full-screen slider + stats strip + community stats */}
-      <HeroSection />
+      <HeroSection banners={data?.banners} stats={data?.stats} />
 
       {/* 2. Events & Programs — 3 highlight cards (LIGHT) */}
       <EventHighlightCards />
 
       {/* 3. Coach Certification — right after events for context (DARK) */}
-      <CoachCertification />
+      <CoachCertification programs={data?.coachPrograms} />
 
       {/* 4. Why Join SSFI — value proposition, features (LIGHT) */}
-      <WhyJoinSSFI />
+      <WhyJoinSSFI stats={data?.stats} />
 
       {/* 5. Beginner Certification — separated from coach cert (DARK) */}
-      <BeginnerCertification />
+      <BeginnerCertification programs={data?.beginnerPrograms} />
 
       {/* 6. Championship Highlights — recent results (LIGHT) */}
-      <RecentResults />
+      <RecentResults results={data?.recentResults} />
 
       {/* 7. Our Team — leadership (DARK) */}
-      <OurTeam />
+      <OurTeam members={data?.teamMembers} />
 
       {/* 8. Meet Rollie — fun mascot break (LIGHT) */}
       <MeetRollie />

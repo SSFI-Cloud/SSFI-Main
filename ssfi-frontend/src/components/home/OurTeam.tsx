@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Users } from 'lucide-react';
-import { api } from '@/lib/api/client';
-
 interface TeamMember {
   id: string;
   name: string;
@@ -23,17 +21,17 @@ const FALLBACK_TEAM: TeamMember[] = [
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1').replace('/api/v1', '');
 
-export default function OurTeam() {
+interface OurTeamProps {
+  members?: TeamMember[];
+}
+
+export default function OurTeam({ members }: OurTeamProps) {
   const [team, setTeam] = useState<TeamMember[]>(FALLBACK_TEAM);
 
+  // Accept members from parent (aggregate endpoint)
   useEffect(() => {
-    api.get('/team-members/public?showOnHome=true')
-      .then(res => {
-        const members = res.data?.data;
-        if (Array.isArray(members) && members.length > 0) setTeam(members);
-      })
-      .catch(() => {});
-  }, []);
+    if (Array.isArray(members) && members.length > 0) setTeam(members);
+  }, [members]);
 
   const getPhotoSrc = (photo?: string) => {
     if (!photo) return null;

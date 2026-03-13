@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Calendar, MapPin, Clock, CheckCircle2, GraduationCap, Users } from 'lucide-react';
-import { api } from '@/lib/api/client';
-
 const benefits = [
   'Official SSFI Coach Certification',
   'Comprehensive technique & safety training',
@@ -26,33 +24,29 @@ const fallbackBatch = {
   id: null as number | null,
 };
 
-export default function CoachCertification() {
+interface CoachCertificationProps {
+  programs?: any[];
+}
+
+export default function CoachCertification({ programs }: CoachCertificationProps) {
   const [batch, setBatch] = useState(fallbackBatch);
 
+  // Accept programs from parent (aggregate endpoint)
   useEffect(() => {
-    const fetchPrograms = async () => {
-      try {
-        const res = await api.get('/coach-cert/programs/active');
-        const programs = res.data?.data;
-        if (Array.isArray(programs) && programs.length > 0) {
-          const p = programs[0]; // Show first active program
-          setBatch({
-            title: p.title,
-            date: new Date(p.startDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) + ' - ' + new Date(p.endDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }),
-            location: p.city + ', ' + p.state,
-            spotsLeft: Math.max(0, p.totalSeats - p.filledSeats),
-            totalSpots: p.totalSeats,
-            fee: '₹' + Number(p.price).toLocaleString(),
-            deadline: new Date(p.lastDateToApply).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }),
-            id: p.id,
-          });
-        }
-      } catch {
-        // Keep fallback
-      }
-    };
-    fetchPrograms();
-  }, []);
+    if (Array.isArray(programs) && programs.length > 0) {
+      const p = programs[0]; // Show first active program
+      setBatch({
+        title: p.title,
+        date: new Date(p.startDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) + ' - ' + new Date(p.endDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }),
+        location: p.city + ', ' + p.state,
+        spotsLeft: Math.max(0, p.totalSeats - p.filledSeats),
+        totalSpots: p.totalSeats,
+        fee: '₹' + Number(p.price).toLocaleString(),
+        deadline: new Date(p.lastDateToApply).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }),
+        id: p.id,
+      });
+    }
+  }, [programs]);
 
   const pct = batch.totalSpots > 0 ? ((batch.totalSpots - batch.spotsLeft) / batch.totalSpots) * 100 : 0;
 
