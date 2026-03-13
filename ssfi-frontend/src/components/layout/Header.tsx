@@ -156,7 +156,7 @@ const Header = () => {
           <div className="flex items-center justify-between h-28">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative w-20 h-20 flex items-center justify-center">
+              <div className="relative w-24 h-24 flex items-center justify-center">
                 <Image
                   src="/images/logo/light.webp"
                   alt="Speed Skating Federation of India"
