@@ -112,11 +112,11 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Rate Limiting - tuned for 100-150 concurrent users
-// Each page load triggers 5-10 API calls, so 100/15min is far too low
+// Rate Limiting - tuned for real-world multi-user traffic
+// Each page load triggers 2-3 API calls; 1000/15min allows ~40+ concurrent users per IP
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '500'), // 500 requests per 15min per IP
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'), // 1000 requests per 15min per IP
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
