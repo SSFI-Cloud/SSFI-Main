@@ -159,7 +159,7 @@ const Header = () => {
               <div className="relative w-20 h-20 flex items-center justify-center">
                 <Image
                   src="/images/logo/light.webp"
-                  alt="SSFI Logo"
+                  alt="Speed Skating Federation of India"
                   fill
                   className="object-contain drop-shadow-lg"
                   priority

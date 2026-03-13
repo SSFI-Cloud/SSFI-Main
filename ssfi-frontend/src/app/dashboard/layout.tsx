@@ -96,7 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="p-5 border-b border-white/10 flex justify-center">
         <Link href="/" className="flex items-center justify-center">
           <div className="relative w-28 h-28">
-            <Image src="/images/logo/light.webp" alt="SSFI" fill className="object-contain" />
+            <Image src="/images/logo/light.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
           </div>
         </Link>
       </div>
@@ -187,7 +187,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a1628] px-4 py-3 flex items-center justify-between">
         <Link href="/">
           <div className="relative w-8 h-8">
-            <Image src="/images/logo/light.webp" alt="SSFI" fill className="object-contain" />
+            <Image src="/images/logo/light.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
           </div>
         </Link>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-white/60 hover:text-white">

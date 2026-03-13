@@ -71,7 +71,7 @@ const Footer = () => {
             {/* Col 1 — Brand + Newsletter */}
             <div className="sm:col-span-2 lg:col-span-4">
               <div className="flex items-center gap-3 mb-4">
-                <Image src="/images/logo/light.webp" alt="SSFI" width={56} height={56} className="object-contain" />
+                <Image src="/images/logo/light.webp" alt="Speed Skating Federation of India" width={56} height={56} className="object-contain" />
                 <div>
                   <span className="text-white font-headline font-bold text-lg">SSFI</span>
                   <p className="text-gray-500 text-xs">Speed Skating Federation of India</p>
