@@ -46,7 +46,7 @@ export const httpCacheHeaders = (maxAgeSeconds: number) => {
     if (req.method === 'GET') {
       res.setHeader(
         'Cache-Control',
-        `public, max-age=${maxAgeSeconds}, s-maxage=${maxAgeSeconds}`
+        `public, max-age=${maxAgeSeconds}, s-maxage=0`
       );
     }
     next();
