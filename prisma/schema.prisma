@@ -527,6 +527,7 @@ model Event {
   @@index([stateId, status])
   @@index([districtId, status])
   @@index([eventDate, status])
+  @@index([isResultsPublished, eventDate])
   @@map("events")
 }
 
