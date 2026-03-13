@@ -37,15 +37,19 @@ if (!profile) {
 }
 
 // ── Endpoints to Test ──
+// Mirrors real user traffic: homepage aggregate (most popular) + other public pages
 const endpoints = [
-  // Frontend pages (served by Next.js/Vercel/Hostinger)
-  { name: 'Homepage',           method: 'GET', url: `${FRONTEND_URL}/`,              weight: 25 },
-  // API endpoints (confirmed working)
-  { name: 'Active Programs',    method: 'GET', url: `${BASE_URL}/api/v1/beginner-cert/programs/active`, weight: 25 },
-  { name: 'Events List',        method: 'GET', url: `${BASE_URL}/api/v1/events`,     weight: 20 },
-  { name: 'News List',          method: 'GET', url: `${BASE_URL}/api/v1/news`,       weight: 15 },
-  { name: 'Notifications',      method: 'GET', url: `${BASE_URL}/api/v1/notifications/public/active`, weight: 10 },
-  { name: 'Locations',          method: 'GET', url: `${BASE_URL}/api/v1/locations/states`, weight: 5 },
+  // Homepage aggregate endpoint (single call replaces 6 separate calls)
+  { name: 'Homepage API',       method: 'GET', url: `${BASE_URL}/api/v1/homepage`,   weight: 30 },
+  // Layout-level call (every page navigation)
+  { name: 'Reg Windows',        method: 'GET', url: `${BASE_URL}/api/v1/registration-windows/active`, weight: 15 },
+  { name: 'Notifications',      method: 'GET', url: `${BASE_URL}/api/v1/notifications/public/active`, weight: 15 },
+  // Other public pages
+  { name: 'Events List',        method: 'GET', url: `${BASE_URL}/api/v1/events`,     weight: 15 },
+  { name: 'News List',          method: 'GET', url: `${BASE_URL}/api/v1/cms/news?limit=10&status=PUBLISHED`, weight: 10 },
+  { name: 'Stats Public',       method: 'GET', url: `${BASE_URL}/api/v1/stats/public`, weight: 5 },
+  { name: 'Coach Programs',     method: 'GET', url: `${BASE_URL}/api/v1/coach-cert/programs/active`, weight: 5 },
+  { name: 'Beginner Programs',  method: 'GET', url: `${BASE_URL}/api/v1/beginner-cert/programs/active`, weight: 5 },
 ];
 
 // ── Stats Tracking ──

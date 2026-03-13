@@ -11,7 +11,7 @@ const globalForPrisma = globalThis as unknown as {
 const dbUrl = process.env.DATABASE_URL || '';
 if (dbUrl && !dbUrl.includes('connection_limit')) {
   const separator = dbUrl.includes('?') ? '&' : '?';
-  process.env.DATABASE_URL = `${dbUrl}${separator}connection_limit=2&pool_timeout=30`;
+  process.env.DATABASE_URL = `${dbUrl}${separator}connection_limit=5&pool_timeout=30`;
 }
 
 export const prisma =
