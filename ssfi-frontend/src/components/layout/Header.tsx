@@ -46,6 +46,7 @@ interface ActiveRegistration {
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
+  { href: '/state-directory', label: 'State Directory' },
   { href: '/events', label: 'Events' },
   { href: '/results', label: 'Results' },
   { href: '/gallery', label: 'Gallery' },
