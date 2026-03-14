@@ -129,14 +129,16 @@ model User {
 
 // State Association
 model State {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  code      String   @unique // KA, TN, MH
-  logo      String?
-  website   String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  name           String   @unique
+  code           String   @unique // KA, TN, MH
+  logo           String?
+  website        String?
+  presidentName  String?
+  presidentPhoto String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
   statePerson StatePerson?

@@ -52,6 +52,7 @@ import locationsRoutes from './routes/locations.routes';
 import { statsRoutes } from './routes/stats.routes';
 import renewalRoutes from './routes/renewal.routes';
 import homepageRoutes from './routes/homepage.routes';
+import stateDirectoryRoutes from './routes/state-directory.routes';
 // import paymentRoutes from './routes/payment.routes';
 
 // Import middleware
@@ -189,6 +190,7 @@ app.use(`/api/${API_VERSION}/beginner-cert`, publicCache);
 app.use(`/api/${API_VERSION}/coach-cert`, publicCache);
 app.use(`/api/${API_VERSION}/notifications`, publicCache);
 app.use(`/api/${API_VERSION}/homepage`, publicCache);
+app.use(`/api/${API_VERSION}/state-directory`, publicCache);
 
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 // app.use(`/api/${API_VERSION}/admin`, adminRoutes);
@@ -234,6 +236,7 @@ app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
 import donationRoutes from './routes/donation.routes';
 app.use(`/api/${API_VERSION}/donations`, donationRoutes);
 app.use(`/api/${API_VERSION}/homepage`, homepageRoutes);
+app.use(`/api/${API_VERSION}/state-directory`, stateDirectoryRoutes);
 
 // Public notification ribbon — returns array of active registrations/programs
 app.get(`/api/${API_VERSION}/notifications/public/active`, cacheMiddleware(300), async (_req: Request, res: Response) => {
