@@ -64,9 +64,14 @@ export const getStateDirectory = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'State not found' });
     }
 
-    // Aggregate totals
-    const totalClubs = districts.reduce((sum, d) => sum + d._count.clubs, 0);
-    const totalStudents = districts.reduce((sum, d) => sum + d._count.students, 0);
+    // Filter: only districts that have an approved secretary AND at least one registered skater
+    const activeDistricts = districts.filter(
+      (d) => d.districtSecretaries.length > 0 && d._count.students > 0
+    );
+
+    // Aggregate totals (from filtered districts only)
+    const totalClubs = activeDistricts.reduce((sum, d) => sum + d._count.clubs, 0);
+    const totalStudents = activeDistricts.reduce((sum, d) => sum + d._count.students, 0);
 
     res.json({
       success: true,
@@ -80,11 +85,11 @@ export const getStateDirectory = async (req: Request, res: Response) => {
           presidentPhoto: state.presidentPhoto || null,
           secretaryName: stateSecretary?.name || null,
           secretaryPhoto: stateSecretary?.profilePhoto || null,
-          totalDistricts: districts.length,
+          totalDistricts: activeDistricts.length,
           totalClubs,
           totalStudents,
         },
-        districts: districts.map((d) => ({
+        districts: activeDistricts.map((d) => ({
           id: d.id,
           name: d.name,
           code: d.code,
