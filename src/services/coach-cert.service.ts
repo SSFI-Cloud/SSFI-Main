@@ -148,11 +148,12 @@ class CoachCertService {
     });
 
     let order: any;
+    let paymentKeyId: string | undefined;
     if (existingPayment) {
       order = { id: existingPayment.razorpayOrderId };
     } else {
       // Create new Razorpay order (with FK link for post-payment actions)
-      order = await paymentService.createOrder({
+      const result = await paymentService.createOrder({
         amount: Number(registration.amount) * 100, // convert to paise
         currency: 'INR',
         payment_type: 'COACH_CERTIFICATION',
@@ -166,6 +167,8 @@ class CoachCertService {
           type: 'COACH_CERTIFICATION',
         },
       });
+      order = result.order;
+      paymentKeyId = result.keyId;
     }
 
     const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
@@ -175,7 +178,7 @@ class CoachCertService {
       razorpayOrderId: order.id,
       amount: Number(registration.amount) * 100,
       currency: 'INR',
-      key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+      key: useMockPayment ? 'rzp_test_mock' : (paymentKeyId || razorpayConfig.keyId),
       userDetails: {
         name: data.fullName,
         email: data.email || '',

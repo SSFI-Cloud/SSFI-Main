@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { paymentService, PaymentService } from '../services/payment.service';
 import { razorpayConfig } from '../config/razorpay.config';
+import { razorpayConfigService } from '../services/razorpayConfig.service';
 import type { CreateOrderRequest, VerifyPaymentRequest, PaymentType } from '../types/payment.types';
 
 class PaymentController {
@@ -56,15 +57,15 @@ class PaymentController {
                 },
             };
 
-            // Create order
-            const order = await paymentService.createOrder(orderRequest);
+            // Create order (resolves secretary-specific config for event registrations)
+            const result = await paymentService.createOrder(orderRequest);
 
             return res.status(200).json({
                 status: 'success',
                 message: 'Order created successfully',
                 data: {
-                    order,
-                    key_id: razorpayConfig.keyId,
+                    order: result.order,
+                    key_id: result.keyId,
                 },
             });
         } catch (error: any) {
@@ -386,17 +387,35 @@ class PaymentController {
         try {
             const signature = req.headers['x-razorpay-signature'] as string;
             const body = JSON.stringify(req.body);
+            const event = req.body;
 
-            // Verify webhook signature
-            const isValid = paymentService.verifyWebhookSignature(body, signature);
+            // Extract order_id to determine which webhook secret to use
+            const orderId = event?.payload?.payment?.entity?.order_id;
+            let webhookSecret: string | undefined;
+
+            if (orderId) {
+                const prisma = (await import('../config/prisma')).default;
+                const paymentRecord = await prisma.payment.findFirst({
+                    where: { razorpayOrderId: orderId },
+                    select: { razorpayConfigId: true },
+                });
+
+                if (paymentRecord?.razorpayConfigId) {
+                    const config = await razorpayConfigService.getDecryptedConfigById(paymentRecord.razorpayConfigId);
+                    if (config?.webhookSecret) {
+                        webhookSecret = config.webhookSecret;
+                    }
+                }
+            }
+
+            // Verify webhook signature with the resolved secret
+            const isValid = paymentService.verifyWebhookSignature(body, signature, webhookSecret);
             if (!isValid) {
                 console.error('Invalid webhook signature');
                 return res.status(400).json({ status: 'error', message: 'Invalid signature' });
             }
 
-            const event = req.body;
             const eventType = event.event;
-
             console.log(`Webhook received: ${eventType}`);
 
             switch (eventType) {
