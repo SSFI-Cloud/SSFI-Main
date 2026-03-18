@@ -119,6 +119,7 @@ model User {
   student        Student?
   payments       Payment[]
   createdEvents  Event[]         @relation("EventCreator")
+  razorpayConfig RazorpayConfig?
 
   @@index([email])
   @@index([phone])
@@ -638,6 +639,9 @@ model Payment {
   beginnerCertRegistrationId Int? @unique
   donationId                 Int? @unique
 
+  // Secretary-specific Razorpay config (null = central SSFI account)
+  razorpayConfigId Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -647,6 +651,7 @@ model Payment {
   coachCertRegistration    CoachCertRegistration?     @relation(fields: [coachCertRegistrationId], references: [id])
   beginnerCertRegistration BeginnerCertRegistration?  @relation(fields: [beginnerCertRegistrationId], references: [id])
   donation                 Donation?                  @relation(fields: [donationId], references: [id])
+  razorpayConfig           RazorpayConfig?            @relation(fields: [razorpayConfigId], references: [id])
 
   @@index([status])
   @@index([paymentType])
@@ -1683,4 +1688,23 @@ model Donation {
   @@index([status])
   @@index([createdAt])
   @@map("donations")
+}
+
+// Secretary-specific Razorpay credentials for direct payment collection
+model RazorpayConfig {
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique
+  keyId            String    @db.VarChar(255) // Razorpay Key ID (public)
+  keySecretEnc     String    @db.Text // AES-256-GCM encrypted key secret
+  webhookSecretEnc String?   @db.Text // AES-256-GCM encrypted webhook secret
+  isVerified       Boolean   @default(false)
+  verifiedAt       DateTime?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@map("razorpay_configs")
 }

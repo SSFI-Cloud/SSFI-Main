@@ -83,3 +83,10 @@ export type PaymentType = keyof typeof razorpayConfig.paymentTypes;
 export const isRazorpayConfigured = (): boolean => {
     return !!(razorpayInstance && keyId && keySecret);
 };
+
+/**
+ * Create a Razorpay instance with custom credentials (for secretary-specific accounts).
+ */
+export function createRazorpayInstance(customKeyId: string, customKeySecret: string): Razorpay {
+    return new Razorpay({ key_id: customKeyId, key_secret: customKeySecret });
+}

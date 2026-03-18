@@ -237,6 +237,8 @@ import donationRoutes from './routes/donation.routes';
 app.use(`/api/${API_VERSION}/donations`, donationRoutes);
 app.use(`/api/${API_VERSION}/homepage`, homepageRoutes);
 app.use(`/api/${API_VERSION}/state-directory`, stateDirectoryRoutes);
+import razorpayConfigRoutes from './routes/razorpayConfig.routes';
+app.use(`/api/${API_VERSION}/razorpay-config`, razorpayConfigRoutes);
 
 // Public notification ribbon — returns array of active registrations/programs
 app.get(`/api/${API_VERSION}/notifications/public/active`, cacheMiddleware(300), async (_req: Request, res: Response) => {

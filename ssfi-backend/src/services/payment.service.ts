@@ -1,9 +1,10 @@
 // Payment Service - Handles all Razorpay operations
 import crypto from 'crypto';
 import { PrismaClient, Prisma } from '@prisma/client';
-import { razorpayInstance, razorpayConfig, isRazorpayConfigured } from '../config/razorpay.config';
+import { razorpayInstance, razorpayConfig, isRazorpayConfigured, createRazorpayInstance } from '../config/razorpay.config';
 import type {
     CreateOrderRequest,
+    CreateOrderResult,
     RazorpayOrder,
     VerifyPaymentRequest,
     PaymentRecord,
@@ -12,18 +13,37 @@ import type {
     PaymentType,
 } from '../types/payment.types';
 import { AppError } from '../utils/errors';
+import { razorpayConfigService } from './razorpayConfig.service';
 
 import prisma from '../config/prisma';
 export class PaymentService {
 
     /**
-     * Create a Razorpay order
+     * Create a Razorpay order.
+     * For EVENT_REGISTRATION payments, checks if the event creator has their own
+     * Razorpay config and uses those credentials if available.
      */
-    async createOrder(request: CreateOrderRequest): Promise<RazorpayOrder> {
+    async createOrder(request: CreateOrderRequest): Promise<CreateOrderResult> {
         const {
             amount, currency = 'INR', receipt, notes, payment_type, entity_id, entity_type, user_id,
             coachCertRegistrationId, beginnerCertRegistrationId, donationId,
         } = request;
+
+        // Resolve secretary-specific Razorpay config for event registrations
+        let secretaryConfig: { id: number; keyId: string; keySecret: string } | null = null;
+        if (payment_type === 'EVENT_REGISTRATION' && entity_type === 'event_registration') {
+            // entity_id is the eventRegistrationId — look up the event through it
+            const eventReg = await prisma.eventRegistration.findUnique({
+                where: { id: Number(entity_id) },
+                select: { eventId: true },
+            });
+            if (eventReg) {
+                const config = await razorpayConfigService.getConfigForEvent(eventReg.eventId);
+                if (config) {
+                    secretaryConfig = { id: config.id, keyId: config.keyId, keySecret: config.keySecret };
+                }
+            }
+        }
 
         // Build common payment data
         const buildPaymentData = (orderId: string) => {
@@ -45,24 +65,30 @@ export class PaymentService {
             if (beginnerCertRegistrationId) data.beginnerCertRegistrationId = beginnerCertRegistrationId;
             // Link donation
             if (donationId) data.donationId = donationId;
+            // Link secretary Razorpay config if used
+            if (secretaryConfig) data.razorpayConfigId = secretaryConfig.id;
             return data;
         };
 
         // Check if Razorpay is configured or Mock Mode is enabled
         const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
 
-        if (useMockPayment || !isRazorpayConfigured() || !razorpayInstance) {
+        if (useMockPayment || (!secretaryConfig && (!isRazorpayConfigured() || !razorpayInstance))) {
             // Return mock order for development
             console.warn('Using Mock Payment Order');
             const mockOrder = this.createMockOrder(amount, currency, receipt || `receipt_${Date.now()}`, notes || {});
 
             await prisma.payment.create({ data: buildPaymentData(mockOrder.id) });
-            return mockOrder;
+            return { order: mockOrder, keyId: secretaryConfig?.keyId || razorpayConfig.keyId };
         }
 
         try {
-            // Create order in Razorpay
-            const order = await razorpayInstance.orders.create({
+            // Use secretary-specific or central Razorpay instance
+            const instance = secretaryConfig
+                ? createRazorpayInstance(secretaryConfig.keyId, secretaryConfig.keySecret)
+                : razorpayInstance!;
+
+            const order = await instance.orders.create({
                 amount,
                 currency,
                 receipt: receipt || PaymentService.generateReceiptId(payment_type),
@@ -75,7 +101,7 @@ export class PaymentService {
             }) as RazorpayOrder;
 
             await prisma.payment.create({ data: buildPaymentData(order.id) });
-            return order;
+            return { order, keyId: secretaryConfig?.keyId || razorpayConfig.keyId };
         } catch (error) {
             console.error('Error creating Razorpay order:', error);
             throw new AppError('Failed to create payment order', 500);
@@ -103,9 +129,10 @@ export class PaymentService {
     }
 
     /**
-     * Verify payment signature
+     * Verify payment signature.
+     * Looks up the payment to determine if a secretary-specific key should be used.
      */
-    verifyPaymentSignature(params: VerifyPaymentRequest): boolean {
+    async verifyPaymentSignature(params: VerifyPaymentRequest): Promise<boolean> {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = params;
 
         // Skip verification for mock orders
@@ -113,14 +140,27 @@ export class PaymentService {
             return true;
         }
 
-        if (!razorpayConfig.keySecret) {
+        // Determine which key secret to use
+        let keySecret = razorpayConfig.keySecret;
+
+        const payment = await prisma.payment.findFirst({
+            where: { razorpayOrderId: razorpay_order_id },
+            select: { razorpayConfigId: true },
+        });
+
+        if (payment?.razorpayConfigId) {
+            const config = await razorpayConfigService.getDecryptedConfigById(payment.razorpayConfigId);
+            if (config) keySecret = config.keySecret;
+        }
+
+        if (!keySecret) {
             console.warn('Razorpay key secret not configured');
             return true; // Allow in development
         }
 
         const body = razorpay_order_id + '|' + razorpay_payment_id;
         const expectedSignature = crypto
-            .createHmac('sha256', razorpayConfig.keySecret)
+            .createHmac('sha256', keySecret)
             .update(body.toString())
             .digest('hex');
 
@@ -134,7 +174,7 @@ export class PaymentService {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = params;
 
         // Verify signature
-        const isValid = this.verifyPaymentSignature(params);
+        const isValid = await this.verifyPaymentSignature(params);
         if (!isValid) {
             throw new AppError('Invalid payment signature', 400);
         }
@@ -445,16 +485,18 @@ export class PaymentService {
     }
 
     /**
-     * Verify webhook signature
+     * Verify webhook signature.
+     * Uses the provided webhookSecret (from secretary config) or falls back to central.
      */
-    verifyWebhookSignature(body: string, signature: string): boolean {
-        if (!razorpayConfig.webhookSecret) {
+    verifyWebhookSignature(body: string, signature: string, webhookSecret?: string): boolean {
+        const secret = webhookSecret || razorpayConfig.webhookSecret;
+        if (!secret) {
             console.warn('Webhook secret not configured');
             return false;
         }
 
         const expectedSignature = crypto
-            .createHmac('sha256', razorpayConfig.webhookSecret)
+            .createHmac('sha256', secret)
             .update(body)
             .digest('hex');
 

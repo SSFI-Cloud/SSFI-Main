@@ -17,6 +17,13 @@ export interface CreateOrderRequest {
     coachCertRegistrationId?: number;
     beginnerCertRegistrationId?: number;
     donationId?: number;
+    // Secretary-specific Razorpay config
+    razorpayConfigId?: number;
+}
+
+export interface CreateOrderResult {
+    order: RazorpayOrder;
+    keyId: string; // The Razorpay Key ID to use on frontend (may be secretary-specific)
 }
 
 export interface RazorpayOrder {

@@ -19,7 +19,6 @@ import { generateUID } from './uid.service';
 import logger from '../utils/logger.util';
 import { paymentService } from './payment.service';
 import { emailService } from './email.service';
-import { razorpayConfig } from '../config/razorpay.config';
 
 import prisma from '../config/prisma';
 // ==========================================
@@ -305,7 +304,7 @@ export const initiateStateSecretaryRegistration = async (
 
 
       // Create NEW Razorpay Order
-      const order = await paymentService.createOrder({
+      const { order, keyId } = await paymentService.createOrder({
         amount: window.baseFee * 100,
         currency: 'INR',
         payment_type: 'AFFILIATION_FEE',
@@ -327,7 +326,7 @@ export const initiateStateSecretaryRegistration = async (
         razorpayOrderId: order.id,
         amount: window.baseFee * 100,
         currency: 'INR',
-        key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+        key: useMockPayment ? 'rzp_test_mock' : keyId,
         userDetails: {
           name: data.name,
           email: data.email,
@@ -485,7 +484,7 @@ export const initiateStateSecretaryRegistration = async (
   }
 
   // Create Razorpay Order
-  const order = await paymentService.createOrder({
+  const { order, keyId } = await paymentService.createOrder({
     amount: window.baseFee * 100,
     currency: 'INR',
     payment_type: 'AFFILIATION_FEE',
@@ -508,7 +507,7 @@ export const initiateStateSecretaryRegistration = async (
     razorpayOrderId: order.id,
     amount: window.baseFee * 100,
     currency: 'INR',
-    key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+    key: useMockPayment ? 'rzp_test_mock' : keyId,
     userDetails: {
       name: data.name,
       email: data.email,
@@ -741,7 +740,7 @@ export const initiateDistrictSecretaryRegistration = async (
       });
 
       // Create NEW Razorpay Order
-      const order = await paymentService.createOrder({
+      const { order, keyId } = await paymentService.createOrder({
         amount: window.baseFee * 100,
         currency: 'INR',
         payment_type: 'AFFILIATION_FEE',
@@ -761,7 +760,7 @@ export const initiateDistrictSecretaryRegistration = async (
         razorpayOrderId: order.id,
         amount: order.amount,
         currency: order.currency,
-        key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+        key: useMockPayment ? 'rzp_test_mock' : keyId,
         userDetails: {
           name: data.name,
           email: data.email,
@@ -809,7 +808,7 @@ export const initiateDistrictSecretaryRegistration = async (
       });
 
       // Create Razorpay Order
-      const order = await paymentService.createOrder({
+      const { order, keyId } = await paymentService.createOrder({
         amount: window.baseFee * 100,
         currency: 'INR',
         payment_type: 'AFFILIATION_FEE',
@@ -829,7 +828,7 @@ export const initiateDistrictSecretaryRegistration = async (
         razorpayOrderId: order.id,
         amount: order.amount,
         currency: order.currency,
-        key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+        key: useMockPayment ? 'rzp_test_mock' : keyId,
         userDetails: {
           name: data.name,
           email: data.email,
@@ -942,7 +941,7 @@ export const initiateDistrictSecretaryRegistration = async (
   // And create Payment with `entityId` = `secretary.id` and `entityType` = 'DISTRICT_SECRETARY'.
 
   // Create Razorpay Order
-  const order = await paymentService.createOrder({
+  const { order, keyId } = await paymentService.createOrder({
     amount: window.baseFee * 100, // paise
     currency: 'INR',
     payment_type: 'AFFILIATION_FEE', // or REGISTRATION_FEE
@@ -960,7 +959,7 @@ export const initiateDistrictSecretaryRegistration = async (
     razorpayOrderId: order.id,
     amount: order.amount,
     currency: order.currency,
-    key: razorpayConfig.keyId,
+    key: keyId,
     userDetails: {
       name: data.name,
       email: data.email,
@@ -1173,7 +1172,7 @@ export const initiateClubRegistration = async (
       });
       if (existingUser) userId = existingUser.id;
 
-      const order = await paymentService.createOrder({
+      const { order, keyId } = await paymentService.createOrder({
         amount: window.baseFee * 100,
         currency: 'INR',
         payment_type: 'AFFILIATION_FEE',
@@ -1194,7 +1193,7 @@ export const initiateClubRegistration = async (
         razorpayOrderId: order.id,
         amount: window.baseFee * 100,
         currency: 'INR',
-        key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+        key: useMockPayment ? 'rzp_test_mock' : keyId,
         userDetails: {
           name: data.contactPersonName,
           email: data.email || '',
@@ -1311,7 +1310,7 @@ export const initiateClubRegistration = async (
   }
 
   // Create Razorpay Order
-  const order = await paymentService.createOrder({
+  const { order, keyId } = await paymentService.createOrder({
     amount: window.baseFee * 100,
     currency: 'INR',
     payment_type: 'AFFILIATION_FEE',
@@ -1334,7 +1333,7 @@ export const initiateClubRegistration = async (
     razorpayOrderId: order.id,
     amount: window.baseFee * 100,
     currency: 'INR',
-    key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+    key: useMockPayment ? 'rzp_test_mock' : keyId,
     userDetails: {
       name: data.contactPersonName,
       email: data.email || `${data.phone}@ssfi.club`,
@@ -1935,7 +1934,7 @@ export const initiateStudentRegistration = async (
   const user = await prisma.user.findFirst({ where: { uid: student.uid } });
 
   // 4. Create Razorpay order
-  const order = await paymentService.createOrder({
+  const { order, keyId } = await paymentService.createOrder({
     amount: Number(window.baseFee) * 100, // convert rupees to paise
     currency: 'INR',
     payment_type: 'STUDENT_REGISTRATION',
@@ -1957,7 +1956,7 @@ export const initiateStudentRegistration = async (
     razorpayOrderId: order.id,
     amount: Number(window.baseFee) * 100,
     currency: 'INR',
-    key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+    key: useMockPayment ? 'rzp_test_mock' : keyId,
     userDetails: {
       name: student.name,
       email: data.email || '',
@@ -2169,7 +2168,7 @@ export const initiateRenewal = async (
   const user = await prisma.user.findFirst({ where: { uid: member.uid } });
   if (!user) throw new AppError('No user account found. Please contact support.', 404);
 
-  const order = await paymentService.createOrder({
+  const { order, keyId } = await paymentService.createOrder({
     amount: window.baseFee * 100,
     currency: 'INR',
     payment_type: 'RENEWAL_FEE',
@@ -2190,7 +2189,7 @@ export const initiateRenewal = async (
     razorpayOrderId: order.id,
     amount: window.baseFee * 100,
     currency: 'INR',
-    key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+    key: useMockPayment ? 'rzp_test_mock' : keyId,
     userDetails: {
       name: member.name,
       email: member.email || '',

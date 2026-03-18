@@ -40,7 +40,7 @@ export async function createDonation(input: CreateDonationInput) {
     });
 
     // 2. Create Razorpay order linked to donation
-    const order = await paymentService.createOrder({
+    const result = await paymentService.createOrder({
         amount: amount * 100, // convert to paise
         currency: 'INR',
         payment_type: 'DONATION',
@@ -59,10 +59,10 @@ export async function createDonation(input: CreateDonationInput) {
 
     return {
         donation,
-        razorpayOrderId: order.id,
+        razorpayOrderId: result.order.id,
         amount: amount * 100, // paise for Razorpay modal
         currency: 'INR',
-        key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+        key: useMockPayment ? 'rzp_test_mock' : result.keyId,
     };
 }
 
