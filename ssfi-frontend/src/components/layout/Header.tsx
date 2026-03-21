@@ -46,11 +46,15 @@ interface ActiveRegistration {
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
-  { href: '/state-directory', label: 'State Directory' },
-  { href: '/events', label: 'Events' },
-  { href: '/results', label: 'Results' },
+  {
+    label: 'Events',
+    href: '/events',
+    children: [
+      { href: '/events', label: 'All Events' },
+      { href: '/results', label: 'Results' },
+    ],
+  },
   { href: '/gallery', label: 'Gallery' },
-  { href: '/news', label: 'News' },
   { href: '/affiliated-coaches', label: 'Coaches' },
   {
     label: 'Programs',

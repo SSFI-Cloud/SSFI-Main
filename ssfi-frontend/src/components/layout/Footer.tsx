@@ -126,6 +126,7 @@ const Footer = () => {
                   { name: 'Events', href: '/events' },
                   { name: 'Results', href: '/results' },
                   { name: 'Gallery', href: '/gallery' },
+                  { name: 'State Directory', href: '/state-directory' },
                   { name: 'News', href: '/news' },
                   { name: 'Contact', href: '/contact' },
                 ].map((link) => (
