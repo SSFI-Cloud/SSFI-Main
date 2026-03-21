@@ -159,11 +159,22 @@ const Header = () => {
       >
         <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-28">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative w-24 h-24 flex items-center justify-center">
+            {/* Logo — wide version for desktop/tablet, square for mobile */}
+            <Link href="/" className="flex items-center group">
+              {/* Mobile: square logo */}
+              <div className="relative w-16 h-16 flex items-center justify-center md:hidden">
                 <Image
                   src="/images/logo/light.webp"
+                  alt="SSFI"
+                  fill
+                  className="object-contain drop-shadow-lg"
+                  priority
+                />
+              </div>
+              {/* Desktop/Tablet: wide horizontal logo */}
+              <div className="relative hidden md:flex items-center" style={{ width: '220px', height: '60px' }}>
+                <Image
+                  src="/images/logo/logo-wide.webp"
                   alt="Speed Skating Federation of India"
                   fill
                   className="object-contain drop-shadow-lg"
