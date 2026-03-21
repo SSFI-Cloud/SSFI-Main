@@ -21,11 +21,27 @@ export const lookupStudent = async (req: Request, res: Response, next: any) => {
 
 export const getAvailableRaces = async (req: Request, res: Response, next: any) => {
     try {
-        const { category, ageGroup } = req.query;
+        const { category, ageGroup, eventId } = req.query;
         if (!category || !ageGroup) throw new AppError('Category and age group required', 400);
 
-        const result = eventRegistrationService.getAvailableRaces(category as string, ageGroup as string);
+        const result = await eventRegistrationService.getAvailableRaces(
+            category as string,
+            ageGroup as string,
+            eventId ? Number(eventId) : undefined
+        );
         res.status(200).json({ status: 'success', data: result });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getEventCategories = async (req: Request, res: Response, next: any) => {
+    try {
+        const eventId = Number(req.params.eventId);
+        if (!eventId) throw new AppError('Event ID is required', 400);
+
+        const categories = await eventRegistrationService.getEventCategories(eventId);
+        res.status(200).json({ status: 'success', data: categories });
     } catch (error) {
         next(error);
     }
@@ -174,6 +190,7 @@ export const updatePaymentStatus = async (req: Request, res: Response, next: any
 export default {
     lookupStudent,
     getAvailableRaces,
+    getEventCategories,
     createRegistration,
     getRegistrations,
     exportRegistrations,

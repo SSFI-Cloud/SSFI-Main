@@ -7,6 +7,7 @@ const router = Router();
 // Public Routes
 router.post('/lookup', eventRegistrationController.lookupStudent);
 router.get('/races', eventRegistrationController.getAvailableRaces);
+router.get('/event-categories/:eventId', eventRegistrationController.getEventCategories);
 router.post('/register', eventRegistrationController.createRegistration);
 
 // Admin / Organizer Routes
