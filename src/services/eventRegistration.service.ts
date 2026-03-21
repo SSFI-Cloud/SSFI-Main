@@ -94,6 +94,7 @@ export const lookupStudentForEvent = async (membershipId: string, eventId: numbe
             code: true,
             eventDate: true,
             eventLevel: true,
+            paymentMode: true,
             registrationStartDate: true,
             registrationEndDate: true,
             status: true,
@@ -189,6 +190,7 @@ export const lookupStudentForEvent = async (membershipId: string, eventId: numbe
             name: event.name,
             code: event.code,
             eventDate: event.eventDate,
+            paymentMode: event.paymentMode,
             entryFee: Number(event.entryFee),
             lateFee: Number(event.lateFee || 0),
             isLateFee,
@@ -250,7 +252,8 @@ export const createEventRegistration = async (data: EventRegistration) => {
             totalFee: event.totalFee,
             amountPaid: 0,
 
-            status: 'PAYMENT_PENDING',
+            // Offline events: confirm immediately, admin marks payment later
+            status: event.paymentMode === 'OFFLINE' ? 'CONFIRMED' : 'PAYMENT_PENDING',
             paymentStatus: 'PENDING',
 
             remarks: data.remarks,

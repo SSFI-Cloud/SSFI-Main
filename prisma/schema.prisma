@@ -465,6 +465,7 @@ model Event {
   city         String?
 
   // Financials
+  paymentMode      String    @default("ONLINE") // ONLINE, OFFLINE
   entryFee         Decimal   @db.Decimal(10, 2)
   lateFee          Decimal?  @db.Decimal(10, 2)
   lateFeeStartDate DateTime?
