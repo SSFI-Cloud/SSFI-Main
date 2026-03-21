@@ -178,8 +178,10 @@ model StatePerson {
   pincode      String
 
   // Documents
-  identityProof String // File path
-  profilePhoto  String?
+  identityProof              String // File path
+  profilePhoto               String?
+  logo                       String? @db.LongText
+  associationRegistrationCopy String? @db.LongText
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -235,8 +237,10 @@ model DistrictPerson {
   pincode      String
 
   // Documents
-  identityProof String
-  profilePhoto  String?
+  identityProof              String
+  profilePhoto               String?
+  logo                       String? @db.LongText
+  associationRegistrationCopy String? @db.LongText
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -963,8 +967,10 @@ model StateSecretary {
   stateId              Int
   state                State     @relation(fields: [stateId], references: [id], onDelete: Restrict)
   residentialAddress   String
-  identityProof        String? // Legacy — now optional since KYC replaces it
-  profilePhoto         String?
+  identityProof               String? // Legacy — now optional since KYC replaces it
+  profilePhoto                String?
+  logo                        String? @db.LongText
+  associationRegistrationCopy String? @db.LongText
   registrationWindowId String
   status               String    @default("PENDING") // PENDING, APPROVED, REJECTED
   approvedAt           DateTime?
@@ -1001,8 +1007,10 @@ model DistrictSecretary {
   districtId           Int
   district             District  @relation(fields: [districtId], references: [id], onDelete: Restrict)
   residentialAddress   String
-  identityProof        String? // Legacy — now optional since KYC replaces it
-  profilePhoto         String?
+  identityProof               String? // Legacy — now optional since KYC replaces it
+  profilePhoto                String?
+  logo                        String? @db.LongText
+  associationRegistrationCopy String? @db.LongText
   registrationWindowId String
   status               String    @default("PENDING")
   approvedAt           DateTime?
