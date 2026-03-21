@@ -38,6 +38,7 @@ enum EventStatus {
   ONGOING
   COMPLETED
   CANCELLED
+  REJECTED
 }
 
 enum PaymentStatus {
