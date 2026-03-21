@@ -1,34 +1,78 @@
 /**
- * Postbuild script: Fix parentheses in chunk paths for LiteSpeed compatibility.
+ * Postbuild script: Fix parenthesized route-group names for LiteSpeed compatibility.
  *
- * Hostinger's LiteSpeed web server rejects literal parentheses in URL paths,
- * returning 404 for requests like /_next/static/chunks/app/(public)/events/page.js
- * but correctly serves /_next/static/chunks/app/%28public%29/events/page.js
+ * Hostinger's LiteSpeed web server rejects URLs containing literal parentheses
+ * AND percent-encoded parentheses (%28 / %29). It either returns 404 or issues
+ * a malformed 308 redirect (appending a slash inside the parens).
  *
- * IMPORTANT: Only encode parentheses in BROWSER-FACING URLs (static/chunks/...),
- * never in server-side file paths that Next.js uses to locate files on disk.
+ * Fix strategy:
+ *  1. Rename ONLY the static/chunks/app/(group) directories to _group_
+ *     (server/app/(group) must stay as-is for Next.js SSR routing)
+ *  2. Rewrite all "static/chunks/app/(group)/" references in build output
+ *     to "static/chunks/app/_group_/" — these are browser-facing URLs
+ *  3. Do NOT touch "server/app/(group)/" references — those are server-side
  */
 const fs = require('fs');
 const path = require('path');
 
 const NEXT_DIR = path.join(__dirname, '..', '.next');
 
-// Only matches parenthesized route-group segments in static chunk URLs.
-// These are the paths that appear in <script> tags and are fetched by the browser.
-// e.g. static/chunks/app/(public)/events/page-xxx.js
-const CHUNK_URL_RE = /static\/chunks\/app\/\([^)]+\)\//g;
+// Tracks which directories were renamed
+const renamedDirs = [];
 
-function encodeParens(str) {
-  return str.replace(/\(/g, '%28').replace(/\)/g, '%29');
+/**
+ * Rename parenthesized directories ONLY under static/chunks/app/
+ * e.g. .next/static/chunks/app/(public) → .next/static/chunks/app/_public_
+ */
+function renameChunkDirs(dir) {
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === 'node_modules' || entry.name === 'cache') continue;
+
+    const oldPath = path.join(dir, entry.name);
+    const parenMatch = entry.name.match(/^\(([^)]+)\)$/);
+
+    if (parenMatch) {
+      const safeName = `_${parenMatch[1]}_`;
+      const newPath = path.join(dir, safeName);
+
+      fs.renameSync(oldPath, newPath);
+      renamedDirs.push({ from: entry.name, to: safeName });
+      console.log(`  Renamed: ${path.relative(NEXT_DIR, oldPath)} → ${safeName}`);
+
+      // Recurse into renamed directory
+      renameChunkDirs(newPath);
+    } else {
+      renameChunkDirs(oldPath);
+    }
+  }
 }
 
 /**
- * Fix a single file — ONLY encodes static/chunks/app/(...) patterns.
- * Does NOT touch server-side file path references.
+ * Fix static chunk references in a single file.
+ * ONLY replaces "static/chunks/app/(group)/" patterns — never "server/app/(group)/".
  */
 function fixFile(filePath) {
   const original = fs.readFileSync(filePath, 'utf8');
-  const fixed = original.replace(CHUNK_URL_RE, (match) => encodeParens(match));
+
+  let fixed = original;
+
+  // Replace literal: static/chunks/app/(public)/ → static/chunks/app/_public_/
+  fixed = fixed.replace(/(static\/chunks\/app\/)\(([^)]+)\)\//g, (match, prefix, name) => {
+    return `${prefix}_${name}_/`;
+  });
+
+  // Replace percent-encoded: static/chunks/app/%28public%29/ → static/chunks/app/_public_/
+  fixed = fixed.replace(/(static\/chunks\/app\/)%28([^%]+)%29\//g, (match, prefix, name) => {
+    return `${prefix}_${name}_/`;
+  });
 
   if (fixed !== original) {
     fs.writeFileSync(filePath, fixed);
@@ -79,12 +123,26 @@ if (!fs.existsSync(NEXT_DIR)) {
   process.exit(1);
 }
 
-const TEXT_EXTENSIONS = ['.json', '.js', '.html', '.mjs'];
+// Step 1: Rename directories ONLY under static/chunks/app/
+console.log('\nStep 1: Renaming static chunk directories...');
+const chunksAppDir = path.join(NEXT_DIR, 'static', 'chunks', 'app');
+if (fs.existsSync(chunksAppDir)) {
+  renameChunkDirs(chunksAppDir);
+}
+// Also handle standalone build output
+const standaloneChunksDir = path.join(NEXT_DIR, 'standalone', '.next', 'static', 'chunks', 'app');
+if (fs.existsSync(standaloneChunksDir)) {
+  renameChunkDirs(standaloneChunksDir);
+}
+console.log(`  Renamed ${renamedDirs.length} directories.`);
 
+// Step 2: Fix static/chunks references in ALL text files
+console.log('\nStep 2: Fixing static chunk references in build files...');
+const TEXT_EXTENSIONS = ['.json', '.js', '.html', '.mjs'];
 const totalFixed = walkAndFix(NEXT_DIR, TEXT_EXTENSIONS);
 
-console.log(`\nDone. Fixed ${totalFixed} file(s).`);
+console.log(`\nDone. Renamed ${renamedDirs.length} directories, fixed ${totalFixed} file(s).`);
 
-if (totalFixed === 0) {
+if (renamedDirs.length === 0 && totalFixed === 0) {
   console.log('(No route-group parentheses found in build output — nothing to fix)');
 }
