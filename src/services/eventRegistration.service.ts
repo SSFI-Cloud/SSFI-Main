@@ -9,6 +9,47 @@ import { emailService } from './email.service';
 
 import prisma from '../config/prisma';
 // ==========================================
+// EVENT LEVEL ELIGIBILITY CHECK
+// ==========================================
+
+/**
+ * Enforces cascading eligibility:
+ *  - DISTRICT events: open to all (no prerequisite)
+ *  - STATE events: student must have a top-5 finish in any published DISTRICT event
+ *  - NATIONAL events: student must have a top-5 finish in any published STATE event
+ */
+const checkEventLevelEligibility = async (studentId: number, eventLevel: string) => {
+    const prerequisiteLevel: Record<string, string> = {
+        STATE: 'DISTRICT',
+        NATIONAL: 'STATE',
+    };
+
+    const requiredLevel = prerequisiteLevel[eventLevel];
+    if (!requiredLevel) return; // DISTRICT events have no prerequisite
+
+    // Check if student has a top-5 finish in any published event at the prerequisite level
+    const qualifyingResult = await prisma.raceResult.findFirst({
+        where: {
+            studentId,
+            position: { lte: 5 },
+            event: {
+                eventLevel: requiredLevel,
+                isResultsPublished: true,
+            },
+        },
+        select: { id: true },
+    });
+
+    if (!qualifyingResult) {
+        const levelLabel = requiredLevel.charAt(0) + requiredLevel.slice(1).toLowerCase();
+        throw new AppError(
+            `This student must place in the top 5 at a ${levelLabel} level event to be eligible for ${eventLevel.charAt(0) + eventLevel.slice(1).toLowerCase()} level events.`,
+            403
+        );
+    }
+};
+
+// ==========================================
 // STUDENT LOOKUP FOR EVENT REGISTRATION
 // ==========================================
 
@@ -52,6 +93,7 @@ export const lookupStudentForEvent = async (membershipId: string, eventId: numbe
             name: true,
             code: true,
             eventDate: true,
+            eventLevel: true,
             registrationStartDate: true,
             registrationEndDate: true,
             status: true,
@@ -107,6 +149,9 @@ export const lookupStudentForEvent = async (membershipId: string, eventId: numbe
     if (existingRegistration && existingRegistration.status !== 'CANCELLED') {
         throw new AppError('You are already registered for this event', 409);
     }
+
+    // Check event-level eligibility (District→State→National progression)
+    await checkEventLevelEligibility(student.id, event.eventLevel);
 
     // Calculate fee
     let totalFee = Number(event.entryFee);
