@@ -367,10 +367,21 @@ export const getEventByCode = async (code: string) => {
 }
 
 export const updateEventStatus = async (id: number, status: string, remarks?: string) => {
-  return prisma.event.update({
+  const validStatuses = ['DRAFT', 'PUBLISHED', 'ONGOING', 'COMPLETED', 'CANCELLED', 'REJECTED'];
+  if (!validStatuses.includes(status)) {
+    throw new AppError(`Invalid status: ${status}. Must be one of: ${validStatuses.join(', ')}`, 400);
+  }
+
+  const event = await prisma.event.update({
     where: { id },
-    data: { status: status as any }
+    data: { status: status as any },
+    include: {
+      state: true,
+      district: true,
+      _count: { select: { registrations: true } },
+    },
   });
+  return formatEvent(event);
 };
 
 export const getUserEvents = async (userId: number, query: any) => {
