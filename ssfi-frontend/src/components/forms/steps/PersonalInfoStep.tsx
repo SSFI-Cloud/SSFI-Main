@@ -24,7 +24,6 @@ export default function PersonalInfoStep({ onComplete }: PersonalInfoStepProps) 
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
       firstName: formData.firstName || '',
-      lastName: formData.lastName || '',
       dateOfBirth: formData.dateOfBirth || '',
       gender: formData.gender,
       bloodGroup: formData.bloodGroup,
@@ -41,23 +40,14 @@ export default function PersonalInfoStep({ onComplete }: PersonalInfoStepProps) 
 
   return (
     <form id="step-1-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name <span className="text-red-400">*</span></label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input {...register('firstName')} placeholder="First name" className={`${inputCls(!!errors.firstName)} pl-9`} />
-          </div>
-          {errors.firstName && <p className="mt-1 text-xs text-red-500">{errors.firstName.message}</p>}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name <span className="text-red-400">*</span></label>
+        <div className="relative">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input {...register('firstName')} placeholder="Full name as per Aadhaar" className={`${inputCls(!!errors.firstName)} pl-9`} />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name <span className="text-red-400">*</span></label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input {...register('lastName')} placeholder="Last name" className={`${inputCls(!!errors.lastName)} pl-9`} />
-          </div>
-          {errors.lastName && <p className="mt-1 text-xs text-red-500">{errors.lastName.message}</p>}
-        </div>
+        {errors.firstName && <p className="mt-1 text-xs text-red-500">{errors.firstName.message}</p>}
+        <p className="mt-1 text-xs text-amber-600 font-medium">Name should be exactly as per your Aadhaar card</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -71,7 +61,7 @@ export default function PersonalInfoStep({ onComplete }: PersonalInfoStepProps) 
           {errors.dateOfBirth && <p className="mt-1 text-xs text-red-500">{errors.dateOfBirth.message}</p>}
           {age !== null && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 flex items-center gap-2">
-              <span className="text-xs text-gray-500">Age: {age} years</span>
+              <span className="text-xs text-gray-500">Age (as of Jan 1, {new Date().getFullYear()}): {age} years</span>
               <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">{ageCategory}</span>
             </motion.div>
           )}
@@ -116,7 +106,7 @@ export default function PersonalInfoStep({ onComplete }: PersonalInfoStepProps) 
           {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-gray-400">(Optional)</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-red-400">*</span></label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input {...register('email')} type="email" placeholder="your@email.com" className={`${inputCls(!!errors.email)} pl-9`} />
@@ -127,7 +117,7 @@ export default function PersonalInfoStep({ onComplete }: PersonalInfoStepProps) 
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
         <p className="text-sm text-amber-800">
-          <strong>Note:</strong> Date of birth is used to determine your age category for competitions. Ensure it matches your Aadhaar card.
+          <strong>Note:</strong> Date of birth is used to determine your age category for competitions. Age is calculated as of January 1, {new Date().getFullYear()}. Ensure it matches your Aadhaar card.
         </p>
       </div>
     </form>

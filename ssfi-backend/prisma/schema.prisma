@@ -75,7 +75,10 @@ enum AcademicBoard {
   STATE_BOARD
   CBSE
   ICSE
+  IGCSE
   IB
+  GOVERNMENT
+  NIOS
   OTHER
 }
 
@@ -365,8 +368,9 @@ model Student {
   aadhaarNumber String      @unique
 
   // Family Details
-  fatherName String
-  motherName String?
+  fatherName       String
+  motherName       String?
+  fatherOccupation String?
 
   // School Details
   schoolName    String

@@ -1867,6 +1867,7 @@ export const registerStudent = async (
 
         fatherName: data.fatherName,
         motherName: data.motherName,
+        fatherOccupation: data.fatherOccupation,
 
         schoolName: data.schoolName,
         academicBoard: data.academicBoard as any,

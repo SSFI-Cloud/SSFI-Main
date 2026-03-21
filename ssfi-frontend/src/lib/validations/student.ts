@@ -3,15 +3,42 @@ import { z } from 'zod';
 // Phone regex for Indian numbers
 const phoneRegex = /^[6-9]\d{9}$/;
 
+// Father's occupation options
+export const FATHER_OCCUPATIONS = [
+    'Business',
+    'Government Employee',
+    'Private Employee',
+    'Self-Employed',
+    'Doctor',
+    'Engineer',
+    'Teacher',
+    'Lawyer',
+    'Farmer',
+    'Military/Defence',
+    'Police',
+    'Other',
+];
+
+// Academic board options
+export const ACADEMIC_BOARDS = [
+    { value: 'STATE_BOARD', label: 'State Board' },
+    { value: 'CBSE', label: 'CBSE' },
+    { value: 'ICSE', label: 'ICSE' },
+    { value: 'IGCSE', label: 'IGCSE' },
+    { value: 'IB', label: 'IB' },
+    { value: 'GOVERNMENT', label: 'Government' },
+    { value: 'NIOS', label: 'NIOS' },
+    { value: 'OTHER', label: 'Other' },
+];
+
 // Personal Info Schema
 const personalInfoSchema = z.object({
-    firstName: z.string().min(2, 'First name must be at least 2 characters').max(50),
-    lastName: z.string().min(2, 'Last name must be at least 2 characters').max(50),
+    firstName: z.string().min(2, 'Full name must be at least 2 characters').max(100),
     dateOfBirth: z.string().min(1, 'Date of birth is required'),
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
     bloodGroup: z.string().optional(),
     phone: z.string().regex(phoneRegex, 'Please enter valid 10-digit mobile number'),
-    email: z.string().email('Please enter valid email address').optional().or(z.literal('')),
+    email: z.string().email('Please enter valid email address').min(1, 'Email is required'),
     aadhaarNumber: z.string().length(12, 'Aadhaar must be 12 digits').optional(),
 });
 
@@ -19,10 +46,9 @@ const personalInfoSchema = z.object({
 const familySchoolSchema = z.object({
     fatherName: z.string().min(2, 'Father name is required').max(100),
     motherName: z.string().min(2, 'Mother name is required').max(100),
-    guardianPhone: z.string().regex(phoneRegex, 'Please enter valid mobile number'),
-    guardianEmail: z.string().email().optional().or(z.literal('')),
-    schoolName: z.string().optional(),
-    schoolClass: z.string().optional(),
+    fatherOccupation: z.string().min(1, 'Father\'s occupation is required'),
+    schoolName: z.string().min(2, 'School/College name is required'),
+    academicBoard: z.string().min(1, 'Academic board is required'),
 });
 
 // Nominee Schema
@@ -38,6 +64,7 @@ const clubCoachSchema = z.object({
     stateId: z.string().min(1, 'State is required'),
     districtId: z.string().min(1, 'District is required'),
     clubId: z.string().min(1, 'Club is required'),
+    clubMode: z.enum(['club', 'school']).optional(),
     coachName: z.string().optional(),
     coachPhone: z.string().optional(),
 });
