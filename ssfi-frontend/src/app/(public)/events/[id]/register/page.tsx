@@ -114,7 +114,8 @@ export default function EventRegistrationPage() {
   const [eventFee, setEventFee]       = useState<EventFee | null>(null);
 
   // Step 2 — Category
-  const [category, setCategory]       = useState('RECREATIONAL');
+  const [eventCategories, setEventCategories] = useState<Array<{ name: string; label: string }>>([]);
+  const [category, setCategory]       = useState('');
 
   // Step 3 — Races
   const [racesLoading, setRacesLoading] = useState(false);
@@ -127,12 +128,25 @@ export default function EventRegistrationPage() {
   const [submitting, setSubmitting]   = useState(false);
   const [regSuccess, setRegSuccess]   = useState<{ confirmationNumber: string; totalFee: number } | null>(null);
 
-  // ── Load event header ──
+  // ── Load event header + categories ──
   useEffect(() => {
     api.get(`/events/${eventId}`)
       .then(res => setEvent(res.data?.data || res.data))
       .catch(() => {})
       .finally(() => setEventLoading(false));
+
+    // Fetch event-specific categories
+    api.get(`/event-registration/event-categories/${eventId}`)
+      .then(res => {
+        const cats = res.data?.data || [];
+        setEventCategories(cats);
+        if (cats.length > 0 && !category) setCategory(cats[0].name);
+      })
+      .catch(() => {
+        // Fallback to defaults
+        setEventCategories(SKATE_CATEGORIES.map(c => ({ name: c.value, label: c.label })));
+        if (!category) setCategory('BEGINNER');
+      });
   }, [eventId]);
 
   // ── Step 1: lookup ──
@@ -162,7 +176,7 @@ export default function EventRegistrationPage() {
     if (!studentData) return;
     setRacesLoading(true);
     try {
-      const res  = await api.get(`/event-registration/races?category=${category}&ageGroup=${studentData.ageCategory || 'OPEN'}`);
+      const res  = await api.get(`/event-registration/races?category=${category}&ageGroup=${studentData.ageCategory || 'OPEN'}&eventId=${eventId}`);
       const d    = res.data?.data;
       const races: RaceOption[] = (d.availableRaces || []).map((r: string) => ({
         id: r,
@@ -421,18 +435,18 @@ export default function EventRegistrationPage() {
 
                 {/* Category grid */}
                 <div className="grid grid-cols-2 gap-3">
-                  {SKATE_CATEGORIES.map(cat => {
-                    const active = category === cat.value;
+                  {(eventCategories.length > 0 ? eventCategories : SKATE_CATEGORIES.map(c => ({ name: c.value, label: c.label }))).map(cat => {
+                    const active = category === cat.name;
+                    const defaultCat = SKATE_CATEGORIES.find(c => c.value === cat.name);
                     return (
-                      <button key={cat.value} onClick={() => setCategory(cat.value)}
+                      <button key={cat.name} onClick={() => setCategory(cat.name)}
                         className={`relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left
                           ${active
                             ? 'border-emerald-400 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-sm'
                             : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'}`}>
-                        <span className="text-2xl">{cat.emoji}</span>
+                        <span className="text-2xl">{defaultCat?.emoji || '🏅'}</span>
                         <div className="min-w-0">
                           <p className={`font-bold text-sm ${active ? 'text-emerald-700' : 'text-gray-800'}`}>{cat.label}</p>
-                          <p className={`text-xs ${active ? 'text-emerald-500' : 'text-gray-400'}`}>{cat.desc}</p>
                         </div>
                         {active && (
                           <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto flex-shrink-0 absolute top-3 right-3" />

@@ -475,6 +475,7 @@ model Event {
   lateFeeStartDate DateTime?
 
   // Configuration
+  raceConfig              Json? // Per-event race rules: { categories: [...] }
   ageCategories           Json? // Stored as array of strings
   allowMultipleCategories Boolean @default(false)
   requiresApproval        Boolean @default(false)

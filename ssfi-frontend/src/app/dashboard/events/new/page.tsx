@@ -19,6 +19,7 @@ import {
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Link from 'next/link';
+import RaceConfigEditor, { type RaceConfig } from '@/components/events/RaceConfigEditor';
 
 interface State {
     id: number;
@@ -56,6 +57,7 @@ export default function NewEventPage() {
     const [success, setSuccess] = useState(false);
 
     const [states, setStates] = useState<State[]>([]);
+    const [raceConfig, setRaceConfig] = useState<RaceConfig | null>(null);
 
     // Role-based event level options
     const eventLevels = useMemo(() => {
@@ -132,6 +134,7 @@ export default function NewEventPage() {
                 venue: formData.venue,
                 city: formData.city,
                 paymentMode: formData.paymentMode,
+                raceConfig: raceConfig,
             });
 
             setSuccess(true);
@@ -433,6 +436,11 @@ export default function NewEventPage() {
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Race Configuration */}
+                <div>
+                    <RaceConfigEditor value={raceConfig} onChange={setRaceConfig} />
                 </div>
 
                 {/* Submit */}

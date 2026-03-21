@@ -203,7 +203,37 @@ export const lookupStudentForEvent = async (membershipId: string, eventId: numbe
     };
 };
 
-export const getAvailableRaces = (skateCategory: string, ageGroup: string) => {
+export const getAvailableRaces = async (skateCategory: string, ageGroup: string, eventId?: number) => {
+    // Check for event-specific race config
+    if (eventId) {
+        const event = await prisma.event.findUnique({
+            where: { id: eventId },
+            select: { raceConfig: true },
+        });
+
+        if (event?.raceConfig) {
+            const config = event.raceConfig as any;
+            const categories = config.categories || [];
+            // Find matching category by name and age group
+            const match = categories.find((cat: any) =>
+                cat.name === skateCategory &&
+                (!cat.ageGroups || cat.ageGroups.length === 0 || cat.ageGroups.includes(ageGroup))
+            );
+            if (match) {
+                return {
+                    ruleKey: match.name,
+                    availableRaces: match.races || [],
+                    minRaces: match.minRaces || 1,
+                    maxRaces: match.maxRaces || match.races?.length || 3,
+                    mandatoryRaces: match.mandatoryRaces || [],
+                    description: `Choose ${match.minRaces || 1}-${match.maxRaces || 3} races`,
+                };
+            }
+            throw new AppError('This category is not available for this event', 400);
+        }
+    }
+
+    // Fall back to hardcoded defaults
     const ruleKey = getRaceRuleKey(skateCategory, ageGroup);
     const rule = RACE_RULES[ruleKey as keyof typeof RACE_RULES];
     if (!rule) throw new AppError('Invalid category combination', 400);
@@ -218,14 +248,73 @@ export const getAvailableRaces = (skateCategory: string, ageGroup: string) => {
     };
 };
 
+/**
+ * Get available skate categories for a specific event.
+ * If event has raceConfig, return only configured categories.
+ * Otherwise return default categories.
+ */
+export const getEventCategories = async (eventId: number) => {
+    const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { raceConfig: true },
+    });
+
+    if (event?.raceConfig) {
+        const config = event.raceConfig as any;
+        const categories = config.categories || [];
+        return categories.map((cat: any) => ({
+            name: cat.name,
+            label: cat.label || cat.name,
+            ageGroups: cat.ageGroups || [],
+        }));
+    }
+
+    // Default categories
+    return [
+        { name: 'BEGINNER', label: 'Beginner', ageGroups: [] },
+        { name: 'RECREATIONAL', label: 'Recreational', ageGroups: [] },
+        { name: 'QUAD', label: 'Quad', ageGroups: [] },
+        { name: 'PRO_INLINE', label: 'Pro Inline', ageGroups: [] },
+    ];
+};
+
 export const createEventRegistration = async (data: EventRegistration) => {
     const { student, event } = await lookupStudentForEvent(data.studentUid, data.eventId);
 
-    const raceValidation = validateRaceSelection(
-        data.skateCategory,
-        student.ageCategory,
-        data.selectedRaces
-    );
+    // Try event-specific validation first
+    const eventData = await prisma.event.findUnique({
+        where: { id: data.eventId },
+        select: { raceConfig: true },
+    });
+
+    let raceValidation: { valid: boolean; error?: string };
+    if (eventData?.raceConfig) {
+        // Validate against event-specific config
+        const config = eventData.raceConfig as any;
+        const categories = config.categories || [];
+        const match = categories.find((cat: any) =>
+            cat.name === data.skateCategory &&
+            (!cat.ageGroups || cat.ageGroups.length === 0 || cat.ageGroups.includes(student.ageCategory))
+        );
+        if (!match) {
+            raceValidation = { valid: false, error: 'This category is not available for this event' };
+        } else {
+            const min = match.minRaces || 1;
+            const max = match.maxRaces || match.races?.length || 3;
+            const count = data.selectedRaces.length;
+            if (count < min || count > max) {
+                raceValidation = { valid: false, error: `Please select between ${min} and ${max} races` };
+            } else {
+                raceValidation = { valid: true };
+            }
+        }
+    } else {
+        raceValidation = validateRaceSelection(
+            data.skateCategory,
+            student.ageCategory,
+            data.selectedRaces
+        );
+    }
 
     if (!raceValidation.valid) {
         throw new AppError(raceValidation.error || 'Invalid race selection', 400);
@@ -520,6 +609,7 @@ export const createManualRegistration = async (data: EventRegistration, operator
 export default {
     lookupStudentForEvent,
     getAvailableRaces,
+    getEventCategories,
     createEventRegistration,
     getEventRegistrations,
     exportRegistrations,

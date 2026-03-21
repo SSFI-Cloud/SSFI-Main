@@ -19,6 +19,7 @@ import {
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Link from 'next/link';
+import RaceConfigEditor, { type RaceConfig } from '@/components/events/RaceConfigEditor';
 
 interface State {
     id: number;
@@ -59,6 +60,7 @@ export default function EditEventPage() {
     const [success, setSuccess] = useState(false);
 
     const [states, setStates] = useState<State[]>([]);
+    const [raceConfig, setRaceConfig] = useState<RaceConfig | null>(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -125,6 +127,9 @@ export default function EditEventPage() {
                     baseFee: event.entryFee || event.baseFee || 500,
                     maxParticipants: event.maxParticipants || 100,
                 });
+                if (event.raceConfig) {
+                    setRaceConfig(event.raceConfig);
+                }
             } catch (err: any) {
                 console.error('Failed to fetch event', err);
                 setError(err.response?.data?.message || 'Failed to load event data');
@@ -157,6 +162,7 @@ export default function EditEventPage() {
                 description: formData.description,
                 entryFee: Number(formData.baseFee),
                 maxParticipants: Number(formData.maxParticipants),
+                raceConfig: raceConfig,
             });
 
             setSuccess(true);
@@ -424,6 +430,11 @@ export default function EditEventPage() {
                             />
                         </div>
                     </div>
+                </div>
+
+                {/* Race Configuration */}
+                <div>
+                    <RaceConfigEditor value={raceConfig} onChange={setRaceConfig} />
                 </div>
 
                 {/* Submit */}
