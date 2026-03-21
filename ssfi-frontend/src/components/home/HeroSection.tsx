@@ -94,7 +94,7 @@ const FALLBACK_SLIDES: SlideData[] = [
     image: '/images/hero/Hero-3.webp',
     ghost: 'INDIA',
     stats: [
-      { n: '240+', l: 'Coaches' },
+      { n: '300+', l: 'Coaches' },
       { n: '3', l: 'Cert Levels' },
       { n: 'All India', l: 'Recognition' },
     ],

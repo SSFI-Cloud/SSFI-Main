@@ -22,6 +22,7 @@ interface ExtendedMeta {
   officeHours?: { weekdays?: string; saturday?: string };
   mapEmbedUrl?: string;
   phone2?: string;
+  certifiedCoachesOverride?: number;
 }
 
 export default function SettingsPage() {
@@ -177,6 +178,21 @@ export default function SettingsPage() {
             <div className="space-y-1.5">
               <label className={labelClass}>Saturday</label>
               <input value={meta.officeHours?.saturday || ''} onChange={e => setMeta({ officeHours: { ...meta.officeHours, saturday: e.target.value } })} className={inputClass} placeholder="10:00 AM – 2:00 PM" />
+            </div>
+          </div>
+        </div>
+
+        {/* Homepage Stat Overrides */}
+        <div className={sectionClass}>
+          <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
+            <Globe className="w-5 h-5 text-gray-900" />
+            <h3 className="text-base font-semibold text-gray-900">Homepage Stat Overrides</h3>
+          </div>
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className={labelClass}>Certified Coaches Count</label>
+              <input type="number" value={meta.certifiedCoachesOverride || ''} onChange={e => setMeta({ certifiedCoachesOverride: e.target.value ? Number(e.target.value) : undefined })} className={inputClass} placeholder="e.g. 300 (leave empty for auto-count)" />
+              <p className="text-xs text-gray-600">Override the certified coaches number shown on homepage. Leave empty to use actual database count.</p>
             </div>
           </div>
         </div>
