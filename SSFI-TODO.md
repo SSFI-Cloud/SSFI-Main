@@ -1,7 +1,7 @@
 # SSFI Digital Platform — Development Todo List
 
-> **Last updated:** March 3, 2026 (Session 2)
-> **Overall status:** ~97% Complete
+> **Last updated:** March 21, 2026 (Session 3)
+> **Overall status:** ~98% Complete
 > ✅ = Done | 🔄 = Partial | ❌ = Not started
 
 ---
@@ -398,6 +398,104 @@ DO NOT TOUCH (Already working, don't break):
 - ✅ Menus — Full CRUD for navigation menus
 - ✅ All CMS hooks (`useCMS.ts`) properly wired to backend endpoints
 - ✅ All backend CMS routes (`cms.routes.ts`, `team.routes.ts`, `milestone.routes.ts`, `contact.routes.ts`, `upload.routes.ts`) verified
+
+---
+
+## Fixes & Features Applied (March 21, 2026 — Session 3)
+
+### Results System Expansion
+- ✅ Expanded race results from top 3 to top 5 positions (Gold, Silver, Bronze, 4th, 5th)
+- ✅ Multiple students can share same position (ties allowed)
+- ✅ Updated homepage, public results page, and results management UI for 5 positions
+- ✅ Cascading eligibility: District top 5 → State eligible, State top 5 → National eligible (hard block)
+
+### Razorpay Multi-Account Integration
+- ✅ Individual Razorpay API keys for State/District secretaries
+- ✅ AES-256-GCM encryption for stored secrets
+- ✅ Payment Settings tab in secretary dashboard
+- ✅ Test Integration feature
+- ✅ Automatic fallback to central SSFI account
+
+### Offline Payment Mode
+- ✅ State/District secretaries can choose Online (Razorpay) or Offline (Cash) per event
+- ✅ Offline events: students confirmed immediately, admin marks paid/unpaid
+- ✅ New PATCH endpoint for payment status updates
+
+### Student Registration Revamp
+- ✅ Removed last name field — single "Full Name (as per Aadhaar)" with notice
+- ✅ Age calculated with Jan 1 cutoff of current year
+- ✅ New categories: U-4, U-6, U-8, U-10, U-12, U-14, U-16, Above 16, Masters 30+
+- ✅ Email now mandatory
+- ✅ Replaced guardian phone with Father's Occupation dropdown
+- ✅ Replaced class/grade with Academic Board (State Board/CBSE/ICSE/IGCSE/IB/Government/NIOS)
+- ✅ School name now mandatory
+- ✅ Club/School toggle — school name auto-fills as club
+
+### Configurable Race Rules Per Event
+- ✅ `raceConfig` JSON field on Event model — per-event race configuration
+- ✅ RaceConfigEditor component for admin event create/edit
+- ✅ Custom categories and races (type any name)
+- ✅ Per-category: age groups, races, min/max, mandatory races
+- ✅ Backward compatible — events without raceConfig use SSFI defaults
+- ✅ New endpoint: GET /event-registration/event-categories/:eventId
+
+### Homepage & Navigation
+- ✅ Removed pricing from Coach/Beginner certification on homepage (shows "Registration Open")
+- ✅ Reorganized navigation: State Directory + News moved to footer
+- ✅ Results now under Events dropdown (Events > All Events, Results)
+- ✅ Wide horizontal logo for desktop/tablet, square logo for mobile
+
+### Event Approve/Reject Fix
+- ✅ Added REJECTED to EventStatus enum (was missing, causing silent Prisma errors)
+- ✅ Added status validation in updateEventStatus service
+- ✅ Toast notifications for approve/reject success/failure
+
+### Registration Form Updates
+- ✅ Removed Digilocker KYC from State, District, Club registration (kept for Student only)
+- ✅ Mandatory logo upload for State, District, Club registration
+- ✅ Mandatory Association Registration Copy for State and District
+- ✅ Student dashboard: profile photo upload/change option added
+
+### Database Cleanup
+- ✅ Removed all non-Tamil Nadu students and their registrations/results/certificates
+- ✅ Removed all district secretaries
+- ✅ Removed all non-Tamil Nadu state secretaries
+- ✅ Kept test users (9999999990-94) and GLOBAL_ADMIN accounts
+
+### Schema Changes (SQL migrations applied)
+- ✅ `razorpay_configs` table (multi-account Razorpay)
+- ✅ `payments.razorpayConfigId` column
+- ✅ `events.paymentMode` column (ONLINE/OFFLINE)
+- ✅ `events.raceConfig` JSON column
+- ✅ `students.fatherOccupation` column
+- ✅ `AcademicBoard` enum: added IGCSE, GOVERNMENT, NIOS
+- ✅ `EventStatus` enum: added REJECTED
+- ✅ `race_results` unique constraint replaced with index (allows ties)
+- ✅ `state_secretaries/district_secretaries/state_persons/district_persons`: added `logo` + `associationRegistrationCopy` columns
+
+### Environment Variables Added
+- ✅ `RAZORPAY_ENCRYPTION_KEY` — 64-char hex string for encrypting Razorpay secrets
+
+---
+
+## Remaining TODO (Future)
+
+### Priority 1
+- ❌ Admin StudentRegistrationWizard — needs same form field changes as public form (remove lastName, add fatherOccupation, academicBoard, etc.)
+- ❌ INTERNATIONAL event level — National top 5 → eligible for International events
+
+### Priority 2
+- ❌ Wire approvals pages to real API (replace mock data)
+- ❌ Wire reports page to real stats API
+- ❌ Wire payment dashboard stats to real API
+- ❌ Renewal reminder emails (30 days, 7 days, expired)
+- ❌ Certificate download integration
+
+### Priority 3 (Tech Debt)
+- ❌ Unit/integration tests
+- ❌ Clean up duplicate service files
+- ❌ Remove legacy gallery.routes.ts
+- ❌ Add .env.example files
 
 ---
 
