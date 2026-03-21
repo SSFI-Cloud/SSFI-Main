@@ -407,6 +407,8 @@ export const initiateStateSecretaryRegistration = async (
       residentialAddress: data.residentialAddress,
       identityProof: data.identityProof || null,
       profilePhoto: data.profilePhoto || data.kycProfileImage || null,
+      logo: data.logo || null,
+      associationRegistrationCopy: data.associationRegistrationCopy || null,
       registrationWindowId: windowId,
       status: 'PAYMENT_PENDING',
       // KYC verification data
@@ -796,6 +798,8 @@ export const initiateDistrictSecretaryRegistration = async (
           residentialAddress: data.residentialAddress,
           identityProof: data.identityProof || null,
           profilePhoto: data.profilePhoto || data.kycProfileImage || null,
+          logo: data.logo || null,
+          associationRegistrationCopy: data.associationRegistrationCopy || null,
           registrationWindowId: String(windowId),
           status: 'PAYMENT_PENDING',
           // KYC verification data

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
-    User, Lock, Shield, Mail, Phone, Save, Loader2,
+    User, Lock, Shield, Mail, Phone, Save, Loader2, Camera,
     CheckCircle, AlertCircle, MapPin, Heart, GraduationCap,
     UserCheck, Calendar, CreditCard, Trash2, Zap, Eye, EyeOff
 } from 'lucide-react';
@@ -464,6 +464,44 @@ export default function SettingsPage() {
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Profile Photo */}
+                                {role === 'STUDENT' && (
+                                    <div>
+                                        <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                                            <Camera className="w-5 h-5 text-emerald-500" /> Profile Photo
+                                        </h2>
+                                        <p className="text-gray-500 text-sm mb-4">Update your profile photo.</p>
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-100 flex items-center justify-center">
+                                                {formData.profilePhoto || (profile as any)?.profilePhoto ? (
+                                                    <img src={formData.profilePhoto || (profile as any)?.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="w-10 h-10 text-gray-300" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-medium cursor-pointer hover:bg-emerald-100 transition-colors border border-emerald-200">
+                                                    <Camera className="w-4 h-4" />
+                                                    Change Photo
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (!file) return;
+                                                            const reader = new FileReader();
+                                                            reader.onloadend = () => setField('profilePhoto', reader.result as string);
+                                                            reader.readAsDataURL(file);
+                                                        }}
+                                                    />
+                                                </label>
+                                                <p className="text-xs text-gray-400 mt-2">JPG, PNG up to 5MB</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Personal details (editable) */}
                                 <div>
