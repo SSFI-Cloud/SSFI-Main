@@ -1333,7 +1333,7 @@ model RaceResult {
   gender        Gender
 
   // Result
-  position Int // 1, 2, 3
+  position Int // 1, 2, 3, 4, 5 (multiple students can share a position)
   timing   String? // Optional timing info (e.g., "00:45:12")
   remarks  String?
 
@@ -1344,7 +1344,7 @@ model RaceResult {
   event   Event   @relation(fields: [eventId], references: [id])
   student Student @relation(fields: [studentId], references: [id])
 
-  @@unique([eventId, raceType, skateCategory, ageCategory, gender, position]) // Ensure unique winner per slot
+  @@index([eventId, raceType, skateCategory, ageCategory, gender, position])
   @@index([eventId])
   @@index([studentId])
   @@map("race_results")

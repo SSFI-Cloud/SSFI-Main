@@ -12,7 +12,7 @@ import {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ResultEntry {
-  position: 1 | 2 | 3;
+  position: 1 | 2 | 3 | 4 | 5;
   firstName: string;
   state: string;
   skateCategory: string;
@@ -27,7 +27,8 @@ interface SlideData {
   city: string;
   category: string;
   ageCategory: string;
-  top3: ResultEntry[];
+  top3?: ResultEntry[];
+  top5?: ResultEntry[];
   isPlaceholder?: boolean;
 }
 
@@ -137,6 +138,8 @@ const MEDALS: Record<number, { emoji: string; label: string; bg: string; text: s
   1: { emoji: '🥇', label: 'Gold',   bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-amber-200' },
   2: { emoji: '🥈', label: 'Silver', bg: 'bg-slate-50',  text: 'text-slate-600',  border: 'border-slate-200' },
   3: { emoji: '🥉', label: 'Bronze', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+  4: { emoji: '4',  label: '4th',    bg: 'bg-teal-50',   text: 'text-teal-700',   border: 'border-teal-200'  },
+  5: { emoji: '5',  label: '5th',    bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200' },
 };
 
 const SKATE_LABELS: Record<string, string> = {
@@ -289,8 +292,8 @@ function ChampionshipCard({ card, index }: { card: EventCardData; index: number 
         </div>
       )}
 
-      {/* Animated medal result rows */}
-      <div className="px-5 pt-3 pb-5 overflow-hidden min-h-[148px]">
+      {/* Animated result rows */}
+      <div className="px-5 pt-3 pb-5 overflow-hidden min-h-[230px]">
         <AnimatePresence mode="wait" custom={dir}>
           <motion.div
             key={activeSlide}
@@ -299,39 +302,49 @@ function ChampionshipCard({ card, index }: { card: EventCardData; index: number 
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: dir * -30 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="space-y-2"
+            className="space-y-1.5"
           >
-            {[1, 2, 3].map(pos => {
-              const entry = slide.top3.find(e => e.position === pos) ?? null;
-              const medal = MEDALS[pos];
-              return (
-                <div
-                  key={pos}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${
-                    entry ? `${medal.bg} ${medal.border}` : 'bg-gray-50 border-gray-100'
-                  }`}
-                >
-                  <span className="text-xl w-7 text-center flex-shrink-0">{medal.emoji}</span>
-                  {entry ? (
-                    <>
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-bold text-sm truncate ${medal.text}`}>
-                          {entry.firstName}
-                        </p>
-                        <p className="text-xs text-gray-400 truncate">
-                          {entry.state} · {skateName(entry.skateCategory)}
-                        </p>
-                      </div>
-                      <span className={`text-xs font-semibold flex-shrink-0 ${medal.text}`}>
-                        {medal.label}
+            {(() => {
+              const entries = slide.top5 || slide.top3 || [];
+              return [1, 2, 3, 4, 5].map(pos => {
+                const entry = entries.find(e => e.position === pos) ?? null;
+                const medal = MEDALS[pos];
+                const isNumericBadge = pos > 3;
+                return (
+                  <div
+                    key={pos}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl border ${
+                      entry ? `${medal.bg} ${medal.border}` : 'bg-gray-50 border-gray-100'
+                    }`}
+                  >
+                    {isNumericBadge ? (
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${entry ? `${medal.bg} ${medal.text} border ${medal.border}` : 'text-gray-300'}`}>
+                        {medal.emoji}
                       </span>
-                    </>
-                  ) : (
-                    <span className="text-gray-300 text-xs italic">—</span>
-                  )}
-                </div>
-              );
-            })}
+                    ) : (
+                      <span className="text-lg w-7 text-center flex-shrink-0">{medal.emoji}</span>
+                    )}
+                    {entry ? (
+                      <>
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-bold text-sm truncate ${medal.text}`}>
+                            {entry.firstName}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {entry.state} · {skateName(entry.skateCategory)}
+                          </p>
+                        </div>
+                        <span className={`text-xs font-semibold flex-shrink-0 ${medal.text}`}>
+                          {medal.label}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-gray-300 text-xs italic">—</span>
+                    )}
+                  </div>
+                );
+              });
+            })()}
           </motion.div>
         </AnimatePresence>
       </div>

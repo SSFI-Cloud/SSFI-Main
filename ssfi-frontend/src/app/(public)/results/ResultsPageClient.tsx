@@ -23,7 +23,7 @@ interface EventSummary {
 }
 
 interface ResultRow {
-  position: 1 | 2 | 3;
+  position: 1 | 2 | 3 | 4 | 5;
   firstName: string;
   state: string;
   skateCategory: string;
@@ -38,17 +38,21 @@ interface EventDetail {
 
 // â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const MEDAL_ICON: Record<number, string>  = { 1: 'ðŸ¥‡', 2: 'ðŸ¥ˆ', 3: 'ðŸ¥‰' };
+const MEDAL_ICON: Record<number, string>  = { 1: '\u{1F947}', 2: '\u{1F948}', 3: '\u{1F949}', 4: '4', 5: '5' };
 
 const MEDAL_ROW_CLS: Record<number, string> = {
   1: 'bg-amber-50/70 border-amber-100',
   2: 'bg-slate-50/70  border-slate-100',
   3: 'bg-orange-50/70 border-orange-100',
+  4: 'bg-teal-50/70   border-teal-100',
+  5: 'bg-indigo-50/70 border-indigo-100',
 };
 const MEDAL_TEXT_CLS: Record<number, string> = {
   1: 'text-amber-700 font-extrabold',
   2: 'text-slate-600  font-bold',
   3: 'text-orange-700 font-bold',
+  4: 'text-teal-700   font-bold',
+  5: 'text-indigo-600 font-bold',
 };
 
 const CAT_CFG: Record<string, { bg: string; text: string }> = {
@@ -133,7 +137,13 @@ function EventResultsTable({ eventId }: { eventId: number }) {
               >
                 {/* Rank */}
                 <td className="px-5 py-3.5 text-center">
-                  <span className="text-xl leading-none">{MEDAL_ICON[r.position]}</span>
+                  {r.position <= 3 ? (
+                    <span className="text-xl leading-none">{MEDAL_ICON[r.position]}</span>
+                  ) : (
+                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${MEDAL_TEXT_CLS[r.position] ?? ''} ${MEDAL_ROW_CLS[r.position] ?? ''}`}>
+                      {MEDAL_ICON[r.position]}
+                    </span>
+                  )}
                 </td>
 
                 {/* Athlete */}
@@ -227,7 +237,7 @@ export default function ResultsPageClient() {
                 </span>
               </h1>
               <p className="text-white/50 text-lg max-w-xl">
-                Official top-3 finishers for every SSFI championship — by age group and discipline.
+                Official top-5 finishers for every SSFI championship — by age group and discipline.
               </p>
             </motion.div>
 
