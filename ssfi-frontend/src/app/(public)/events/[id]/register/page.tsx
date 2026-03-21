@@ -34,6 +34,7 @@ interface EventFee {
   lateFee: number;
   isLateFee: boolean;
   totalFee: number;
+  paymentMode?: string;
 }
 
 interface RaceOption {
@@ -650,7 +651,9 @@ export default function EventRegistrationPage() {
 
               <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Registration Successful! 🎉</h2>
               <p className="text-gray-500 text-sm mb-6 max-w-sm mx-auto">
-                Your spot is reserved. Complete payment to fully confirm your registration.
+                {eventFee?.paymentMode === 'OFFLINE'
+                  ? 'Your registration is confirmed. Please pay the entry fee to the event organizer.'
+                  : 'Your spot is reserved. Complete payment to fully confirm your registration.'}
               </p>
 
               {/* Confirmation number */}
@@ -673,20 +676,29 @@ export default function EventRegistrationPage() {
               )}
 
               {/* Next steps box */}
-              <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 text-sm text-teal-700 mb-6 max-w-md mx-auto text-left">
-                <p className="font-semibold mb-1">📋 Next Steps</p>
-                <p>Complete payment to secure your spot. Save your confirmation number — you will need to present it at the venue on event day.</p>
-              </div>
+              {eventFee?.paymentMode === 'OFFLINE' ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700 mb-6 max-w-md mx-auto text-left">
+                  <p className="font-semibold mb-1">💵 Offline Payment</p>
+                  <p>Please pay <strong>₹{regSuccess.totalFee.toLocaleString('en-IN')}</strong> in cash to the event organizer. Save your confirmation number — you will need to present it at the venue on event day.</p>
+                </div>
+              ) : (
+                <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 text-sm text-teal-700 mb-6 max-w-md mx-auto text-left">
+                  <p className="font-semibold mb-1">📋 Next Steps</p>
+                  <p>Complete payment to secure your spot. Save your confirmation number — you will need to present it at the venue on event day.</p>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex items-center justify-center gap-3 flex-wrap">
-                <button
-                  onClick={() => router.push(
-                    `/payment?registrationId=${encodeURIComponent(regSuccess.confirmationNumber)}&amount=${regSuccess.totalFee}&eventId=${eventId}&eventName=${encodeURIComponent(event?.name || '')}`
-                  )}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all">
-                  <Zap className="w-4 h-4" /> Complete Payment
-                </button>
+                {eventFee?.paymentMode !== 'OFFLINE' && (
+                  <button
+                    onClick={() => router.push(
+                      `/payment?registrationId=${encodeURIComponent(regSuccess.confirmationNumber)}&amount=${regSuccess.totalFee}&eventId=${eventId}&eventName=${encodeURIComponent(event?.name || '')}`
+                    )}
+                    className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all">
+                    <Zap className="w-4 h-4" /> Complete Payment
+                  </button>
+                )}
                 <Link href="/events"
                   className="px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200 transition-all">
                   View Events

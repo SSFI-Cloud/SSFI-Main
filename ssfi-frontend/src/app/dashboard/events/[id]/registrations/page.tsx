@@ -18,6 +18,7 @@ import {
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { portalService } from '@/services/portal.service';
+import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 interface Registration {
@@ -55,6 +56,7 @@ function AdminRegistrationsContent() {
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [search, setSearch] = useState('');
     const [exporting, setExporting] = useState(false);
+    const [eventPaymentMode, setEventPaymentMode] = useState<string>('ONLINE');
 
     // Manual Registration State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,17 +81,39 @@ function AdminRegistrationsContent() {
         if (!token) return;
         try {
             setLoading(true);
-            const response = await portalService.getEventRegistrations(eventId, {}, token);
-            if (response.status === 'success') {
-                setRegistrations(response.data.registrations);
+            const [regResponse, eventResponse] = await Promise.all([
+                portalService.getEventRegistrations(eventId, {}, token),
+                api.get(`/events/${eventId}`).catch(() => null),
+            ]);
+            if (regResponse.status === 'success') {
+                setRegistrations(regResponse.data.registrations);
             } else {
                 toast.error('Failed to load registrations');
+            }
+            if (eventResponse?.data?.data?.paymentMode) {
+                setEventPaymentMode(eventResponse.data.data.paymentMode);
             }
         } catch (error) {
             console.error(error);
             toast.error('Something went wrong');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleTogglePayment = async (registrationId: number, currentStatus: string) => {
+        const newStatus = currentStatus === 'PAID' ? 'PENDING' : 'PAID';
+        try {
+            await api.patch(`/event-registration/${registrationId}/payment-status`, {
+                paymentStatus: newStatus,
+            });
+            // Update local state
+            setRegistrations(prev =>
+                prev.map(r => r.id === registrationId ? { ...r, paymentStatus: newStatus } : r)
+            );
+            toast.success(`Payment marked as ${newStatus}`);
+        } catch (error) {
+            toast.error('Failed to update payment status');
         }
     };
 
@@ -370,6 +394,19 @@ function AdminRegistrationsContent() {
                                                     <span className="text-xs text-gray-600 font-mono" title={reg.payment.razorpayPaymentId}>
                                                         {reg.payment.razorpayPaymentId.slice(-6)}
                                                     </span>
+                                                )}
+                                                {eventPaymentMode === 'OFFLINE' && (
+                                                    <button
+                                                        onClick={() => handleTogglePayment(reg.id, reg.paymentStatus)}
+                                                        className={`ml-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                                                            reg.paymentStatus === 'PAID'
+                                                                ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                                                                : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'
+                                                        }`}
+                                                        title={reg.paymentStatus === 'PAID' ? 'Mark as Unpaid' : 'Mark as Paid'}
+                                                    >
+                                                        {reg.paymentStatus === 'PAID' ? 'Unpaid' : 'Paid'}
+                                                    </button>
                                                 )}
                                             </div>
                                         </td>
