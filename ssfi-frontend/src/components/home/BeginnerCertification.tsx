@@ -223,10 +223,10 @@ export default function BeginnerCertification({ programs }: BeginnerCertificatio
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                  <div>
-                    <p className="text-white/30 text-xs">Program Fee</p>
-                    <p className="text-2xl font-headline font-bold text-white">{batch.fee}</p>
+                <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <p className="text-emerald-400 text-sm font-bold">Registration Open</p>
                   </div>
                   <div className="flex items-center gap-1 text-white/30">
                     <Users className="w-4 h-4" />
