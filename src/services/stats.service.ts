@@ -63,7 +63,7 @@ export class StatsService {
                 states: statesCount,
                 districts: districtsCount,
                 championships: championshipsCount,
-                certifiedCoaches: coachOverride ?? certifiedCoachesCount
+                certifiedCoaches: coachOverride ?? (certifiedCoachesCount || 300)
             };
         } catch (error) {
             console.error('Error fetching public stats:', error);
