@@ -13,6 +13,11 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: '*.up.railway.app',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'ssfiskate.com',
         pathname: '/**',
       },

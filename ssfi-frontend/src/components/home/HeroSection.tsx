@@ -162,14 +162,14 @@ const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
     return {
       id: s.id,
       tag: meta.badge || s.subtitle || 'SSFI Announcement',
-      titleLine1: s.title,
-      accent: meta.highlight || '',
-      stroke: '',
-      description: meta.description || '',
-      ctaText: s.linkText || 'Learn More',
-      ctaLink: s.linkUrl || '/about',
-      secondaryText: meta.secondaryCtaText || '',
-      secondaryLink: meta.secondaryCtaLink || '',
+      titleLine1: s.title || fallback.titleLine1,
+      accent: meta.highlight || fallback.accent,
+      stroke: meta.stroke || fallback.stroke,
+      description: meta.description || fallback.description,
+      ctaText: s.linkText || fallback.ctaText,
+      ctaLink: s.linkUrl || fallback.ctaLink,
+      secondaryText: meta.secondaryCtaText || fallback.secondaryText,
+      secondaryLink: meta.secondaryCtaLink || fallback.secondaryLink,
       image: s.imageUrl
         ? (s.imageUrl.startsWith('http') ? s.imageUrl : s.imageUrl.startsWith('/images/') ? s.imageUrl : `${API_BASE}${s.imageUrl}`)
         : fallback.image,
