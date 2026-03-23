@@ -118,8 +118,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Logo */}
       <div className="p-5 border-b border-white/10 flex justify-center">
         <Link href="/" className="flex items-center justify-center">
-          <div className="relative w-28 h-28">
-            <Image src="/images/logo/light.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
+          <div className="relative w-36 h-20">
+            <Image src="/images/logo/logo-wide.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
           </div>
         </Link>
       </div>

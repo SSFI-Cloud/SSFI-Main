@@ -71,7 +71,7 @@ const Footer = () => {
             {/* Col 1 — Brand + Newsletter */}
             <div className="sm:col-span-2 lg:col-span-4">
               <div className="mb-4">
-                <Image src="/images/logo/light.webp" alt="Speed Skating Federation of India" width={100} height={100} className="object-contain" />
+                <Image src="/images/logo/logo-wide.webp" alt="Speed Skating Federation of India" width={180} height={60} className="object-contain" />
               </div>
               <p className="text-gray-400 text-sm leading-relaxed mb-6">
                 The official governing body for speed skating in India, promoting excellence and growth nationwide since 2001.
