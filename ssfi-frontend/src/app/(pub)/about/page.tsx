@@ -37,9 +37,10 @@ async function fetchData(url: string) {
 }
 
 export default async function AboutPage() {
-  const [milestones, stats] = await Promise.all([
+  const [milestones, stats, team] = await Promise.all([
     fetchData('/milestones/public'),
     fetchData('/stats/public'),
+    fetchData('/team-members/public'),
   ]);
 
   return (
@@ -54,6 +55,7 @@ export default async function AboutPage() {
       <AboutPageClient
         initialMilestones={Array.isArray(milestones) && milestones.length > 0 ? milestones : null}
         initialStats={stats || null}
+        initialTeam={Array.isArray(team) ? team : null}
       />
     </>
   );

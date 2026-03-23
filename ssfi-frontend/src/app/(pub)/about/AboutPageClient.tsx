@@ -31,18 +31,14 @@ const missionPoints = [
   { icon: Shield, text: 'Uphold sportsmanship, discipline, and excellence in competition' },
 ];
 
-/* ── Hierarchy org-chart data ────────────────────────────── */
-const hierarchyTop = [
-  { name: 'TBD', role: 'Chief Patron', photo: '' },
-  { name: 'Mr. Krishna Baisware', role: 'President', photo: '/images/team/krishna-baisware.webp' },
-  { name: 'TBD', role: 'Vice President', photo: '' },
-  { name: 'Shri S. Muruganantham', role: 'General Secretary', photo: '/images/team/muruganantham.webp' },
+/* ── Hierarchy org-chart data (fallback — overridden by CMS if available) ── */
+const HIERARCHY_FALLBACK = [
+  { name: 'Mr. Krishna Baisware', role: 'President', photo: '/images/team/krishna-baisware.webp', displayOrder: 1 },
+  { name: 'Shri S. Muruganantham', role: 'General Secretary', photo: '/images/team/muruganantham.webp', displayOrder: 2 },
 ];
-const hierarchyBottom = [
-  { name: 'TBD', role: 'Joint Secretary', photo: '' },
-  { name: 'TBD', role: 'Treasurer', photo: '' },
-  { name: 'TBD', role: 'EC Member', photo: '' },
-];
+
+// Filter helper — only show members with actual names (not TBD/empty)
+const isRealMember = (m: { name: string }) => m.name && m.name !== 'TBD' && m.name.trim() !== '';
 
 const orgChartCSS = `
 @keyframes hGradient{0%{background-position:0% 0%}100%{background-position:0% 200%}}
@@ -87,11 +83,19 @@ interface AboutPageClientProps {
     totalEvents?: number;
     championships?: number;
   } | null;
+  initialTeam?: any[] | null;
 }
 
-export default function AboutPageClient({ initialMilestones, initialStats }: AboutPageClientProps) {
+export default function AboutPageClient({ initialMilestones, initialStats, initialTeam }: AboutPageClientProps) {
   const milestones = initialMilestones || MILESTONE_FALLBACK;
   const statsData = initialStats || { students: 5600, clubs: 800, states: 36, districts: 640, totalEvents: 50, championships: 25 };
+
+  // Team members from CMS, filtered to only real members (not TBD/empty)
+  const allTeamMembers = (initialTeam && initialTeam.length > 0 ? initialTeam : HIERARCHY_FALLBACK).filter(isRealMember);
+  // Split into top chain (President, General Secretary, etc.) and bottom row (Joint Secretary, Treasurer, etc.)
+  const topRoles = ['Chief Patron', 'President', 'Vice President', 'General Secretary'];
+  const hierarchyTop = allTeamMembers.filter(m => topRoles.includes(m.role));
+  const hierarchyBottom = allTeamMembers.filter(m => !topRoles.includes(m.role));
 
   const stats = [
     { label: 'Registered Skaters', value: `${statsData.students?.toLocaleString()}+`, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200/60', accent: '#10b981' },
@@ -223,7 +227,7 @@ export default function AboutPageClient({ initialMilestones, initialStats }: Abo
 
           {/* Org chart */}
           <div className="flex flex-col items-center max-w-4xl mx-auto">
-            {/* Top 4 — single chain */}
+            {/* Top chain — President, General Secretary, etc. */}
             {hierarchyTop.map((member, idx) => (
               <div key={member.role} className="flex flex-col items-center">
                 {idx > 0 && <div className="org-line-v h-10 md:h-14" />}
@@ -231,22 +235,23 @@ export default function AboutPageClient({ initialMilestones, initialStats }: Abo
               </div>
             ))}
 
-            {/* Branch connector: vertical stem */}
-            <div className="org-line-v h-10 md:h-14" />
-
-            {/* Branch: horizontal bar + 3 drops */}
-            <div className="relative w-full max-w-md md:max-w-xl">
-              {/* Horizontal bar spanning outer two nodes */}
-              <div className="org-line-h absolute top-0 left-[16.67%] right-[16.67%]" />
-              <div className="grid grid-cols-3">
-                {hierarchyBottom.map((member, idx) => (
-                  <div key={member.role} className="flex flex-col items-center">
-                    <div className="org-line-v h-10 md:h-14" />
-                    <HierarchyNode name={member.name} role={member.role} photo={member.photo} delay={0.5 + idx * 0.12} />
+            {/* Bottom branch — only show if there are real members */}
+            {hierarchyBottom.length > 0 && (
+              <>
+                <div className="org-line-v h-10 md:h-14" />
+                <div className="relative w-full max-w-md md:max-w-xl">
+                  <div className="org-line-h absolute top-0 left-[16.67%] right-[16.67%]" />
+                  <div className={`grid grid-cols-${Math.min(hierarchyBottom.length, 3)}`}>
+                    {hierarchyBottom.map((member, idx) => (
+                      <div key={member.role} className="flex flex-col items-center">
+                        <div className="org-line-v h-10 md:h-14" />
+                        <HierarchyNode name={member.name} role={member.role} photo={member.photo} delay={0.5 + idx * 0.12} />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
