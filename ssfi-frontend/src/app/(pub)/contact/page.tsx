@@ -20,7 +20,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/ap
 async function fetchSettings() {
   try {
     const res = await fetch(`${API_URL}/cms/settings`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 60 }, // Revalidate every 1 minute for quick CMS updates
     });
     if (!res.ok) return null;
     const json = await res.json();

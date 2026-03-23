@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 async function fetchData(url: string) {
   try {
     const res = await fetch(`${API_URL}${url}`, {
-      next: { revalidate: 3600 }, // ISR: revalidate every 1 hour
+      next: { revalidate: 60 }, // Revalidate every 1 minute for quick CMS updates
     });
     if (!res.ok) return null;
     const json = await res.json();
