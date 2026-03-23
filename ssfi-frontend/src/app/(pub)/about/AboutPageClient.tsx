@@ -7,6 +7,7 @@ import {
   Award, Users, MapPin, Calendar, Trophy, Target, Star, ChevronRight,
   Medal, Shield, Eye, Rocket, GraduationCap, Globe, Flame, Flag,
 } from 'lucide-react';
+import { resolveImageUrl } from '@/lib/utils/resolveImageUrl';
 
 // Icon map — matches the fixed icon set in the CMS
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -49,18 +50,8 @@ const orgChartCSS = `
 .org-avatar{animation:hGlow 3s ease-in-out infinite}
 `;
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1').replace('/api/v1', '');
-
-function resolvePhoto(photo: string) {
-  if (!photo) return '';
-  if (photo.startsWith('http')) return photo;
-  if (photo.startsWith('/images/')) return photo; // Local public folder
-  if (photo.startsWith('/uploads/')) return `${API_BASE}${photo}`; // Backend uploads
-  return photo;
-}
-
 function HierarchyNode({ name, role, photo, delay = 0 }: { name: string; role: string; photo: string; delay?: number }) {
-  const photoUrl = resolvePhoto(photo);
+  const photoUrl = resolveImageUrl(photo);
   return (
     <motion.div initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay, duration: 0.5, ease: 'easeOut' }}
       className="flex flex-col items-center gap-2">
