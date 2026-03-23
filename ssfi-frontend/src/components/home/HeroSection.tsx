@@ -17,6 +17,7 @@ interface CMSBanner {
   metadata?: {
     badge?: string;
     highlight?: string;
+    stroke?: string;
     description?: string;
     secondaryCtaText?: string;
     secondaryCtaLink?: string;
