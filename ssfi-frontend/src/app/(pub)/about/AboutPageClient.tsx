@@ -49,14 +49,25 @@ const orgChartCSS = `
 .org-avatar{animation:hGlow 3s ease-in-out infinite}
 `;
 
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1').replace('/api/v1', '');
+
+function resolvePhoto(photo: string) {
+  if (!photo) return '';
+  if (photo.startsWith('http')) return photo;
+  if (photo.startsWith('/images/')) return photo; // Local public folder
+  if (photo.startsWith('/uploads/')) return `${API_BASE}${photo}`; // Backend uploads
+  return photo;
+}
+
 function HierarchyNode({ name, role, photo, delay = 0 }: { name: string; role: string; photo: string; delay?: number }) {
+  const photoUrl = resolvePhoto(photo);
   return (
     <motion.div initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay, duration: 0.5, ease: 'easeOut' }}
       className="flex flex-col items-center gap-2">
       <div className="org-avatar relative w-20 h-20 md:w-24 md:h-24 rounded-full p-[2.5px] bg-gradient-to-br from-emerald-400 via-teal-400 to-sky-400">
         <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-100">
-          {photo ? (
-            <Image src={photo} alt={name} fill className="object-cover object-top" sizes="96px" />
+          {photoUrl ? (
+            <Image src={photoUrl} alt={name} fill className="object-cover object-top" sizes="96px" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"><Users className="w-8 h-8 md:w-10 md:h-10 text-gray-300" /></div>
           )}
