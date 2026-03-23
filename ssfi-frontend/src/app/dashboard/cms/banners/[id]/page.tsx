@@ -23,7 +23,7 @@ export default function EditBannerPage() {
     status: 'PUBLISHED' as 'PUBLISHED' | 'DRAFT', sortOrder: 0,
   });
   const [meta, setMeta] = useState({
-    badge: '', highlight: '', description: '',
+    badge: '', highlight: '', stroke: '', description: '',
     secondaryCtaText: '', secondaryCtaLink: '', ghostWord: '',
   });
 
@@ -44,11 +44,11 @@ export default function EditBannerPage() {
         if (b.metadata) {
           const m = b.metadata;
           setMeta({
-            badge: m.badge || '', highlight: m.highlight || '', description: m.description || '',
+            badge: m.badge || '', highlight: m.highlight || '', stroke: m.stroke || '', description: m.description || '',
             secondaryCtaText: m.secondaryCtaText || '', secondaryCtaLink: m.secondaryCtaLink || '', ghostWord: m.ghostWord || '',
           });
           // Auto-expand if any metadata is present
-          if (m.badge || m.highlight || m.description || m.secondaryCtaText || m.secondaryCtaLink || m.ghostWord) {
+          if (m.badge || m.highlight || m.stroke || m.description || m.secondaryCtaText || m.secondaryCtaLink || m.ghostWord) {
             setShowAdvanced(true);
           }
         }
@@ -67,6 +67,7 @@ export default function EditBannerPage() {
       const metadata: Record<string, string> = {};
       if (meta.badge.trim()) metadata.badge = meta.badge.trim();
       if (meta.highlight.trim()) metadata.highlight = meta.highlight.trim();
+      if (meta.stroke.trim()) metadata.stroke = meta.stroke.trim();
       if (meta.description.trim()) metadata.description = meta.description.trim();
       if (meta.secondaryCtaText.trim()) metadata.secondaryCtaText = meta.secondaryCtaText.trim();
       if (meta.secondaryCtaLink.trim()) metadata.secondaryCtaLink = meta.secondaryCtaLink.trim();
@@ -159,9 +160,14 @@ export default function EditBannerPage() {
                 <p className="text-xs text-gray-400">Orange badge with pulsing dot at top of slide</p>
               </div>
               <div className="space-y-1.5">
-                <label className={labelClass}>Accent Line (Orange)</label>
+                <label className={labelClass}>Accent Line (Green)</label>
                 <input value={meta.highlight} onChange={e => setM('highlight', e.target.value)} className={inputClass} placeholder="e.g. Championship" />
-                <p className="text-xs text-gray-400">Second line of title in orange color</p>
+                <p className="text-xs text-gray-400">Second line of title in green/emerald color</p>
+              </div>
+              <div className="space-y-1.5">
+                <label className={labelClass}>Stroke Text (Outline)</label>
+                <input value={meta.stroke} onChange={e => setM('stroke', e.target.value)} className={inputClass} placeholder="e.g. 2025 Recap" />
+                <p className="text-xs text-gray-400">Third line with outline/stroke text style</p>
               </div>
               <div className="md:col-span-2 space-y-1.5">
                 <label className={labelClass}>Description</label>
