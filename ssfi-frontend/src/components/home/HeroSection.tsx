@@ -178,7 +178,36 @@ const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
     };
   });
 
-  const slides = hasCms ? cmsAdapted : FALLBACK_SLIDES;
+  // Merge live API stats into fallback slides
+  const liveSlides = FALLBACK_SLIDES.map((slide, i) => {
+    if (!propStats) return slide;
+    const s = propStats;
+    const statsMap: Record<number, { n: string; l: string }[]> = {
+      0: [
+        { n: `${(s.students || 2000).toLocaleString()}+`, l: 'Athletes' },
+        { n: String(s.states || 28), l: 'States' },
+        { n: `${(s.students || 5616).toLocaleString()}+`, l: 'Registered' },
+      ],
+      1: [
+        { n: `${s.clubs || 500}+`, l: 'Clubs' },
+        { n: String(s.states || 18), l: 'States' },
+        { n: 'Age 6+', l: 'Any Level' },
+      ],
+      2: [
+        { n: `${s.certifiedCoaches || 300}+`, l: 'Coaches' },
+        { n: '3', l: 'Cert Levels' },
+        { n: 'All India', l: 'Recognition' },
+      ],
+      3: [
+        { n: String(s.states || 36), l: 'States' },
+        { n: `${(s.students || 5616).toLocaleString()}+`, l: 'Skaters' },
+        { n: 'Open', l: 'Season' },
+      ],
+    };
+    return { ...slide, stats: statsMap[i] || slide.stats };
+  });
+
+  const slides = hasCms ? cmsAdapted : liveSlides;
   const N = slides.length;
 
   const goTo = useCallback((n: number) => {

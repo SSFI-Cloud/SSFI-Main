@@ -207,8 +207,9 @@ export default function LoginPage() {
                 <div className="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-10" />
                 <div className="absolute inset-0 flex items-center justify-center p-12">
                     <div className="text-center">
+                        <img src="/images/logo/login-logo.webp" alt="SSFI" className="mx-auto mb-8 h-28 w-auto object-contain" />
                         <h2 className="text-5xl font-display font-bold text-white mb-6">
-                            Join India's Premier
+                            Join India&apos;s Premier
                             <br />
                             Skating Federation
                         </h2>

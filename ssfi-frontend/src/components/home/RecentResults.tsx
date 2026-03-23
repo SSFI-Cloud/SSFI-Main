@@ -485,7 +485,7 @@ export default function RecentResults({ results }: RecentResultsProps) {
         >
           <p className="text-gray-400 text-sm mb-3">Disciplines covered in national events</p>
           <div className="flex flex-wrap justify-center gap-3">
-            {['#SpeedSkating', '#ArtisticSkating', '#InlineHockey', '#FreestyleSlalom', '#DownhillRacing', '#FigureSkating'].map(tag => (
+            {['#SpeedSkating', '#SSFI', '#NationalChampionship', '#SkatingIndia', '#TeamIndia', '#BharatSkate'].map(tag => (
               <span
                 key={tag}
                 className="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-medium shadow-sm hover:border-emerald-200 hover:text-emerald-600 transition-colors cursor-default"

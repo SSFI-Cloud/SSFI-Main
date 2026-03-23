@@ -22,10 +22,7 @@ interface SiteSettings {
 }
 
 const FALLBACK_DEPARTMENTS: Department[] = [
-  { name: 'General Enquiries', email: 'info@ssfiskate.com', phone: '+91 XXXXX XXXXX' },
-  { name: 'Event Registration', email: 'events@ssfiskate.com', phone: '+91 XXXXX XXXXX' },
-  { name: 'Coaching & Certification', email: 'coaching@ssfiskate.com', phone: '+91 XXXXX XXXXX' },
-  { name: 'Media & Press', email: 'media@ssfiskate.com', phone: '+91 XXXXX XXXXX' },
+  { name: 'All Enquiries', email: 'info@ssfiskate.com', phone: '' },
 ];
 
 const CARD_COLORS: Record<string, { gradient: string; bg: string; border: string }> = {
@@ -47,8 +44,8 @@ export default function ContactPageClient({ initialSettings }: ContactPageClient
   const phone2 = settings?.metadata?.phone2 || settings?.contactPhone2 || '';
   const email = settings?.contactEmail || 'info@ssfiskate.com';
   const address = settings?.address || 'SSFI National Office, Chennai, Tamil Nadu, India';
-  const weekdays = settings?.metadata?.officeHours?.weekdays || 'Mon – Fri: 9 AM – 6 PM';
-  const saturday = settings?.metadata?.officeHours?.saturday || 'Sat: 10 AM – 2 PM';
+  const weekdays = settings?.metadata?.officeHours?.weekdays || 'Mon – Sat: 9 AM – 6 PM';
+  const saturday = settings?.metadata?.officeHours?.saturday || 'Sun: Holiday';
   const departments = (settings?.metadata?.departments?.length ? settings.metadata.departments : FALLBACK_DEPARTMENTS);
   const mapUrl = settings?.metadata?.mapEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d248849.84916296526!2d80.04419748372182!3d13.047325953744937!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a5265ea4f7d3361%3A0x6e61a70b6863d433!2sChennai%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1679298123456!5m2!1sen!2sin';
 
