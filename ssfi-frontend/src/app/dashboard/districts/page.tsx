@@ -173,15 +173,11 @@ export default function DistrictsPage() {
     };
 
     useEffect(() => {
-        // Debounce search
-        const timer = setTimeout(() => {
-            if (token) {
-                fetchDistricts();
-            } else {
-                setIsLoading(false); // Stop loading if no token (though ideally redirect)
-            }
-        }, 500);
-        return () => clearTimeout(timer);
+        if (token) {
+            fetchDistricts();
+        } else {
+            setIsLoading(false);
+        }
     }, [token, currentPage, searchQuery, stateFilter, sortField, sortOrder]);
 
 
