@@ -171,7 +171,7 @@ const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
       secondaryText: meta.secondaryCtaText || '',
       secondaryLink: meta.secondaryCtaLink || '',
       image: s.imageUrl
-        ? (s.imageUrl.startsWith('http') ? s.imageUrl : `${API_BASE}${s.imageUrl}`)
+        ? (s.imageUrl.startsWith('http') ? s.imageUrl : s.imageUrl.startsWith('/images/') ? s.imageUrl : `${API_BASE}${s.imageUrl}`)
         : fallback.image,
       ghost: meta.ghostWord || GHOST_WORDS[i % GHOST_WORDS.length],
       stats: fallback.stats,
