@@ -93,9 +93,10 @@ for (const origin of rawOrigins) {
   }
 }
 
+// Allow Vercel preview/production deployments
 const corsOptions = {
   origin: (origin: string | undefined, callback: Function) => {
-    if (!origin || allowedOrigins.has(origin)) {
+    if (!origin || allowedOrigins.has(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
       logger.warn(`CORS blocked origin: ${origin}`);
