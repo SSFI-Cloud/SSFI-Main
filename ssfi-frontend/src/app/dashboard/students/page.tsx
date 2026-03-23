@@ -119,8 +119,7 @@ export default function StudentsPage() {
     };
 
     useEffect(() => {
-        const timer = setTimeout(() => { fetchStudents(); }, 400);
-        return () => clearTimeout(timer);
+        fetchStudents();
     }, [currentPage, searchQuery, categoryFilter, verificationFilter, sortField, sortOrder]);
 
     const calculateAge = (dob: string) => {

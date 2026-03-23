@@ -110,8 +110,7 @@ export default function ClubsPage() {
     }, [token]);
 
     useEffect(() => {
-        const timer = setTimeout(() => { if (token) fetchClubs(); }, 400);
-        return () => clearTimeout(timer);
+        if (token) fetchClubs();
     }, [token, currentPage, searchQuery, stateFilter, verificationFilter, sortField, sortOrder]);
 
     const handleSort = (field: keyof Club) => {
