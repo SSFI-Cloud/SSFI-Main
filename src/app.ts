@@ -15,18 +15,14 @@ if (!process.env.DATABASE_URL) {
   dotenv.config({ path: path.resolve(__dirname, '../../public_html/.builds/config/.env') });
 }
 
-// ── Process/thread limits (Hostinger has a 200 process cap) ──
-// UV_THREADPOOL_SIZE must be set BEFORE any async I/O — controls libuv threads
-// for DNS lookups, fs operations, crypto, etc.
-if (!process.env.UV_THREADPOOL_SIZE) process.env.UV_THREADPOOL_SIZE = '2';
+// ── Process/thread limits ──
+// Railway: higher defaults for dedicated container; Hostinger: restricted
+const isRailway = !!process.env.RAILWAY_ENVIRONMENT;
+if (!process.env.UV_THREADPOOL_SIZE) process.env.UV_THREADPOOL_SIZE = isRailway ? '8' : '2';
+if (!process.env.VIPS_CONCURRENCY) process.env.VIPS_CONCURRENCY = isRailway ? '2' : '1';
 
-// Limit libvips (sharp's image library) thread pool via env var
-// This MUST be set before sharp is imported
-if (!process.env.VIPS_CONCURRENCY) process.env.VIPS_CONCURRENCY = '1';
-
-// Now import and configure sharp
 import sharp from 'sharp';
-sharp.concurrency(1);
+sharp.concurrency(isRailway ? 2 : 1);
 
 // Import routes
 import authRoutes from './routes/auth.routes';
