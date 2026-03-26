@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+// Performance: image optimization re-enabled for Vercel (was disabled for Hostinger)
 const nextConfig = {
   output: 'standalone',
   images: {
