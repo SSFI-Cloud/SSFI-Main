@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { api } from '@/lib/api/client';
 import HeroSection from '@/components/home/HeroSection';
 
 // Eagerly loaded — above the fold
@@ -18,16 +16,12 @@ const MeetRollie = dynamic(() => import('@/components/home/MeetRollie'), { ssr: 
 const DonationsSection = dynamic(() => import('@/components/home/DonationsSection'), { ssr: false });
 const PartnersMarquee = dynamic(() => import('@/components/home/PartnersMarquee'), { ssr: false });
 
-export default function HomePageClient() {
-  const [data, setData] = useState<any>(null);
+interface HomePageClientProps {
+  initialData?: any;
+}
 
-  useEffect(() => {
-    api.get('/homepage')
-      .then(res => {
-        if (res.data?.success) setData(res.data.data);
-      })
-      .catch(() => {});
-  }, []);
+export default function HomePageClient({ initialData }: HomePageClientProps) {
+  const data = initialData;
 
   return (
     <main className="min-h-screen bg-white">

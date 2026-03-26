@@ -334,7 +334,7 @@ const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
                 transform: isActive ? undefined : 'scale(1.08)',
                 willChange: 'transform',
               }}>
-                <Image src={s.image} alt={s.titleLine1} fill className="object-cover" style={{ objectPosition: 'center 25%' }} priority={i === 0} quality={90} sizes="100vw" />
+                <Image src={s.image} alt={s.titleLine1} fill className="object-cover" style={{ objectPosition: 'center 25%' }} priority={i === 0} quality={75} sizes="100vw" />
               </div>
 
               {/* Overlays */}

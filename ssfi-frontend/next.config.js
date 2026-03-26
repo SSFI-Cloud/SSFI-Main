@@ -2,10 +2,11 @@
 const nextConfig = {
   output: 'standalone',
   images: {
-    // Disable server-side image optimization — it uses Sharp which spawns
-    // threads and kills Hostinger's 200 process limit. Images are already
-    // pre-optimized as WebP at upload time on the backend.
-    unoptimized: true,
+    // Vercel handles image optimization natively (no process limit like Hostinger)
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       {
         protocol: 'https',

@@ -22,7 +22,7 @@ const barlowCondensed = Barlow_Condensed({
   weight: ['700', '900'],
   style: ['normal', 'italic'],
   variable: '--font-hero',
-  display: 'swap',
+  display: 'optional',  // Don't block render for decorative hero font
 });
 
 import ScrollNavigation from '@/components/ui/ScrollNavigation';
