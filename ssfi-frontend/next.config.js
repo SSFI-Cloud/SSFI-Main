@@ -62,7 +62,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://api.ssfiskate.com https://ssfiskate.com https://*.ssfiskate.com https://*.up.railway.app",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://api.ssfiskate.com https://ssfiskate.com https://*.ssfiskate.com https://*.up.railway.app https://api.razorpay.com https://lumberjack-cx.razorpay.com https://cloudflareinsights.com",
+              "connect-src 'self' https://api.ssfiskate.com https://ssfiskate.com https://*.ssfiskate.com https://*.up.railway.app https://api.razorpay.com https://lumberjack.razorpay.com https://lumberjack-cx.razorpay.com https://cloudflareinsights.com",
               "frame-src https://www.google.com https://maps.google.com https://api.razorpay.com",
               "object-src 'none'",
               "base-uri 'self'",
