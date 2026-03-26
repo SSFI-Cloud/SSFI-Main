@@ -45,6 +45,16 @@ export class StatsService {
                 }).catch(() => 0)
             ]);
 
+            // Check for admin stat overrides in SiteSettings.metadata
+            let coachOverride: number | null = null;
+            try {
+                const settings = await prisma.siteSettings.findFirst();
+                const metadata = settings?.metadata as any;
+                if (metadata?.certifiedCoachesOverride) {
+                    coachOverride = Number(metadata.certifiedCoachesOverride);
+                }
+            } catch {} // Silently ignore if settings don't exist
+
             return {
                 students: studentsCount,
                 clubs: clubsCount,
@@ -53,7 +63,7 @@ export class StatsService {
                 states: statesCount,
                 districts: districtsCount,
                 championships: championshipsCount,
-                certifiedCoaches: certifiedCoachesCount
+                certifiedCoaches: coachOverride ?? (certifiedCoachesCount || 300)
             };
         } catch (error) {
             console.error('Error fetching public stats:', error);

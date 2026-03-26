@@ -39,6 +39,7 @@ enum EventStatus {
   ONGOING
   COMPLETED
   CANCELLED
+  REJECTED
 }
 
 enum PaymentStatus {
@@ -76,7 +77,10 @@ enum AcademicBoard {
   STATE_BOARD
   CBSE
   ICSE
+  IGCSE
   IB
+  GOVERNMENT
+  NIOS
   OTHER
 }
 
@@ -120,6 +124,7 @@ model User {
   student        Student?
   payments       Payment[]
   createdEvents  Event[]         @relation("EventCreator")
+  razorpayConfig RazorpayConfig?
 
   @@index([email])
   @@index([phone])
@@ -130,14 +135,16 @@ model User {
 
 // State Association
 model State {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  code      String   @unique // KA, TN, MH
-  logo      String?
-  website   String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  name           String   @unique
+  code           String   @unique // KA, TN, MH
+  logo           String?
+  website        String?
+  presidentName  String?
+  presidentPhoto String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
   statePerson StatePerson?
@@ -172,8 +179,10 @@ model StatePerson {
   pincode      String
 
   // Documents
-  identityProof String // File path
-  profilePhoto  String?
+  identityProof              String // File path
+  profilePhoto               String?
+  logo                       String? @db.LongText
+  associationRegistrationCopy String? @db.LongText
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -229,8 +238,10 @@ model DistrictPerson {
   pincode      String
 
   // Documents
-  identityProof String
-  profilePhoto  String?
+  identityProof              String
+  profilePhoto               String?
+  logo                       String? @db.LongText
+  associationRegistrationCopy String? @db.LongText
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -325,16 +336,16 @@ model ClubOwner {
   // Personal Details
   name          String
   gender        Gender
-  aadhaarNumber String @unique
+  aadhaarNumber String? @unique  // Made optional — KYC removed for clubs
 
   // Address
-  addressLine1 String
+  addressLine1 String?  // Made optional — new flow uses Club.address
   addressLine2 String?
-  city         String
-  pincode      String
+  city         String?  // Made optional
+  pincode      String?  // Made optional
 
   // Documents
-  identityProof String
+  identityProof String?  // Made optional — KYC removed
   profilePhoto  String?
 
   createdAt DateTime @default(now())
@@ -363,8 +374,9 @@ model Student {
   aadhaarNumber String      @unique
 
   // Family Details
-  fatherName String
-  motherName String?
+  fatherName       String
+  motherName       String?
+  fatherOccupation String?
 
   // School Details
   schoolName    String
@@ -463,11 +475,13 @@ model Event {
   city         String?
 
   // Financials
+  paymentMode      String    @default("ONLINE") // ONLINE, OFFLINE
   entryFee         Decimal   @db.Decimal(10, 2)
   lateFee          Decimal?  @db.Decimal(10, 2)
   lateFeeStartDate DateTime?
 
   // Configuration
+  raceConfig              Json? // Per-event race rules: { categories: [...] }
   ageCategories           Json? // Stored as array of strings
   allowMultipleCategories Boolean @default(false)
   requiresApproval        Boolean @default(false)
@@ -528,6 +542,7 @@ model Event {
   @@index([stateId, status])
   @@index([districtId, status])
   @@index([eventDate, status])
+  @@index([isResultsPublished, eventDate])
   @@map("events")
 }
 
@@ -613,13 +628,13 @@ model EventRegistration {
 
 // Payments
 model Payment {
-  id     Int @id @default(autoincrement())
-  userId Int
+  id     Int  @id @default(autoincrement())
+  userId Int?
 
   // Payment Details
   amount      Decimal       @db.Decimal(10, 2)
   currency    String        @default("INR")
-  paymentType String // REGISTRATION, RENEWAL, EVENT
+  paymentType String // REGISTRATION, RENEWAL, EVENT, DONATION, AFFILIATION_FEE
   status      PaymentStatus @default(PENDING)
 
   // Gateway Details
@@ -631,12 +646,24 @@ model Payment {
   description         String?
   eventRegistrationId Int?    @unique
 
+  // FK links for all payment types
+  coachCertRegistrationId    Int? @unique
+  beginnerCertRegistrationId Int? @unique
+  donationId                 Int? @unique
+
+  // Secretary-specific Razorpay config (null = central SSFI account)
+  razorpayConfigId Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  user              User               @relation(fields: [userId], references: [id])
-  eventRegistration EventRegistration? @relation(fields: [eventRegistrationId], references: [id])
+  user                     User?                     @relation(fields: [userId], references: [id])
+  eventRegistration        EventRegistration?         @relation(fields: [eventRegistrationId], references: [id])
+  coachCertRegistration    CoachCertRegistration?     @relation(fields: [coachCertRegistrationId], references: [id])
+  beginnerCertRegistration BeginnerCertRegistration?  @relation(fields: [beginnerCertRegistrationId], references: [id])
+  donation                 Donation?                  @relation(fields: [donationId], references: [id])
+  razorpayConfig           RazorpayConfig?            @relation(fields: [razorpayConfigId], references: [id])
 
   @@index([status])
   @@index([paymentType])
@@ -937,19 +964,21 @@ model StateSecretary {
   gender               String
   email                String
   phone                String
-  aadhaarNumber        String
+  aadhaarNumber        String?   // Made optional — KYC removed for secretaries
   stateId              Int
   state                State     @relation(fields: [stateId], references: [id], onDelete: Restrict)
   residentialAddress   String
-  identityProof        String? // Legacy — now optional since KYC replaces it
-  profilePhoto         String?
+  identityProof               String?
+  profilePhoto                String?
+  logo                        String? @db.LongText
+  associationRegistrationCopy String? @db.LongText
   registrationWindowId String
   status               String    @default("PENDING") // PENDING, APPROVED, REJECTED
   approvedAt           DateTime?
   approvedBy           String?
   rejectionRemarks     String?
 
-  // KYC Verification (SurePass Aadhaar OTP)
+  // KYC fields (legacy — no longer collected, kept for existing data)
   kycVerified     Boolean   @default(false)
   kycVerifiedAt   DateTime?
   kycVerifiedName String?
@@ -973,21 +1002,23 @@ model DistrictSecretary {
   gender               String
   email                String
   phone                String
-  aadhaarNumber        String
+  aadhaarNumber        String?   // Made optional — KYC removed for secretaries
   stateId              Int
   state                State     @relation(fields: [stateId], references: [id])
   districtId           Int
   district             District  @relation(fields: [districtId], references: [id], onDelete: Restrict)
   residentialAddress   String
-  identityProof        String? // Legacy — now optional since KYC replaces it
-  profilePhoto         String?
+  identityProof               String?
+  profilePhoto                String?
+  logo                        String? @db.LongText
+  associationRegistrationCopy String? @db.LongText
   registrationWindowId String
   status               String    @default("PENDING")
   approvedAt           DateTime?
   approvedBy           String?
   rejectionRemarks     String?
 
-  // KYC Verification (SurePass Aadhaar OTP)
+  // KYC fields (legacy — no longer collected, kept for existing data)
   kycVerified     Boolean   @default(false)
   kycVerifiedAt   DateTime?
   kycVerifiedName String?
@@ -1318,7 +1349,7 @@ model RaceResult {
   gender        Gender
 
   // Result
-  position Int // 1, 2, 3
+  position Int // 1, 2, 3, 4, 5 (multiple students can share a position)
   timing   String? // Optional timing info (e.g., "00:45:12")
   remarks  String?
 
@@ -1329,7 +1360,7 @@ model RaceResult {
   event   Event   @relation(fields: [eventId], references: [id])
   student Student @relation(fields: [studentId], references: [id])
 
-  @@unique([eventId, raceType, skateCategory, ageCategory, gender, position]) // Ensure unique winner per slot
+  @@index([eventId, raceType, skateCategory, ageCategory, gender, position])
   @@index([eventId])
   @@index([studentId])
   @@map("race_results")
@@ -1448,6 +1479,7 @@ model CoachCertRegistration {
 
   // Relations
   program CoachCertProgram @relation(fields: [programId], references: [id])
+  payment Payment?
 
   @@unique([programId, phone])
   @@unique([programId, aadhaarNumber])
@@ -1641,6 +1673,7 @@ model BeginnerCertRegistration {
 
   // Relations
   program BeginnerCertProgram @relation(fields: [programId], references: [id])
+  payment Payment?
 
   @@unique([programId, phone])
   @@unique([programId, aadhaarNumber])
@@ -1648,4 +1681,46 @@ model BeginnerCertRegistration {
   @@index([status])
   @@index([isCompleted])
   @@map("beginner_cert_registrations")
+}
+
+// Donations
+model Donation {
+  id          Int       @id @default(autoincrement())
+  donorName   String
+  donorEmail  String
+  donorPhone  String?
+  amount      Decimal   @db.Decimal(10, 2)
+  currency    String    @default("INR")
+  message     String?   @db.Text
+  isAnonymous Boolean   @default(false)
+  status      String    @default("PENDING") // PENDING, COMPLETED, FAILED, REFUNDED
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  payment     Payment?
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("donations")
+}
+
+// Secretary-specific Razorpay credentials for direct payment collection
+model RazorpayConfig {
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique
+  keyId            String    @db.VarChar(255) // Razorpay Key ID (public)
+  keySecretEnc     String    @db.Text // AES-256-GCM encrypted key secret
+  webhookSecretEnc String?   @db.Text // AES-256-GCM encrypted webhook secret
+  isVerified       Boolean   @default(false)
+  verifiedAt       DateTime?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@map("razorpay_configs")
 }

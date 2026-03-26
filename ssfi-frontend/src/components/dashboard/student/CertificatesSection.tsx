@@ -36,17 +36,25 @@ export default function CertificatesSection() {
         }
     };
 
-    const handleDownload = (cert: any) => {
-        // Here we could trigger a real PDF download. 
-        // For now, let's navigate to the ticket page (which we might repurpose or add a specific certificate view)
-        // OR, simply toast "Coming Soon" if the PDF generation isn't strictly ready.
-        // But the plan said "verify download".
-        // Let's assume we want to navigate to a certificate page similar to ticket page.
-        // For now, let's just show a toast or link to the ticket page which effectively serves as proof.
-        // Actually, let's create a certificate view later if needed.
-        // But per my plan, I created `getMyCertificates` which returns a list.
-        toast('Certificate Download initialized...', { icon: '📄' });
-        // window.open(`/dashboard/certificates/${cert.eventId}`, '_blank');
+    const handleDownload = async (cert: any) => {
+        try {
+            const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.ssfiskate.com/api/v1';
+            const token = localStorage.getItem('accessToken');
+            const res = await fetch(`${API_BASE}/certificates/${cert.id}/download`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error('Download failed');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `SSFI_Certificate_${cert.certificateNumber || cert.id}.pdf`;
+            link.click();
+            URL.revokeObjectURL(url);
+            toast.success('Certificate downloaded!');
+        } catch {
+            toast.error('Failed to download certificate. Please try again.');
+        }
     };
 
     if (isLoading) return <div className="p-4 text-center text-gray-600">Loading certificates...</div>;

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import {
     Trophy,
     Plus,
@@ -106,9 +107,11 @@ export default function EventsPage() {
     const handleApprove = async (event: Event) => {
         try {
             await approveEvent(event.id);
-            fetchEvents();
-        } catch (error) {
+            toast.success('Event approved and published!');
+            await fetchEvents();
+        } catch (error: any) {
             console.error('Failed to approve event', error);
+            toast.error(error?.message || 'Failed to approve event');
         }
     };
 
@@ -117,10 +120,12 @@ export default function EventsPage() {
             const reason = prompt('Enter reason for rejection:');
             if (reason) {
                 await rejectEvent(event.id, reason);
-                fetchEvents();
+                toast.success('Event rejected');
+                await fetchEvents();
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to reject event', error);
+            toast.error(error?.message || 'Failed to reject event');
         }
     };
 
@@ -213,7 +218,7 @@ export default function EventsPage() {
                 const mappedEvents = data.map((e: any) => ({
                     ...e,
                     event_level_type_id: e.eventLevel === 'NATIONAL' ? 3 : e.eventLevel === 'STATE' ? 2 : 1,
-                    status: e.status === 'DRAFT' ? 'pending' : (e.status === 'PUBLISHED' || e.status === 'ONGOING' || e.status === 'REGISTRATION_OPEN' ? 'active' : 'inactive')
+                    status: e.status === 'DRAFT' ? 'pending' : e.status === 'REJECTED' ? 'rejected' : (e.status === 'PUBLISHED' || e.status === 'ONGOING' || e.status === 'REGISTRATION_OPEN' ? 'active' : 'inactive')
                 }));
 
                 setEvents(mappedEvents);

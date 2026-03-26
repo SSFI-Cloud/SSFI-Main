@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Building2, MapPin, Trophy, Calendar, CreditCard,
   FileText, Settings, Bell, LogOut, Menu, X, ChevronDown, Globe, UserPlus,
-  ClipboardList, Clock, GraduationCap, Award, Medal, ChevronRight,
+  ClipboardList, Clock, GraduationCap, Award, Medal, ChevronRight, Heart,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
   { label: 'Coach Certification', href: '/dashboard/coach-certification', icon: Award, roles: ['GLOBAL_ADMIN'] },
   { label: 'Beginner Certification', href: '/dashboard/beginner-certification', icon: Medal, roles: ['GLOBAL_ADMIN'] },
   { label: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY', 'CLUB_OWNER'] },
+  { label: 'Donations', href: '/dashboard/donations', icon: Heart, roles: ['GLOBAL_ADMIN'] },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'] },
   { label: 'Renewals', href: '/dashboard/renewals', icon: Clock, roles: ['GLOBAL_ADMIN'] },
   { label: 'Content Management', href: '/dashboard/cms', icon: Globe, roles: ['GLOBAL_ADMIN'] },
@@ -61,9 +62,32 @@ const roleColors: Record<string, string> = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Redirect to login if not authenticated after loading
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/auth/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // Show loading spinner while auth is being verified
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f5f6f8] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render dashboard if not authenticated
+  if (!isAuthenticated || !user) return null;
 
   const userRole = (user?.role || 'STUDENT') as UserRole;
   const roleConfig = ROLE_CONFIG[userRole];
@@ -94,8 +118,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Logo */}
       <div className="p-5 border-b border-white/10 flex justify-center">
         <Link href="/" className="flex items-center justify-center">
-          <div className="relative w-28 h-28">
-            <Image src="/images/logo/light.webp" alt="SSFI" fill className="object-contain" />
+          <div className="relative w-36 h-20">
+            <Image src="/images/logo/logo-wide.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
           </div>
         </Link>
       </div>
@@ -186,7 +210,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a1628] px-4 py-3 flex items-center justify-between">
         <Link href="/">
           <div className="relative w-8 h-8">
-            <Image src="/images/logo/light.webp" alt="SSFI" fill className="object-contain" />
+            <Image src="/images/logo/light.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
           </div>
         </Link>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-white/60 hover:text-white">

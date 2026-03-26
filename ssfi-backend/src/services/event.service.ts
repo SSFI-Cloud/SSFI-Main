@@ -20,6 +20,8 @@ const formatEvent = (event: any) => ({
   state: event.state,
   district: event.district,
   status: event.status,
+  paymentMode: event.paymentMode,
+  raceConfig: event.raceConfig,
   entryFee: Number(event.entryFee),
   lateFee: Number(event.lateFee),
   maxParticipants: event.maxParticipants,
@@ -74,9 +76,11 @@ export const createEvent = async (data: any, userId: number) => {
       registrationEndDate: new Date(data.registrationEndDate),
       venue: data.venue,
       city: data.city,
+      paymentMode: data.paymentMode || 'ONLINE',
       entryFee: Number(data.entryFee),
       lateFee: Number(data.lateFee || 0),
       maxParticipants: data.maxParticipants ? Number(data.maxParticipants) : undefined,
+      raceConfig: data.raceConfig || undefined,
       ageCategories: data.ageCategories,
       bannerImage: data.bannerImage,
       creatorId: userId,
@@ -113,9 +117,11 @@ export const updateEvent = async (id: number, data: any, userId: number, userRol
       city: data.city,
       stateId: data.stateId ? Number(data.stateId) : undefined,
       districtId: data.districtId ? Number(data.districtId) : undefined,
+      paymentMode: data.paymentMode,
       entryFee: data.entryFee ? Number(data.entryFee) : undefined,
       lateFee: data.lateFee ? Number(data.lateFee) : undefined,
       maxParticipants: data.maxParticipants ? Number(data.maxParticipants) : undefined,
+      raceConfig: data.raceConfig !== undefined ? data.raceConfig : undefined,
       ageCategories: data.ageCategories,
       bannerImage: data.bannerImage,
     },
@@ -361,10 +367,21 @@ export const getEventByCode = async (code: string) => {
 }
 
 export const updateEventStatus = async (id: number, status: string, remarks?: string) => {
-  return prisma.event.update({
+  const validStatuses = ['DRAFT', 'PUBLISHED', 'ONGOING', 'COMPLETED', 'CANCELLED', 'REJECTED'];
+  if (!validStatuses.includes(status)) {
+    throw new AppError(`Invalid status: ${status}. Must be one of: ${validStatuses.join(', ')}`, 400);
+  }
+
+  const event = await prisma.event.update({
     where: { id },
-    data: { status: status as any }
+    data: { status: status as any },
+    include: {
+      state: true,
+      district: true,
+      _count: { select: { registrations: true } },
+    },
   });
+  return formatEvent(event);
 };
 
 export const getUserEvents = async (userId: number, query: any) => {

@@ -11,7 +11,7 @@ export interface Student {
     id: string;
     uid: string;
     firstName: string;
-    lastName: string;
+    name?: string;
     dateOfBirth: string;
     gender: 'MALE' | 'FEMALE' | 'OTHER';
     bloodGroup?: string;
@@ -27,12 +27,11 @@ export interface Student {
     // Family
     fatherName: string;
     motherName: string;
-    guardianPhone: string;
-    guardianEmail?: string;
+    fatherOccupation?: string;
 
     // School
     schoolName?: string;
-    schoolClass?: string;
+    academicBoard?: string;
 
     // Nominee
     nomineeName: string;
@@ -67,7 +66,6 @@ export interface Student {
 
 export interface StudentRegistrationData {
     firstName: string;
-    lastName: string;
     dateOfBirth: string;
     gender: 'MALE' | 'FEMALE' | 'OTHER';
     bloodGroup?: string;
@@ -77,10 +75,9 @@ export interface StudentRegistrationData {
 
     fatherName: string;
     motherName: string;
-    guardianPhone: string;
-    guardianEmail?: string;
+    fatherOccupation?: string;
     schoolName?: string;
-    schoolClass?: string;
+    academicBoard?: string;
 
     nomineeName: string;
     nomineeRelation: string;
@@ -89,6 +86,7 @@ export interface StudentRegistrationData {
 
     // Club/Coach Details
     clubId: string;
+    clubMode?: 'club' | 'school';
     coachName?: string;
     coachPhone?: string;
     coachEmail?: string;

@@ -7,18 +7,38 @@ export const getAllDistricts = async (query: any) => {
     const skip = (Number(page) - 1) * Number(limit);
     const take = Number(limit);
 
-    const where: Prisma.DistrictWhereInput = {
-        isActive: true,
-        ...(stateId && { stateId: Number(stateId) }),
-        // registeredOnly param kept for backwards compat but no longer default
-        ...(registeredOnly === 'true' && { districtPerson: { isNot: null } }),
-        ...(search && {
+    // Determine if this is a public request (controller passes publicOnly flag)
+    const isPublic = query.publicOnly === 'true';
+
+    // Build AND conditions array so public filter + search can coexist
+    const andConditions: Prisma.DistrictWhereInput[] = [];
+
+    // Public endpoint: Only show districts that have actual clubs OR students
+    if (isPublic) {
+        andConditions.push({
+            OR: [
+                { clubs: { some: { status: 'APPROVED' } } },
+                { students: { some: { user: { isApproved: true } } } },
+            ],
+        });
+    }
+
+    // Search filter
+    if (search) {
+        andConditions.push({
             OR: [
                 { name: { contains: search as string } },
                 { code: { contains: search as string } },
-                { districtPerson: { name: { contains: search as string } } }, // Search by secretary name too
+                { districtPerson: { name: { contains: search as string } } },
             ],
-        }),
+        });
+    }
+
+    const where: Prisma.DistrictWhereInput = {
+        isActive: true,
+        ...(stateId && { stateId: Number(stateId) }),
+        ...(registeredOnly === 'true' && { districtPerson: { isNot: null } }),
+        ...(andConditions.length > 0 && { AND: andConditions }),
     };
 
     // Dynamic sorting

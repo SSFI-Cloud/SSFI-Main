@@ -5,6 +5,7 @@ import { injectScopeFilters } from '../middleware/scope.middleware';
 import { UserRole } from '@prisma/client';
 
 import { uploadFields } from '../middleware/upload.middleware';
+import { optimizeUploadedImages } from '../middleware/imageOptimize.middleware';
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ const clubUpload = uploadFields([
 ]);
 
 // Public Routes - Registration
-router.post('/initiate', clubUpload, clubController.initiateRegistration);
+router.post('/initiate', clubUpload, optimizeUploadedImages, clubController.initiateRegistration);
 router.post('/verify', clubController.verifyPayment);
 
 // Protected Routes

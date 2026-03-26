@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import { motion } from 'framer-motion';
 import { Shield, CreditCard, Trophy, Users, Globe, Award, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { api } from '@/lib/api/client';
 
 const features = [
   { icon: CreditCard, title: 'Official ID Card', description: 'Get your official SSFI membership card with unique identification number', color: 'text-emerald-500', bg: 'bg-emerald-500/10', borderTint: 'border-emerald-200/40', glassBg: 'from-emerald-500/[0.04]' },
@@ -18,21 +18,23 @@ const features = [
 
 const tags = ['#Students', '#Athletes', '#Coaches', '#Schools', '#Clubs', '#State Associations'];
 
-const WhyJoinSSFI = () => {
+interface WhyJoinSSFIProps {
+  stats?: { students?: number; states?: number; clubs?: number };
+}
+
+const WhyJoinSSFI = ({ stats: propStats }: WhyJoinSSFIProps) => {
   const [stats, setStats] = useState({ students: 10000, states: 28, clubs: 500 });
 
+  // Update from parent-provided stats (aggregate endpoint)
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await api.get('/stats/public');
-        if (response.data.success) {
-          const d = response.data.data;
-          setStats({ students: d.students || 10000, states: d.states || 28, clubs: d.clubs || 500 });
-        }
-      } catch (error) { console.error('Stats fetch failed:', error); }
-    };
-    fetchStats();
-  }, []);
+    if (propStats) {
+      setStats({
+        students: propStats.students || 10000,
+        states: propStats.states || 28,
+        clubs: propStats.clubs || 500,
+      });
+    }
+  }, [propStats]);
 
   return (
     <section className="relative py-28 overflow-hidden bg-gray-50">

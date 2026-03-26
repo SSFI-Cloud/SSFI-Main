@@ -2,10 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Bell } from 'lucide-react';
-import axios from 'axios';
 import Link from 'next/link';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
+import { api } from '@/lib/api/client';
 
 interface Notification {
   id: string;
@@ -26,7 +24,7 @@ export default function NotificationRibbon() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/notifications/public/active`, { timeout: 5000 });
+        const res = await api.get('/notifications/public/active');
         const data = res.data?.data;
         if (!data) return;
         // Support both array and single object

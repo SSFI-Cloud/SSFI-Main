@@ -97,20 +97,13 @@ export default function EventResultsPage() {
     };
 
     const handleResultChange = (studentId: number, position: number) => {
-        // If selecting a position already taken by another student, clear that student's position
         let newResults = [...results];
 
         // Remove existing result for this student if any
         newResults = newResults.filter(r => r.studentId !== studentId);
 
+        // Add the new position (multiple students can share the same position)
         if (position > 0) {
-            // Check if position is occupied
-            const occupied = newResults.find(r => r.position === position);
-            if (occupied) {
-                // Remove position from the other student
-                newResults = newResults.filter(r => r.studentId !== occupied.studentId);
-                toast('Previous winner for this position removed', { icon: 'ℹ️' });
-            }
             newResults.push({ studentId, position });
         }
 
@@ -167,6 +160,8 @@ export default function EventResultsPage() {
             case 1: return 'Gold';
             case 2: return 'Silver';
             case 3: return 'Bronze';
+            case 4: return '4th Place';
+            case 5: return '5th Place';
             default: return '';
         }
     };
@@ -320,30 +315,42 @@ export default function EventResultsPage() {
                                                     {student.club?.name || student.district?.name}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        {[1, 2, 3].map((pos) => {
+                                                    <div className="flex items-center justify-center gap-1.5">
+                                                        {[1, 2, 3, 4, 5].map((pos) => {
                                                             const isSelected = currentPos === pos;
-                                                            let colorClass = '';
-                                                            if (pos === 1) colorClass = isSelected
-                                                                ? 'bg-yellow-400 text-black border-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.3)]'
-                                                                : 'border-gray-200 text-gray-600 hover:border-yellow-500/50 hover:text-yellow-400 hover:bg-yellow-100';
-
-                                                            if (pos === 2) colorClass = isSelected
-                                                                ? 'bg-slate-300 text-gray-900 border-slate-400 shadow-[0_0_15px_rgba(203,213,225,0.3)]'
-                                                                : 'border-gray-200 text-gray-600 hover:border-slate-400/50 hover:text-gray-700 hover:bg-slate-400/10';
-
-                                                            if (pos === 3) colorClass = isSelected
-                                                                ? 'bg-amber-600 text-white border-amber-700 shadow-[0_0_15px_rgba(217,119,6,0.3)]'
-                                                                : 'border-gray-200 text-gray-600 hover:border-amber-600/50 hover:text-amber-600 hover:bg-amber-600/10';
+                                                            const colorMap: Record<number, { active: string; inactive: string }> = {
+                                                                1: {
+                                                                    active: 'bg-yellow-400 text-black border-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.3)]',
+                                                                    inactive: 'border-gray-200 text-gray-600 hover:border-yellow-500/50 hover:text-yellow-400 hover:bg-yellow-100',
+                                                                },
+                                                                2: {
+                                                                    active: 'bg-slate-300 text-gray-900 border-slate-400 shadow-[0_0_15px_rgba(203,213,225,0.3)]',
+                                                                    inactive: 'border-gray-200 text-gray-600 hover:border-slate-400/50 hover:text-gray-700 hover:bg-slate-400/10',
+                                                                },
+                                                                3: {
+                                                                    active: 'bg-amber-600 text-white border-amber-700 shadow-[0_0_15px_rgba(217,119,6,0.3)]',
+                                                                    inactive: 'border-gray-200 text-gray-600 hover:border-amber-600/50 hover:text-amber-600 hover:bg-amber-600/10',
+                                                                },
+                                                                4: {
+                                                                    active: 'bg-teal-500 text-white border-teal-600 shadow-[0_0_15px_rgba(20,184,166,0.3)]',
+                                                                    inactive: 'border-gray-200 text-gray-600 hover:border-teal-500/50 hover:text-teal-500 hover:bg-teal-500/10',
+                                                                },
+                                                                5: {
+                                                                    active: 'bg-indigo-500 text-white border-indigo-600 shadow-[0_0_15px_rgba(99,102,241,0.3)]',
+                                                                    inactive: 'border-gray-200 text-gray-600 hover:border-indigo-500/50 hover:text-indigo-500 hover:bg-indigo-500/10',
+                                                                },
+                                                            };
+                                                            const colorClass = isSelected ? colorMap[pos].active : colorMap[pos].inactive;
+                                                            const showMedal = pos <= 3;
 
                                                             return (
                                                                 <button
                                                                     key={pos}
                                                                     onClick={() => handleResultChange(student.id, isSelected ? 0 : pos)}
-                                                                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${colorClass} ${isSelected ? 'scale-110' : 'hover:scale-105'}`}
+                                                                    className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${colorClass} ${isSelected ? 'scale-110' : 'hover:scale-105'}`}
                                                                     title={getPositionName(pos)}
                                                                 >
-                                                                    <Medal className="w-5 h-5" />
+                                                                    {showMedal ? <Medal className="w-4 h-4" /> : <span className="text-xs font-bold">{pos}</span>}
                                                                 </button>
                                                             );
                                                         })}

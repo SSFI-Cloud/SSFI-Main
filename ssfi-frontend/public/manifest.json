@@ -8,9 +8,9 @@
   "theme_color": "#10b981",
   "icons": [
     {
-      "src": "/images/logo/ssfi-logo.png",
+      "src": "/images/logo/favicon.webp",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/webp"
     }
   ]
 }

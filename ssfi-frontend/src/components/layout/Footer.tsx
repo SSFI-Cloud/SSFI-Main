@@ -70,12 +70,8 @@ const Footer = () => {
 
             {/* Col 1 — Brand + Newsletter */}
             <div className="sm:col-span-2 lg:col-span-4">
-              <div className="flex items-center gap-3 mb-4">
-                <Image src="/images/logo/light.webp" alt="SSFI" width={56} height={56} className="object-contain" />
-                <div>
-                  <span className="text-white font-headline font-bold text-lg">SSFI</span>
-                  <p className="text-gray-500 text-xs">Speed Skating Federation of India</p>
-                </div>
+              <div className="mb-4">
+                <Image src="/images/logo/logo-wide.webp" alt="Speed Skating Federation of India" width={180} height={60} className="object-contain" />
               </div>
               <p className="text-gray-400 text-sm leading-relaxed mb-6">
                 The official governing body for speed skating in India, promoting excellence and growth nationwide since 2001.
@@ -130,6 +126,7 @@ const Footer = () => {
                   { name: 'Events', href: '/events' },
                   { name: 'Results', href: '/results' },
                   { name: 'Gallery', href: '/gallery' },
+                  { name: 'State Directory', href: '/state-directory' },
                   { name: 'News', href: '/news' },
                   { name: 'Contact', href: '/contact' },
                 ].map((link) => (

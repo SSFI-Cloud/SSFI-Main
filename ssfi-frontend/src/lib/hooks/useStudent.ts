@@ -448,10 +448,13 @@ export const useAgeCategories = () => {
 // ============================================
 
 /**
- * Calculate age from date of birth
+ * Calculate age from date of birth.
+ * Default cutoff: January 1 of the current year.
  */
 export const calculateAge = (dateOfBirth: string, cutoffDate?: string): number => {
-  const cutoff = cutoffDate ? new Date(cutoffDate) : new Date();
+  const cutoff = cutoffDate
+    ? new Date(cutoffDate)
+    : new Date(new Date().getFullYear(), 0, 1); // Jan 1 of current year
   const dob = new Date(dateOfBirth);
 
   let age = cutoff.getFullYear() - dob.getFullYear();
@@ -465,22 +468,17 @@ export const calculateAge = (dateOfBirth: string, cutoffDate?: string): number =
 };
 
 /**
- * Get age category from age
+ * Get age category from age (as of Jan 1 cutoff).
+ * Categories: U-4, U-6, U-8, U-10, U-12, U-14, U-16, Above 16, Masters 30+
  */
 export const getAgeCategoryFromAge = (age: number): string => {
-  const categories = [
-    { name: 'U-6', minAge: 0, maxAge: 5 },
-    { name: 'U-8', minAge: 6, maxAge: 7 },
-    { name: 'U-10', minAge: 8, maxAge: 9 },
-    { name: 'U-12', minAge: 10, maxAge: 11 },
-    { name: 'U-14', minAge: 12, maxAge: 13 },
-    { name: 'U-16', minAge: 14, maxAge: 15 },
-    { name: 'U-18', minAge: 16, maxAge: 17 },
-    { name: 'U-21', minAge: 18, maxAge: 20 },
-    { name: 'Senior', minAge: 21, maxAge: 35 },
-    { name: 'Masters', minAge: 36, maxAge: 100 },
-  ];
-
-  const category = categories.find(cat => age >= cat.minAge && age <= cat.maxAge);
-  return category?.name || 'Unknown';
+  if (age < 4)  return 'U-4';
+  if (age < 6)  return 'U-6';
+  if (age < 8)  return 'U-8';
+  if (age < 10) return 'U-10';
+  if (age < 12) return 'U-12';
+  if (age < 14) return 'U-14';
+  if (age < 16) return 'U-16';
+  if (age < 30) return 'Above 16';
+  return 'Masters 30+';
 };

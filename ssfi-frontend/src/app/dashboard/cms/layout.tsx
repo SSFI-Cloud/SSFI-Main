@@ -16,7 +16,6 @@ const navItems = [
   { href: '/dashboard/cms/pages', label: 'Pages', icon: FileText },
   { href: '/dashboard/cms/banners', label: 'Banners', icon: Megaphone },
   { href: '/dashboard/cms/gallery', label: 'Gallery', icon: ImageIcon },
-  { href: '/dashboard/cms/menus', label: 'Menus', icon: MenuIcon },
   { href: '/dashboard/cms/settings', label: 'Settings', icon: Settings },
 ];
 

@@ -19,6 +19,7 @@ import {
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Link from 'next/link';
+import RaceConfigEditor, { type RaceConfig } from '@/components/events/RaceConfigEditor';
 
 interface State {
     id: number;
@@ -56,6 +57,7 @@ export default function NewEventPage() {
     const [success, setSuccess] = useState(false);
 
     const [states, setStates] = useState<State[]>([]);
+    const [raceConfig, setRaceConfig] = useState<RaceConfig | null>(null);
 
     // Role-based event level options
     const eventLevels = useMemo(() => {
@@ -66,6 +68,8 @@ export default function NewEventPage() {
     }, [user?.role]);
 
     const defaultLevel = eventLevels[0]?.value || 'DISTRICT';
+
+    const isSecretary = user?.role === 'STATE_SECRETARY' || user?.role === 'DISTRICT_SECRETARY';
 
     const [formData, setFormData] = useState({
         name: '',
@@ -83,6 +87,7 @@ export default function NewEventPage() {
         description: '',
         baseFee: 500,
         maxParticipants: 100,
+        paymentMode: 'ONLINE' as 'ONLINE' | 'OFFLINE',
     });
 
     // Update default level when eventLevels changes
@@ -128,6 +133,8 @@ export default function NewEventPage() {
                 maxParticipants: Number(formData.maxParticipants),
                 venue: formData.venue,
                 city: formData.city,
+                paymentMode: formData.paymentMode,
+                raceConfig: raceConfig,
             });
 
             setSuccess(true);
@@ -391,7 +398,49 @@ export default function NewEventPage() {
                                 className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
+                        {isSecretary && (
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-500 mb-2">Payment Collection Mode</label>
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, paymentMode: 'ONLINE' })}
+                                        className={`flex-1 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                                            formData.paymentMode === 'ONLINE'
+                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-center gap-2">
+                                            <IndianRupee className="w-4 h-4" />
+                                            Online (Razorpay)
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">Collect payments online via payment gateway</p>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, paymentMode: 'OFFLINE' })}
+                                        className={`flex-1 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                                            formData.paymentMode === 'OFFLINE'
+                                                ? 'border-amber-500 bg-amber-50 text-amber-700'
+                                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-center gap-2">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                            Offline (Cash)
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">Collect cash payments and mark as paid manually</p>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
+                </div>
+
+                {/* Race Configuration */}
+                <div>
+                    <RaceConfigEditor value={raceConfig} onChange={setRaceConfig} />
                 </div>
 
                 {/* Submit */}

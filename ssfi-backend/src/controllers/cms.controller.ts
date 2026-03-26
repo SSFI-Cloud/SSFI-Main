@@ -12,6 +12,8 @@ import {
 import { successResponse } from '../utils/response.util';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AuthRequest } from '../types';
+import { seedCmsPages } from '../services/cms-seed.service';
+import { deleteCachePattern } from '../utils/cache.util';
 
 // ==========================================
 // PAGE CONTROLLERS
@@ -20,6 +22,7 @@ import { AuthRequest } from '../types';
 export const createPage = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data = createPageSchema.parse(req.body);
   const page = await cmsService.createPage(data, req.user!.id.toString());
+  deleteCachePattern('/cms/pages');
 
   return successResponse(res, {
     statusCode: 201,
@@ -32,6 +35,7 @@ export const updatePage = asyncHandler(async (req: AuthRequest, res: Response) =
   const { id } = req.params;
   const data = updatePageSchema.parse(req.body);
   const page = await cmsService.updatePage(id, data, req.user!.id.toString());
+  deleteCachePattern('/cms/pages');
 
   return successResponse(res, {
     message: 'Page updated successfully',
@@ -66,6 +70,7 @@ export const listPages = asyncHandler(async (req: AuthRequest, res: Response) =>
 export const deletePage = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   await cmsService.deletePage(id, req.user!.id.toString());
+  deleteCachePattern('/cms/pages');
 
   return successResponse(res, { message: 'Page deleted successfully' });
 });
@@ -77,6 +82,7 @@ export const deletePage = asyncHandler(async (req: AuthRequest, res: Response) =
 export const createBanner = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data = createBannerSchema.parse(req.body);
   const banner = await cmsService.createBanner(data, req.user!.id.toString());
+  deleteCachePattern('/cms/banners');
 
   return successResponse(res, {
     statusCode: 201,
@@ -89,6 +95,7 @@ export const updateBanner = asyncHandler(async (req: AuthRequest, res: Response)
   const { id } = req.params;
   const data = updateBannerSchema.parse(req.body);
   const banner = await cmsService.updateBanner(id, data, req.user!.id.toString());
+  deleteCachePattern('/cms/banners');
 
   return successResponse(res, {
     message: 'Banner updated successfully',
@@ -106,6 +113,7 @@ export const getBanners = asyncHandler(async (req: Request, res: Response) => {
 export const deleteBanner = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   await cmsService.deleteBanner(id, req.user!.id.toString());
+  deleteCachePattern('/cms/banners');
 
   return successResponse(res, { message: 'Banner deleted successfully' });
 });
@@ -117,6 +125,8 @@ export const deleteBanner = asyncHandler(async (req: AuthRequest, res: Response)
 export const createNews = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data = createNewsSchema.parse(req.body);
   const news = await cmsService.createNews(data, req.user!.id.toString());
+  deleteCachePattern('/news');
+  deleteCachePattern('/cms/news');
 
   return successResponse(res, {
     statusCode: 201,
@@ -129,6 +139,8 @@ export const updateNews = asyncHandler(async (req: AuthRequest, res: Response) =
   const { id } = req.params;
   const data = updateNewsSchema.parse(req.body);
   const news = await cmsService.updateNews(id, data, req.user!.id.toString());
+  deleteCachePattern('/news');
+  deleteCachePattern('/cms/news');
 
   return successResponse(res, {
     message: 'News article updated successfully',
@@ -165,6 +177,8 @@ export const getNewsCategories = asyncHandler(async (req: Request, res: Response
 export const deleteNews = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   await cmsService.deleteNews(id, req.user!.id.toString());
+  deleteCachePattern('/news');
+  deleteCachePattern('/cms/news');
 
   return successResponse(res, { message: 'News article deleted successfully' });
 });
@@ -176,6 +190,7 @@ export const deleteNews = asyncHandler(async (req: AuthRequest, res: Response) =
 export const createGalleryAlbum = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data = createGalleryAlbumSchema.parse(req.body);
   const album = await cmsService.createGalleryAlbum(data, req.user!.id.toString());
+  deleteCachePattern('/cms/gallery');
 
   return successResponse(res, {
     statusCode: 201,
@@ -188,6 +203,7 @@ export const updateGalleryAlbum = asyncHandler(async (req: AuthRequest, res: Res
   const { id } = req.params;
   const data = updateGalleryAlbumSchema.parse(req.body);
   const album = await cmsService.updateGalleryAlbum(id, data, req.user!.id.toString());
+  deleteCachePattern('/cms/gallery');
 
   return successResponse(res, {
     message: 'Gallery album updated successfully',
@@ -224,6 +240,7 @@ export const getBannerById = asyncHandler(async (req: AuthRequest, res: Response
 export const addGalleryItem = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data = createGalleryItemSchema.parse(req.body);
   const item = await cmsService.addGalleryItem(data, req.user!.id.toString());
+  deleteCachePattern('/cms/gallery');
 
   return successResponse(res, {
     statusCode: 201,
@@ -236,6 +253,7 @@ export const updateGalleryItem = asyncHandler(async (req: AuthRequest, res: Resp
   const { id } = req.params;
   const data = updateGalleryItemSchema.parse(req.body);
   const item = await cmsService.updateGalleryItem(id, data, req.user!.id.toString());
+  deleteCachePattern('/cms/gallery');
 
   return successResponse(res, {
     message: 'Gallery item updated successfully',
@@ -246,6 +264,7 @@ export const updateGalleryItem = asyncHandler(async (req: AuthRequest, res: Resp
 export const deleteGalleryItem = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   await cmsService.deleteGalleryItem(id);
+  deleteCachePattern('/cms/gallery');
 
   return successResponse(res, { message: 'Gallery item deleted successfully' });
 });
@@ -253,6 +272,7 @@ export const deleteGalleryItem = asyncHandler(async (req: AuthRequest, res: Resp
 export const deleteGalleryAlbum = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   await cmsService.deleteGalleryAlbum(id, req.user!.id.toString());
+  deleteCachePattern('/cms/gallery');
 
   return successResponse(res, { message: 'Gallery album deleted successfully' });
 });
@@ -264,6 +284,7 @@ export const deleteGalleryAlbum = asyncHandler(async (req: AuthRequest, res: Res
 export const createMenu = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data = createMenuSchema.parse(req.body);
   const menu = await cmsService.createMenu(data, req.user!.id.toString());
+  deleteCachePattern('/cms/menus');
 
   return successResponse(res, {
     statusCode: 201,
@@ -276,6 +297,7 @@ export const updateMenu = asyncHandler(async (req: AuthRequest, res: Response) =
   const { id } = req.params;
   const data = updateMenuSchema.parse(req.body);
   const menu = await cmsService.updateMenu(id, data, req.user!.id.toString());
+  deleteCachePattern('/cms/menus');
 
   return successResponse(res, {
     message: 'Menu updated successfully',
@@ -304,6 +326,7 @@ export const getMenuById = asyncHandler(async (req: AuthRequest, res: Response) 
 export const deleteMenu = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   await cmsService.deleteMenu(id, req.user!.id.toString());
+  deleteCachePattern('/cms/menus');
 
   return successResponse(res, { message: 'Menu deleted successfully' });
 });
@@ -321,6 +344,7 @@ export const getSiteSettings = asyncHandler(async (req: Request, res: Response) 
 export const updateSiteSettings = asyncHandler(async (req: AuthRequest, res: Response) => {
   const data = siteSettingsSchema.parse(req.body);
   const settings = await cmsService.updateSiteSettings(data, req.user!.id.toString());
+  deleteCachePattern('/cms/settings');
 
   return successResponse(res, {
     message: 'Site settings updated successfully',
@@ -328,9 +352,22 @@ export const updateSiteSettings = asyncHandler(async (req: AuthRequest, res: Res
   });
 });
 
+// ==========================================
+// SEED PAGES CONTROLLER
+// ==========================================
+
+export const seedPages = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const result = await seedCmsPages(req.user!.id.toString());
+
+  return successResponse(res, {
+    message: `CMS pages seeded: ${result.created} created, ${result.skipped} skipped`,
+    data: result,
+  });
+});
+
 export default {
   // Pages
-  createPage, updatePage, getPageBySlug, getPageById, listPages, deletePage,
+  createPage, updatePage, getPageBySlug, getPageById, listPages, deletePage, seedPages,
   // Banners
   createBanner, updateBanner, getBanners, deleteBanner,
   // News

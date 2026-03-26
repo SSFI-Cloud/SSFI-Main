@@ -104,16 +104,11 @@ export interface StateSecretaryFormData {
   gender: Gender;
   email: string;
   phone: string;
-  aadhaarNumber: string;
   stateId: string;
   residentialAddress: string;
-  identityProof?: string;
   profilePhoto: string;
-  // KYC fields
-  kycVerified: boolean;
-  kycVerifiedName: string;
-  kycVerifiedDob?: string;
-  kycProfileImage?: string;
+  logo: string;
+  associationRegistrationCopy: string;
   termsAccepted: boolean;
 }
 
@@ -122,17 +117,12 @@ export interface DistrictSecretaryFormData {
   gender: Gender;
   email: string;
   phone: string;
-  aadhaarNumber: string;
   stateId: string;
   districtId: string;
   residentialAddress: string;
-  identityProof?: string;
   profilePhoto: string;
-  // KYC fields
-  kycVerified: boolean;
-  kycVerifiedName: string;
-  kycVerifiedDob?: string;
-  kycProfileImage?: string;
+  logo: string;
+  associationRegistrationCopy: string;
   termsAccepted: boolean;
 }
 
@@ -146,13 +136,7 @@ export interface ClubFormData {
   stateId: string;
   districtId: string;
   address: string;
-  clubLogo?: string;
-  // Contact Person KYC
-  contactPersonAadhaar: string;
-  kycVerified: boolean;
-  kycVerifiedName: string;
-  kycVerifiedDob?: string;
-  kycProfileImage?: string;
+  clubLogo: string;
   status: 'ACTIVE' | 'INACTIVE';
   termsAccepted: boolean;
 }

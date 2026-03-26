@@ -84,14 +84,17 @@ export function usePayment(options: UsePaymentOptions = {}): UsePaymentReturn {
         loadRazorpayScript();
     }, [fetchConfig, loadRazorpayScript]);
 
-    // Create order
-    const createOrder = useCallback(async (payload: CreateOrderPayload): Promise<RazorpayOrder | null> => {
+    // Create order — returns both the order and the key_id to use (may be secretary-specific)
+    const createOrder = useCallback(async (payload: CreateOrderPayload): Promise<{ order: RazorpayOrder; keyId: string } | null> => {
         try {
             const response = await apiClient.post('/payments/create-order', payload);
             if (response.data.status !== 'success') {
                 throw new Error(response.data.message || 'Failed to create order');
             }
-            return response.data.data.order;
+            return {
+                order: response.data.data.order,
+                keyId: response.data.data.key_id,
+            };
         } catch (err: any) {
             throw new Error(err.response?.data?.message || err.message || 'Failed to create order');
         }
@@ -148,20 +151,21 @@ export function usePayment(options: UsePaymentOptions = {}): UsePaymentReturn {
                 throw new Error('Failed to load payment gateway');
             }
 
-            // Create order
-            const order = await createOrder(payload);
-            if (!order) {
+            // Create order (returns order-specific key_id for secretary payments)
+            const result = await createOrder(payload);
+            if (!result) {
                 throw new Error('Failed to create payment order');
             }
 
+            const { order, keyId: orderKeyId } = result;
             setCurrentOrder(order);
 
             // Get payment type config for description
             const paymentTypeConfig = config?.payment_types[payload.payment_type];
 
-            // Razorpay checkout options
+            // Razorpay checkout options — use order-specific key (may be secretary's)
             const checkoutOptions: RazorpayCheckoutOptions = {
-                key: config?.key_id || '',
+                key: orderKeyId || config?.key_id || '',
                 amount: order.amount,
                 currency: order.currency,
                 name: 'Speed Skating Federation of India',

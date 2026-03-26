@@ -16,8 +16,6 @@ import { useClubRegistration } from '@/lib/hooks/useAffiliation';
 import { useStates, useDistricts } from '@/lib/hooks/useStudent';
 import { useRenewal, type MemberLookupResult } from '@/lib/hooks/useAffiliationLookup';
 import AffiliationLookupStep from './AffiliationLookupStep';
-import AadhaarKYCVerification from '@/components/forms/shared/AadhaarKYCVerification';
-import type { KycResult } from '@/lib/hooks/useKYC';
 import type { ClubFormData } from '@/types/affiliation';
 
 const formSchema = z.object({
@@ -30,13 +28,7 @@ const formSchema = z.object({
   stateId: z.string().min(1, 'Please select a state'),
   districtId: z.string().min(1, 'Please select a district'),
   address: z.string().min(10, 'Address must be at least 10 characters').max(500),
-  clubLogo: z.string().optional(),
-  // Contact Person KYC
-  contactPersonAadhaar: z.string().regex(/^\d{12}$/, 'Aadhaar must be 12 digits'),
-  kycVerified: z.literal(true, { message: 'Contact person KYC verification is required' }),
-  kycVerifiedName: z.string().min(1, 'KYC verified name is required'),
-  kycVerifiedDob: z.string().optional(),
-  kycProfileImage: z.string().optional(),
+  clubLogo: z.string().min(1, 'Club logo is required'),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
   termsAccepted: z.boolean().refine((v) => v === true, 'You must accept the terms'),
 });
@@ -70,16 +62,6 @@ export default function ClubRegistrationForm() {
     if (selectedStateId) { fetchDistricts(selectedStateId); setValue('districtId', ''); }
     else clearDistricts();
   }, [selectedStateId, fetchDistricts, clearDistricts, setValue]);
-
-  // KYC Verified handler for contact person
-  const handleKycVerified = useCallback((result: KycResult) => {
-    const rawAadhaar = result.maskedAadhaar?.replace(/\s/g, '').replace(/X/g, '0') || '';
-    setValue('contactPersonAadhaar', rawAadhaar, { shouldValidate: true });
-    setValue('kycVerified', true as any, { shouldValidate: true });
-    setValue('kycVerifiedName', result.fullName, { shouldValidate: true });
-    setValue('kycVerifiedDob', result.dob || '', { shouldValidate: true });
-    setValue('kycProfileImage', result.profileImage || '', { shouldValidate: true });
-  }, [setValue]);
 
   const handleLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -325,31 +307,10 @@ export default function ClubRegistrationForm() {
                   </div>
                 </div>
 
-                {/* Contact Person KYC Verification */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-teal-500" />
-                    <h2 className="font-semibold text-gray-900">Contact Person KYC Verification</h2>
-                  </div>
-                  <div className="p-6">
-                    <p className="text-xs text-gray-500 mb-4">
-                      Verify the contact person&apos;s identity using their Aadhaar number via OTP.
-                    </p>
-                    <AadhaarKYCVerification
-                      onVerified={handleKycVerified}
-                      showProfilePhotoChoice={false}
-                      colorScheme="teal"
-                    />
-                    {errors.kycVerified && (
-                      <p className="mt-3 text-xs text-red-500">{errors.kycVerified.message}</p>
-                    )}
-                  </div>
-                </div>
-
                 {/* Club Logo */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100">
-                    <h2 className="font-semibold text-gray-900">Club Logo <span className="text-gray-400 text-sm font-normal">(Optional)</span></h2>
+                    <h2 className="font-semibold text-gray-900">Club Logo <span className="text-red-400">*</span></h2>
                   </div>
                   <div className="p-6">
                     <div className="w-40">
@@ -369,6 +330,7 @@ export default function ClubRegistrationForm() {
                       )}
                       <input ref={logoRef} type="file" accept="image/*" onChange={handleLogo} className="hidden" />
                     </div>
+                    {errors.clubLogo && <p className="mt-2 text-xs text-red-500">{errors.clubLogo.message}</p>}
                   </div>
                 </div>
 

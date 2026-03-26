@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { api } from '@/lib/api/client';
 import { useInView } from 'framer-motion';
 
 /* ─── Types ─── */
@@ -18,6 +17,7 @@ interface CMSBanner {
   metadata?: {
     badge?: string;
     highlight?: string;
+    stroke?: string;
     description?: string;
     secondaryCtaText?: string;
     secondaryCtaLink?: string;
@@ -95,7 +95,7 @@ const FALLBACK_SLIDES: SlideData[] = [
     image: '/images/hero/Hero-3.webp',
     ghost: 'INDIA',
     stats: [
-      { n: '240+', l: 'Coaches' },
+      { n: '300+', l: 'Coaches' },
       { n: '3', l: 'Cert Levels' },
       { n: 'All India', l: 'Recognition' },
     ],
@@ -134,7 +134,12 @@ const heroCSS = `
 `;
 
 /* ─── Component ─── */
-const HeroSection = () => {
+interface HeroSectionProps {
+  banners?: CMSBanner[];
+  stats?: { students?: number; states?: number; clubs?: number; totalEvents?: number; events?: number; certifiedCoaches?: number };
+}
+
+const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [fireLines, setFireLines] = useState(false);
@@ -142,15 +147,12 @@ const HeroSection = () => {
   const [cmsSlides, setCmsSlides] = useState<CMSBanner[] | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load CMS banners
+  // Accept banners from parent prop (aggregate endpoint)
   useEffect(() => {
-    api.get('/cms/banners?position=HOME_HERO&status=PUBLISHED')
-      .then(res => {
-        const data: CMSBanner[] = res.data?.data || [];
-        if (data.length > 0) setCmsSlides(data.sort((a, b) => a.sortOrder - b.sortOrder));
-      })
-      .catch(() => {});
-  }, []);
+    if (banners && banners.length > 0) {
+      setCmsSlides([...banners].sort((a, b) => a.sortOrder - b.sortOrder));
+    }
+  }, [banners]);
 
   const hasCms = cmsSlides && cmsSlides.length > 0;
 
@@ -161,23 +163,81 @@ const HeroSection = () => {
     return {
       id: s.id,
       tag: meta.badge || s.subtitle || 'SSFI Announcement',
-      titleLine1: s.title,
-      accent: meta.highlight || '',
-      stroke: '',
-      description: meta.description || '',
-      ctaText: s.linkText || 'Learn More',
-      ctaLink: s.linkUrl || '/about',
-      secondaryText: meta.secondaryCtaText || '',
-      secondaryLink: meta.secondaryCtaLink || '',
+      titleLine1: s.title || fallback.titleLine1,
+      accent: meta.highlight || fallback.accent,
+      stroke: meta.stroke || fallback.stroke,
+      description: meta.description || fallback.description,
+      ctaText: s.linkText || fallback.ctaText,
+      ctaLink: s.linkUrl || fallback.ctaLink,
+      secondaryText: meta.secondaryCtaText || fallback.secondaryText,
+      secondaryLink: meta.secondaryCtaLink || fallback.secondaryLink,
       image: s.imageUrl
-        ? (s.imageUrl.startsWith('http') ? s.imageUrl : `${API_BASE}${s.imageUrl}`)
+        ? (s.imageUrl.startsWith('http') ? s.imageUrl : s.imageUrl.startsWith('/images/') ? s.imageUrl : `${API_BASE}${s.imageUrl}`)
         : fallback.image,
       ghost: meta.ghostWord || GHOST_WORDS[i % GHOST_WORDS.length],
       stats: fallback.stats,
     };
   });
 
-  const slides = hasCms ? cmsAdapted : FALLBACK_SLIDES;
+  // Merge live API stats into fallback slides
+  const liveSlides = FALLBACK_SLIDES.map((slide, i) => {
+    if (!propStats) return slide;
+    const s = propStats;
+    const statsMap: Record<number, { n: string; l: string }[]> = {
+      0: [
+        { n: `${(s.students || 2000).toLocaleString()}+`, l: 'Athletes' },
+        { n: String(s.states || 28), l: 'States' },
+        { n: `${(s.students || 5616).toLocaleString()}+`, l: 'Registered' },
+      ],
+      1: [
+        { n: `${s.clubs || 500}+`, l: 'Clubs' },
+        { n: String(s.states || 18), l: 'States' },
+        { n: 'Age 6+', l: 'Any Level' },
+      ],
+      2: [
+        { n: `${s.certifiedCoaches || 300}+`, l: 'Coaches' },
+        { n: '3', l: 'Cert Levels' },
+        { n: 'All India', l: 'Recognition' },
+      ],
+      3: [
+        { n: String(s.states || 36), l: 'States' },
+        { n: `${(s.students || 5616).toLocaleString()}+`, l: 'Skaters' },
+        { n: 'Open', l: 'Season' },
+      ],
+    };
+    return { ...slide, stats: statsMap[i] || slide.stats };
+  });
+
+  // Apply live stats to CMS slides too
+  const cmsWithLiveStats = cmsAdapted.map((slide, i) => {
+    if (!propStats) return slide;
+    const s = propStats;
+    const statsMap: Record<number, { n: string; l: string }[]> = {
+      0: [
+        { n: `${(s.students || 2000).toLocaleString()}+`, l: 'Athletes' },
+        { n: String(s.states || 28), l: 'States' },
+        { n: `${(s.students || 5616).toLocaleString()}+`, l: 'Registered' },
+      ],
+      1: [
+        { n: `${s.clubs || 500}+`, l: 'Clubs' },
+        { n: String(s.states || 18), l: 'States' },
+        { n: 'Age 6+', l: 'Any Level' },
+      ],
+      2: [
+        { n: `${s.certifiedCoaches || 300}+`, l: 'Coaches' },
+        { n: '3', l: 'Cert Levels' },
+        { n: 'All India', l: 'Recognition' },
+      ],
+      3: [
+        { n: String(s.states || 36), l: 'States' },
+        { n: `${(s.students || 5616).toLocaleString()}+`, l: 'Skaters' },
+        { n: 'Open', l: 'Season' },
+      ],
+    };
+    return { ...slide, stats: statsMap[i] || slide.stats };
+  });
+
+  const slides = hasCms ? cmsWithLiveStats : liveSlides;
   const N = slides.length;
 
   const goTo = useCallback((n: number) => {
@@ -389,7 +449,7 @@ const HeroSection = () => {
       </section>
 
       {/* ─── Stats Strip (dynamic from backend) ─── */}
-      <StatsStrip />
+      <StatsStrip propStats={propStats} />
 
       {/* ─── Seamless transition: navy → white ─── */}
       <div className="h-40 sm:h-56 lg:h-64" style={{ background: 'linear-gradient(to bottom, #0e1e38 0%, #13243f 12%, #1a3050 24%, #243d5e 36%, #3a5a7a 46%, #5d809e 55%, #8aa8c0 64%, #b0c8d8 72%, #d0dee8 80%, #e4ecf1 87%, #f2f5f7 93%, #ffffff 100%)' }} />
@@ -423,21 +483,15 @@ function AnimatedCounter({ target, suffix = '', duration = 2000 }: { target: num
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
-/* ─── Stats Strip (backend-connected) ─── */
-function StatsStrip() {
-  const [stats, setStats] = useState({ students: 0, states: 0, clubs: 0, events: 0, certifiedCoaches: 0 });
-
-  useEffect(() => {
-    api.get('/stats/public')
-      .then(response => {
-        const payload = (response.data as any);
-        if (payload.success || payload.status === 'success') {
-          const d = payload.data ?? payload;
-          setStats({ students: d.students || 0, states: d.states || 0, clubs: d.clubs || 0, events: d.totalEvents || d.events || 0, certifiedCoaches: d.certifiedCoaches || 0 });
-        }
-      })
-      .catch(() => {});
-  }, []);
+/* ─── Stats Strip (accepts data from parent) ─── */
+function StatsStrip({ propStats }: { propStats?: HeroSectionProps['stats'] }) {
+  const stats = {
+    students: propStats?.students || 0,
+    states: propStats?.states || 0,
+    clubs: propStats?.clubs || 0,
+    events: propStats?.totalEvents || propStats?.events || 0,
+    certifiedCoaches: propStats?.certifiedCoaches || 0,
+  };
 
   const items = [
     { value: stats.students, suffix: '+', label: 'Registered Skaters' },

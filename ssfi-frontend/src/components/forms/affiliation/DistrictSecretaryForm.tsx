@@ -16,8 +16,6 @@ import { useDistrictSecretaryRegistration } from '@/lib/hooks/useAffiliation';
 import { useStates, useDistricts } from '@/lib/hooks/useStudent';
 import { useRenewal, type MemberLookupResult } from '@/lib/hooks/useAffiliationLookup';
 import AffiliationLookupStep from './AffiliationLookupStep';
-import AadhaarKYCVerification from '@/components/forms/shared/AadhaarKYCVerification';
-import type { KycResult } from '@/lib/hooks/useKYC';
 import type { DistrictSecretaryFormData } from '@/types/affiliation';
 import { GENDERS } from '@/types/affiliation';
 
@@ -26,15 +24,12 @@ const formSchema = z.object({
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
   email: z.string().email('Invalid email address'),
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
-  aadhaarNumber: z.string().regex(/^\d{12}$/, 'Aadhaar must be 12 digits'),
   stateId: z.string().min(1, 'Please select a state'),
   districtId: z.string().min(1, 'Please select a district'),
   residentialAddress: z.string().min(10, 'Address must be at least 10 characters').max(500),
-  kycVerified: z.literal(true, { message: 'Aadhaar KYC verification is required' }),
-  kycVerifiedName: z.string().min(1, 'KYC verified name is required'),
-  kycVerifiedDob: z.string().optional(),
-  kycProfileImage: z.string().optional(),
   profilePhoto: z.string().min(1, 'Profile photo is required'),
+  logo: z.string().min(1, 'Association logo is required'),
+  associationRegistrationCopy: z.string().min(1, 'Association registration copy is required'),
   termsAccepted: z.boolean().refine((v) => v === true, 'You must accept the terms'),
 });
 type FormData = z.infer<typeof formSchema>;
@@ -48,6 +43,8 @@ export default function DistrictSecretaryRegistrationForm() {
   const [mode, setMode] = useState<Mode>('choose');
   const [renewMember, setRenewMember] = useState<MemberLookupResult | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [regCopyPreview, setRegCopyPreview] = useState<string | null>(null);
   const photoRef = useRef<HTMLInputElement>(null);
 
   const { initiate, verify, isLoading } = useDistrictSecretaryRegistration();
@@ -65,24 +62,21 @@ export default function DistrictSecretaryRegistrationForm() {
   useEffect(() => { fetchStates(); }, [fetchStates]);
   useEffect(() => { if (selectedStateId) fetchDistricts(selectedStateId); }, [selectedStateId, fetchDistricts]);
 
-  // KYC Verified handler
-  const handleKycVerified = useCallback((result: KycResult) => {
-    const rawAadhaar = result.maskedAadhaar?.replace(/\s/g, '').replace(/X/g, '0') || '';
-    setValue('aadhaarNumber', rawAadhaar, { shouldValidate: true });
-    setValue('kycVerified', true as any, { shouldValidate: true });
-    setValue('kycVerifiedName', result.fullName, { shouldValidate: true });
-    setValue('kycVerifiedDob', result.dob || '', { shouldValidate: true });
-    setValue('kycProfileImage', result.profileImage || '', { shouldValidate: true });
-  }, [setValue]);
-
-  // Profile photo choice from KYC
-  const handleProfilePhotoChoice = useCallback((useAadhaar: boolean, base64?: string) => {
-    if (useAadhaar && base64) {
-      const dataUri = `data:image/jpeg;base64,${base64}`;
-      setPhotoPreview(dataUri);
-      setValue('profilePhoto', dataUri, { shouldValidate: true });
-    }
-  }, [setValue]);
+  const handleFileUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: 'profilePhoto' | 'logo' | 'associationRegistrationCopy',
+    setPreview: (v: string | null) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const b64 = reader.result as string;
+      setPreview(b64);
+      setValue(field, b64, { shouldValidate: true });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handlePhotoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -318,22 +312,60 @@ export default function DistrictSecretaryRegistrationForm() {
                   </div>
                 </div>
 
-                {/* Aadhaar KYC Verification */}
+                {/* Association Logo */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                     <Shield className="w-4 h-4 text-teal-500" />
-                    <h2 className="font-semibold text-gray-900">Aadhaar KYC Verification</h2>
+                    <h2 className="font-semibold text-gray-900">Association Logo <span className="text-red-400">*</span></h2>
                   </div>
                   <div className="p-6">
-                    <AadhaarKYCVerification
-                      onVerified={handleKycVerified}
-                      onProfilePhotoChoice={handleProfilePhotoChoice}
-                      showProfilePhotoChoice={true}
-                      colorScheme="teal"
-                    />
-                    {errors.kycVerified && (
-                      <p className="mt-3 text-xs text-red-500">{errors.kycVerified.message}</p>
+                    <div className="w-40">
+                      {logoPreview ? (
+                        <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
+                          <img src={logoPreview} alt="Logo" className="w-full h-full object-contain bg-white p-2" />
+                          <button type="button" onClick={() => { setLogoPreview(null); setValue('logo', ''); }} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div onClick={() => document.getElementById('district-logo-input')?.click()} className={`aspect-square rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.logo ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
+                          <Shield className="w-7 h-7 text-gray-400" />
+                          <span className="text-xs text-gray-500 text-center">Association Logo</span>
+                          <span className="text-xs text-gray-400">PNG, JPG</span>
+                        </div>
+                      )}
+                      <input id="district-logo-input" type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo', setLogoPreview)} className="hidden" />
+                    </div>
+                    {errors.logo && <p className="mt-2 text-xs text-red-500">{errors.logo.message}</p>}
+                  </div>
+                </div>
+
+                {/* Association Registration Copy */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-teal-500" />
+                    <h2 className="font-semibold text-gray-900">Association Registration Copy <span className="text-red-400">*</span></h2>
+                  </div>
+                  <div className="p-6">
+                    {regCopyPreview ? (
+                      <div className="relative inline-block">
+                        <div className="px-4 py-3 bg-teal-50 border border-teal-200 rounded-xl flex items-center gap-3">
+                          <Check className="w-4 h-4 text-teal-500" />
+                          <span className="text-sm text-teal-700 font-medium">Document uploaded</span>
+                          <button type="button" onClick={() => { setRegCopyPreview(null); setValue('associationRegistrationCopy', ''); }} className="ml-2 text-red-400 hover:text-red-600">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div onClick={() => document.getElementById('district-regcopy-input')?.click()} className={`p-6 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center gap-2 transition-all ${errors.associationRegistrationCopy ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
+                        <Camera className="w-7 h-7 text-gray-400" />
+                        <span className="text-sm text-gray-500">Upload registration certificate</span>
+                        <span className="text-xs text-gray-400">Image or PDF, up to 5MB</span>
+                      </div>
                     )}
+                    <input id="district-regcopy-input" type="file" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'associationRegistrationCopy', setRegCopyPreview)} className="hidden" />
+                    {errors.associationRegistrationCopy && <p className="mt-2 text-xs text-red-500">{errors.associationRegistrationCopy.message}</p>}
                   </div>
                 </div>
 

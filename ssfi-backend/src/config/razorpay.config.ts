@@ -58,6 +58,16 @@ export const razorpayConfig = {
             baseAmount: 0, // Variable - depends on program
             description: 'SSFI Beginner Certification Fee',
         },
+        AFFILIATION_FEE: {
+            name: 'Affiliation Fee',
+            baseAmount: 0, // Variable - depends on registration window
+            description: 'SSFI Affiliation / Registration Fee',
+        },
+        DONATION: {
+            name: 'Donation',
+            baseAmount: 0, // Variable - donor chooses
+            description: 'Donation to SSFI',
+        },
     },
 
     // Callback URLs
@@ -73,3 +83,10 @@ export type PaymentType = keyof typeof razorpayConfig.paymentTypes;
 export const isRazorpayConfigured = (): boolean => {
     return !!(razorpayInstance && keyId && keySecret);
 };
+
+/**
+ * Create a Razorpay instance with custom credentials (for secretary-specific accounts).
+ */
+export function createRazorpayInstance(customKeyId: string, customKeySecret: string): Razorpay {
+    return new Razorpay({ key_id: customKeyId, key_secret: customKeySecret });
+}

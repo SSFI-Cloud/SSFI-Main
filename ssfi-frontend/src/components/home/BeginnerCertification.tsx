@@ -7,8 +7,6 @@ import {
   ArrowRight, Calendar, MapPin, Clock,
   CheckCircle2, Sparkles, Users, Medal,
 } from 'lucide-react';
-import { api } from '@/lib/api/client';
-
 const benefits = [
   'Official SSFI Level 1 Beginner Certification',
   'Balance, posture & speed technique training',
@@ -29,48 +27,44 @@ const fallbackBatch = {
   id: null as number | null,
 };
 
-export default function BeginnerCertification() {
+interface BeginnerCertificationProps {
+  programs?: any[];
+}
+
+export default function BeginnerCertification({ programs }: BeginnerCertificationProps) {
   const [batch, setBatch] = useState(fallbackBatch);
 
+  // Accept programs from parent (aggregate endpoint)
   useEffect(() => {
-    const fetchPrograms = async () => {
-      try {
-        const res = await api.get('/beginner-cert/programs/active');
-        const programs = res.data?.data;
-        if (Array.isArray(programs) && programs.length > 0) {
-          const p = programs[0]; // Show first active program
-          setBatch({
-            title: p.title,
-            date:
-              new Date(p.startDate).toLocaleDateString('en-IN', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              }) +
-              ' - ' +
-              new Date(p.endDate).toLocaleDateString('en-IN', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              }),
-            location: p.city + ', ' + p.state,
-            spotsLeft: Math.max(0, p.totalSeats - p.filledSeats),
-            totalSpots: p.totalSeats,
-            fee: '₹' + Number(p.price).toLocaleString(),
-            deadline: new Date(p.lastDateToApply).toLocaleDateString('en-IN', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            }),
-            id: p.id,
-          });
-        }
-      } catch {
-        // Keep fallback
-      }
-    };
-    fetchPrograms();
-  }, []);
+    if (Array.isArray(programs) && programs.length > 0) {
+      const p = programs[0]; // Show first active program
+      setBatch({
+        title: p.title,
+        date:
+          new Date(p.startDate).toLocaleDateString('en-IN', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }) +
+          ' - ' +
+          new Date(p.endDate).toLocaleDateString('en-IN', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+        location: p.city + ', ' + p.state,
+        spotsLeft: Math.max(0, p.totalSeats - p.filledSeats),
+        totalSpots: p.totalSeats,
+        fee: '₹' + Number(p.price).toLocaleString(),
+        deadline: new Date(p.lastDateToApply).toLocaleDateString('en-IN', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+        id: p.id,
+      });
+    }
+  }, [programs]);
 
   const pct =
     batch.totalSpots > 0
@@ -229,10 +223,10 @@ export default function BeginnerCertification() {
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                  <div>
-                    <p className="text-white/30 text-xs">Program Fee</p>
-                    <p className="text-2xl font-headline font-bold text-white">{batch.fee}</p>
+                <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <p className="text-emerald-400 text-sm font-bold">Registration Open</p>
                   </div>
                   <div className="flex items-center gap-1 text-white/30">
                     <Users className="w-4 h-4" />

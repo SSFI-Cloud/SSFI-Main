@@ -5,7 +5,6 @@ import type { StudentRegistrationData } from '@/types/student';
 // Default form values
 const defaultFormData: Partial<StudentRegistrationData> = {
   firstName: '',
-  lastName: '',
   dateOfBirth: '',
   gender: undefined,
   bloodGroup: undefined,
@@ -13,8 +12,9 @@ const defaultFormData: Partial<StudentRegistrationData> = {
   phone: '',
   fatherName: '',
   motherName: '',
+  fatherOccupation: '',
   schoolName: '',
-  schoolClass: '',
+  academicBoard: '',
   nomineeName: '',
   nomineeAge: undefined,
   nomineeRelation: undefined,
@@ -198,7 +198,6 @@ export const useRegistrationStore = create<RegistrationState>()(
 export const usePersonalInfoData = () =>
   useRegistrationStore((state) => ({
     firstName: state.formData.firstName,
-    lastName: state.formData.lastName,
     dateOfBirth: state.formData.dateOfBirth,
     gender: state.formData.gender,
     bloodGroup: state.formData.bloodGroup,
@@ -210,8 +209,9 @@ export const useFamilySchoolData = () =>
   useRegistrationStore((state) => ({
     fatherName: state.formData.fatherName,
     motherName: state.formData.motherName,
+    fatherOccupation: (state.formData as any).fatherOccupation,
     schoolName: state.formData.schoolName,
-    schoolClass: state.formData.schoolClass,
+    academicBoard: (state.formData as any).academicBoard,
   }));
 
 export const useNomineeData = () =>

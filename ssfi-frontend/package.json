@@ -4,7 +4,8 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "next build && node scripts/fix-litespeed-paths.js",
+        "build": "next build",
+        "build:hostinger": "next build && node scripts/fix-litespeed-paths.js",
         "start": "next start",
         "lint": "next lint"
     },
@@ -39,3 +40,4 @@
         "zustand": "^4.4.7"
     }
 }
+
