@@ -43,7 +43,10 @@ export const requestTimeout = (req: Request, res: Response, next: NextFunction) 
 export const httpCacheHeaders = (maxAgeSeconds: number) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (req.method === 'GET') {
-      res.setHeader('Cache-Control', `public, max-age=${maxAgeSeconds}, s-maxage=${maxAgeSeconds}`);
+      res.setHeader(
+        'Cache-Control',
+        `public, max-age=${maxAgeSeconds}, s-maxage=0`
+      );
     }
     next();
   };

@@ -7,6 +7,7 @@ import {
     SkateCategoryEnum,
 } from '../validators/eventRegistration.validator';
 import { AppError } from '../utils/errors';
+import prisma from '../config/prisma';
 
 export const lookupStudent = async (req: Request, res: Response, next: any) => {
     try {
@@ -20,11 +21,27 @@ export const lookupStudent = async (req: Request, res: Response, next: any) => {
 
 export const getAvailableRaces = async (req: Request, res: Response, next: any) => {
     try {
-        const { category, ageGroup } = req.query;
+        const { category, ageGroup, eventId } = req.query;
         if (!category || !ageGroup) throw new AppError('Category and age group required', 400);
 
-        const result = eventRegistrationService.getAvailableRaces(category as string, ageGroup as string);
+        const result = await eventRegistrationService.getAvailableRaces(
+            category as string,
+            ageGroup as string,
+            eventId ? Number(eventId) : undefined
+        );
         res.status(200).json({ status: 'success', data: result });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getEventCategories = async (req: Request, res: Response, next: any) => {
+    try {
+        const eventId = Number(req.params.eventId);
+        if (!eventId) throw new AppError('Event ID is required', 400);
+
+        const categories = await eventRegistrationService.getEventCategories(eventId);
+        res.status(200).json({ status: 'success', data: categories });
     } catch (error) {
         next(error);
     }
@@ -125,12 +142,59 @@ export const getMyRegistration = async (req: Request, res: Response, next: any) 
     }
 };
 
+export const updatePaymentStatus = async (req: Request, res: Response, next: any) => {
+    try {
+        const registrationId = Number(req.params.registrationId);
+        const userId = req.user?.id;
+        const userRole = req.user?.role;
+        const { paymentStatus } = req.body;
+
+        if (!userId || !userRole) {
+            return res.status(401).json({ status: 'fail', message: 'Unauthorized' });
+        }
+
+        if (!['PAID', 'PENDING'].includes(paymentStatus)) {
+            return res.status(400).json({ status: 'fail', message: 'Invalid payment status. Must be PAID or PENDING.' });
+        }
+
+        // Find registration with event
+        const registration = await prisma.eventRegistration.findUnique({
+            where: { id: registrationId },
+            include: { event: { select: { creatorId: true, paymentMode: true } } },
+        });
+
+        if (!registration) {
+            return res.status(404).json({ status: 'fail', message: 'Registration not found' });
+        }
+
+        // Only event creator or GLOBAL_ADMIN can update
+        if (userRole !== 'GLOBAL_ADMIN' && registration.event.creatorId !== userId) {
+            return res.status(403).json({ status: 'fail', message: 'Not authorized to update this registration' });
+        }
+
+        // Update payment status
+        const updated = await prisma.eventRegistration.update({
+            where: { id: registrationId },
+            data: {
+                paymentStatus,
+                amountPaid: paymentStatus === 'PAID' ? registration.totalFee : 0,
+            },
+        });
+
+        res.status(200).json({ status: 'success', data: updated });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export default {
     lookupStudent,
     getAvailableRaces,
+    getEventCategories,
     createRegistration,
     getRegistrations,
     exportRegistrations,
     createManualRegistration,
-    getMyRegistration
+    getMyRegistration,
+    updatePaymentStatus
 };

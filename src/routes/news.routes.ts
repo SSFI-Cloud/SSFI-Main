@@ -1,8 +1,10 @@
 import { Router } from 'express';
 const router = Router();
 import prisma from '../config/prisma';
+import { cacheMiddleware } from '../utils/cache.util';
+
 // Get all news articles with pagination
-router.get('/', async (req, res) => {
+router.get('/', cacheMiddleware(300), async (req, res) => {
     try {
         const { page = '1', limit = '10', category, search } = req.query;
         const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
@@ -63,7 +65,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get news categories
-router.get('/categories', async (req, res) => {
+router.get('/categories', cacheMiddleware(600), async (req, res) => {
     try {
         const categories = await prisma.newsArticle.findMany({
             where: { isPublished: true },
@@ -85,7 +87,7 @@ router.get('/categories', async (req, res) => {
 });
 
 // Get featured news
-router.get('/featured', async (req, res) => {
+router.get('/featured', cacheMiddleware(300), async (req, res) => {
     try {
         // Since we don't have isFeatured flag, we'll take top 3 latest published
         const articles = await prisma.newsArticle.findMany({
@@ -108,7 +110,7 @@ router.get('/featured', async (req, res) => {
 });
 
 // Get single news article by slug
-router.get('/:slug', async (req, res) => {
+router.get('/:slug', cacheMiddleware(600), async (req, res) => {
     try {
         const { slug } = req.params;
 

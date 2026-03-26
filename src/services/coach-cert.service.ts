@@ -123,23 +123,53 @@ class CoachCertService {
   }
 
   async initiateRegistration(data: any, files: { photo?: string; aadhaarCard?: string }) {
-    // 1. Register coach using existing logic
-    const registration = await this.registerCoach(data, files);
+    let registration: any;
 
-    // 2. Create Razorpay order
-    const order = await paymentService.createOrder({
-      amount: Number(registration.amount) * 100, // convert to paise
-      currency: 'INR',
-      payment_type: 'COACH_CERTIFICATION',
-      entity_id: registration.id,
-      entity_type: 'coach_certification',
-      user_id: 1, // public registration, no user
-      notes: {
-        registration_number: registration.registrationNumber,
-        name: data.fullName,
-        type: 'COACH_CERTIFICATION',
+    // 1. Check for existing unpaid registration (retry scenario)
+    const existing = await prisma.coachCertRegistration.findFirst({
+      where: {
+        programId: data.programId,
+        OR: [{ phone: data.phone }, ...(data.aadhaarNumber ? [{ aadhaarNumber: data.aadhaarNumber }] : [])],
       },
+      include: { program: { select: { title: true, level: true, price: true } } },
     });
+
+    if (existing && existing.paymentStatus === 'PENDING') {
+      registration = existing;
+    } else if (existing && existing.paymentStatus === 'PAID') {
+      throw new Error('Already registered and paid for this program');
+    } else {
+      registration = await this.registerCoach(data, files);
+    }
+
+    // 2. Check if there's already a PENDING payment for this registration
+    const existingPayment = await prisma.payment.findFirst({
+      where: { coachCertRegistrationId: registration.id, status: 'PENDING' },
+    });
+
+    let order: any;
+    let paymentKeyId: string | undefined;
+    if (existingPayment) {
+      order = { id: existingPayment.razorpayOrderId };
+    } else {
+      // Create new Razorpay order (with FK link for post-payment actions)
+      const result = await paymentService.createOrder({
+        amount: Number(registration.amount) * 100, // convert to paise
+        currency: 'INR',
+        payment_type: 'COACH_CERTIFICATION',
+        entity_id: registration.id,
+        entity_type: 'coach_certification',
+        user_id: undefined, // public registration, no user
+        coachCertRegistrationId: registration.id,
+        notes: {
+          registration_number: registration.registrationNumber,
+          name: data.fullName,
+          type: 'COACH_CERTIFICATION',
+        },
+      });
+      order = result.order;
+      paymentKeyId = result.keyId;
+    }
 
     const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
 
@@ -148,7 +178,7 @@ class CoachCertService {
       razorpayOrderId: order.id,
       amount: Number(registration.amount) * 100,
       currency: 'INR',
-      key: useMockPayment ? 'rzp_test_mock' : razorpayConfig.keyId,
+      key: useMockPayment ? 'rzp_test_mock' : (paymentKeyId || razorpayConfig.keyId),
       userDetails: {
         name: data.fullName,
         email: data.email || '',

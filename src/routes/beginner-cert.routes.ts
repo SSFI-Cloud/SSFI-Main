@@ -2,7 +2,9 @@ import { Router } from 'express';
 import * as ctrl from '../controllers/beginner-cert.controller';
 import { authenticate, requireRole } from '../middleware/auth.middleware';
 import { uploadFields } from '../middleware/upload.middleware';
+import { optimizeUploadedImages } from '../middleware/imageOptimize.middleware';
 import { UserRole } from '@prisma/client';
+import { cacheMiddleware } from '../utils/cache.util';
 
 const router = Router();
 
@@ -14,10 +16,10 @@ const beginnerUpload = uploadFields([
 
 // ────────── PUBLIC ROUTES ──────────
 
-router.get('/programs/active', ctrl.getActivePrograms);
+router.get('/programs/active', cacheMiddleware(300), ctrl.getActivePrograms);
 router.get('/lookup-student', ctrl.lookupStudent);
-router.post('/register', beginnerUpload, ctrl.registerBeginner);
-router.post('/initiate', beginnerUpload, ctrl.initiateRegistration);
+router.post('/register', beginnerUpload, optimizeUploadedImages, ctrl.registerBeginner);
+router.post('/initiate', beginnerUpload, optimizeUploadedImages, ctrl.initiateRegistration);
 router.post('/verify-payment', ctrl.verifyPayment);
 
 // ────────── ADMIN ROUTES ──────────

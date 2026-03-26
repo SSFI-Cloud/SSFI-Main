@@ -2,6 +2,7 @@ import { Router } from 'express';
 import cmsController from '../controllers/cms.controller';
 import { authenticate, requireRole } from '../middleware/auth.middleware';
 import { uploadSingle } from '../middleware/upload.middleware';
+import { optimizeUploadedImages } from '../middleware/imageOptimize.middleware';
 import { cacheMiddleware } from '../utils/cache.util';
 
 const router = Router();
@@ -225,6 +226,16 @@ router.put(
   '/admin/settings',
   requireRole('GLOBAL_ADMIN'),
   cmsController.updateSiteSettings
+);
+
+// ----------------------------------------
+// SEED PAGES (populate CMS with existing frontend pages)
+// ----------------------------------------
+
+router.post(
+  '/admin/pages/seed',
+  requireRole('GLOBAL_ADMIN'),
+  cmsController.seedPages
 );
 
 export default router;

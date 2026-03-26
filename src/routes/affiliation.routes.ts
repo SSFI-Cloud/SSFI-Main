@@ -3,6 +3,7 @@ import affiliationController from '../controllers/affiliation.controller';
 import { authenticate, requireRole } from '../middleware/auth.middleware';
 import { injectScopeFilters, verifyApprovalScope } from '../middleware/scope.middleware';
 import { uploadFields } from '../middleware/upload.middleware';
+import { optimizeUploadedImages } from '../middleware/imageOptimize.middleware';
 
 const router = Router();
 
@@ -43,14 +44,14 @@ router.get('/status/:type', affiliationController.checkRegistrationStatus);
  * @desc    Register as State Secretary
  * @access  Public (when registration is open)
  */
-router.post('/state-secretary', secretaryUpload, affiliationController.registerStateSecretary);
+router.post('/state-secretary', secretaryUpload, optimizeUploadedImages, affiliationController.registerStateSecretary);
 
 /**
  * @route   POST /api/v1/affiliations/district-secretary/initiate
  * @desc    Initiate District Secretary Registration
  * @access  Public (when registration is open)
  */
-router.post('/district-secretary/initiate', secretaryUpload, affiliationController.initiateDistrictSecretaryRegistration);
+router.post('/district-secretary/initiate', secretaryUpload, optimizeUploadedImages, affiliationController.initiateDistrictSecretaryRegistration);
 
 /**
  * @route   POST /api/v1/affiliations/district-secretary/verify
@@ -64,7 +65,7 @@ router.post('/district-secretary/verify', affiliationController.verifyDistrictSe
  * @desc    Register a Club
  * @access  Public (when registration is open)
  */
-router.post('/club', clubUpload, affiliationController.registerClub);
+router.post('/club', clubUpload, optimizeUploadedImages, affiliationController.registerClub);
 
 const studentUpload = uploadFields([
   { name: 'profilePhoto', maxCount: 1 },
@@ -77,7 +78,7 @@ const studentUpload = uploadFields([
  * @desc    Initiate Student Registration with Payment
  * @access  Public (when registration is open)
  */
-router.post('/student/initiate', studentUpload, affiliationController.initiateStudentRegistration);
+router.post('/student/initiate', studentUpload, optimizeUploadedImages, affiliationController.initiateStudentRegistration);
 
 /**
  * @route   POST /api/v1/affiliations/student/verify
@@ -91,7 +92,7 @@ router.post('/student/verify', affiliationController.verifyStudentPayment);
  * @desc    Register a Student
  * @access  Public (when registration is open)
  */
-router.post('/student', studentUpload, affiliationController.registerStudent);
+router.post('/student', studentUpload, optimizeUploadedImages, affiliationController.registerStudent);
 
 /**
  * @route   GET /api/v1/affiliations/lookup

@@ -15,18 +15,14 @@ if (!process.env.DATABASE_URL) {
   dotenv.config({ path: path.resolve(__dirname, '../../public_html/.builds/config/.env') });
 }
 
-// ── Process/thread limits (Hostinger has a 200 process cap) ──
-// UV_THREADPOOL_SIZE must be set BEFORE any async I/O — controls libuv threads
-// for DNS lookups, fs operations, crypto, etc.
-if (!process.env.UV_THREADPOOL_SIZE) process.env.UV_THREADPOOL_SIZE = '2';
+// ── Process/thread limits ──
+// Railway: higher defaults for dedicated container; Hostinger: restricted
+const isRailway = !!process.env.RAILWAY_ENVIRONMENT;
+if (!process.env.UV_THREADPOOL_SIZE) process.env.UV_THREADPOOL_SIZE = isRailway ? '8' : '2';
+if (!process.env.VIPS_CONCURRENCY) process.env.VIPS_CONCURRENCY = isRailway ? '2' : '1';
 
-// Limit libvips (sharp's image library) thread pool via env var
-// This MUST be set before sharp is imported
-if (!process.env.VIPS_CONCURRENCY) process.env.VIPS_CONCURRENCY = '1';
-
-// Now import and configure sharp
 import sharp from 'sharp';
-sharp.concurrency(1);
+sharp.concurrency(isRailway ? 2 : 1);
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -51,17 +47,23 @@ import settingsRoutes from './routes/settings.routes';
 import locationsRoutes from './routes/locations.routes';
 import { statsRoutes } from './routes/stats.routes';
 import renewalRoutes from './routes/renewal.routes';
+import homepageRoutes from './routes/homepage.routes';
+import stateDirectoryRoutes from './routes/state-directory.routes';
 // import paymentRoutes from './routes/payment.routes';
 
 // Import middleware
 import { errorHandler } from './middleware/error.middleware';
 import { notFound } from './middleware/error.middleware';
 import { requestTimer, requestTimeout, httpCacheHeaders } from './middleware/performance.middleware';
+import { cacheMiddleware } from './utils/cache.util';
 
 // Import utils
 import logger from './utils/logger.util';
 
 const app: Application = express();
+
+// Trust Hostinger/Cloudflare reverse proxy headers
+app.set('trust proxy', 1);
 
 // Security Middleware
 app.use(helmet({
@@ -87,9 +89,10 @@ for (const origin of rawOrigins) {
   }
 }
 
+// Allow Vercel preview/production deployments
 const corsOptions = {
   origin: (origin: string | undefined, callback: Function) => {
-    if (!origin || allowedOrigins.has(origin)) {
+    if (!origin || allowedOrigins.has(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
       logger.warn(`CORS blocked origin: ${origin}`);
@@ -107,11 +110,11 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Rate Limiting - tuned for 100-150 concurrent users
-// Each page load triggers 5-10 API calls, so 100/15min is far too low
+// Rate Limiting - tuned for real-world multi-user traffic
+// Each page load triggers 2-3 API calls; 1000/15min allows ~40+ concurrent users per IP
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '500'), // 500 requests per 15min per IP
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'), // 1000 requests per 15min per IP
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -179,6 +182,12 @@ app.use(`/api/${API_VERSION}/stats`, publicCache);
 app.use(`/api/${API_VERSION}/results`, publicCache);
 app.use(`/api/${API_VERSION}/team-members`, publicCache);
 app.use(`/api/${API_VERSION}/milestones`, publicCache);
+app.use(`/api/${API_VERSION}/events`, publicCache);
+app.use(`/api/${API_VERSION}/beginner-cert`, publicCache);
+app.use(`/api/${API_VERSION}/coach-cert`, publicCache);
+app.use(`/api/${API_VERSION}/notifications`, publicCache);
+app.use(`/api/${API_VERSION}/homepage`, publicCache);
+app.use(`/api/${API_VERSION}/state-directory`, publicCache);
 
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 // app.use(`/api/${API_VERSION}/admin`, adminRoutes);
@@ -221,9 +230,15 @@ app.use(`/api/${API_VERSION}/beginner-cert`, beginnerCertRoutes);
 app.use(`/api/${API_VERSION}/team-members`, teamRoutes);
 app.use(`/api/${API_VERSION}/milestones`, milestoneRoutes);
 app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
+import donationRoutes from './routes/donation.routes';
+app.use(`/api/${API_VERSION}/donations`, donationRoutes);
+app.use(`/api/${API_VERSION}/homepage`, homepageRoutes);
+app.use(`/api/${API_VERSION}/state-directory`, stateDirectoryRoutes);
+import razorpayConfigRoutes from './routes/razorpayConfig.routes';
+app.use(`/api/${API_VERSION}/razorpay-config`, razorpayConfigRoutes);
 
 // Public notification ribbon — returns array of active registrations/programs
-app.get(`/api/${API_VERSION}/notifications/public/active`, async (_req: Request, res: Response) => {
+app.get(`/api/${API_VERSION}/notifications/public/active`, cacheMiddleware(300), async (_req: Request, res: Response) => {
   try {
     const { default: prisma } = await import('./config/prisma');
     const now = new Date();

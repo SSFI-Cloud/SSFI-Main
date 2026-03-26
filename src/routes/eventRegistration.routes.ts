@@ -7,6 +7,7 @@ const router = Router();
 // Public Routes
 router.post('/lookup', eventRegistrationController.lookupStudent);
 router.get('/races', eventRegistrationController.getAvailableRaces);
+router.get('/event-categories/:eventId', eventRegistrationController.getEventCategories);
 router.post('/register', eventRegistrationController.createRegistration);
 
 // Admin / Organizer Routes
@@ -16,5 +17,6 @@ router.get('/:eventId/registrations', eventRegistrationController.getRegistratio
 router.get('/:eventId/registrations/export', eventRegistrationController.exportRegistrations);
 router.get('/:eventId/my-registration', eventRegistrationController.getMyRegistration); // New endpoint
 router.post('/manual-register', eventRegistrationController.createManualRegistration);
+router.patch('/:registrationId/payment-status', eventRegistrationController.updatePaymentStatus);
 
 export default router;

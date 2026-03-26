@@ -72,6 +72,7 @@ export const getAllStates = async (query: any) => {
             code: state.code,
             logo: state.logo,
             website: state.website,
+            presidentName: state.presidentName || null,
             districtsCount: state._count.districts,
             clubsCount: state._count.clubs,
             skatersCount: state._count.students,
@@ -152,6 +153,8 @@ export const getStateById = async (id: number) => {
         code: state.code,
         logo: state.logo,
         website: state.website,
+        presidentName: state.presidentName || null,
+        presidentPhoto: state.presidentPhoto || null,
         districtsCount: state._count.districts,
         clubsCount: state._count.clubs,
         skatersCount: state._count.students,
@@ -195,7 +198,9 @@ export const createState = async (data: any) => {
                 name: data.name,
                 code: data.code,
                 logo: data.logo,
-                website: data.website
+                website: data.website,
+                presidentName: data.presidentName,
+                presidentPhoto: data.presidentPhoto,
             },
         });
 
@@ -232,7 +237,7 @@ export const createState = async (data: any) => {
     });
 };
 
-export const updateState = async (id: number, data: { name?: string; code?: string; logo?: string; website?: string }) => {
+export const updateState = async (id: number, data: { name?: string; code?: string; logo?: string; website?: string; presidentName?: string; presidentPhoto?: string }) => {
     const state = await prisma.state.findUnique({ where: { id } });
     if (!state) throw new AppError('State not found', 404);
 

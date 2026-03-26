@@ -208,7 +208,7 @@ export const resultController = {
                     id: true, name: true, eventDate: true,
                     city: true, category: true,
                     raceResults: {
-                        where: { position: { lte: 3 } },
+                        where: { position: { lte: 5 } },
                         orderBy: [{ ageCategory: 'asc' }, { position: 'asc' }],
                         include: {
                             student: {
@@ -240,14 +240,6 @@ export const resultController = {
                 }
 
                 for (const [ageCategory, entries] of byAge.entries()) {
-                    // Keep only the first occurrence of each position (1, 2, 3)
-                    const seen = new Set<number>();
-                    const top3 = entries.filter(e => {
-                        if (seen.has(e.position)) return false;
-                        seen.add(e.position);
-                        return true;
-                    }).slice(0, 3);
-
                     slides.push({
                         eventId: event.id,
                         eventName: event.name,
@@ -255,7 +247,7 @@ export const resultController = {
                         city: event.city,
                         category: event.category,
                         ageCategory,
-                        top3,
+                        top5: entries,
                     });
                 }
             }
@@ -305,7 +297,7 @@ export const resultController = {
             }
 
             const rows = await prisma.raceResult.findMany({
-                where: { eventId, position: { lte: 3 } },
+                where: { eventId, position: { lte: 5 } },
                 orderBy: [
                     { ageCategory: 'asc' },
                     { skateCategory: 'asc' },
