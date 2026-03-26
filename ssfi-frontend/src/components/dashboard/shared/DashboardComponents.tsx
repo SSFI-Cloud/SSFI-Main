@@ -41,13 +41,13 @@ export function StatCard({ title, value, icon: Icon, color, trend, href, delay =
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className={`relative bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-hidden ${href ? 'hover:shadow-md hover:border-gray-200 cursor-pointer transition-all group' : ''}`}
+      className={`relative bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 overflow-hidden ${href ? 'hover:shadow-md hover:border-gray-200 cursor-pointer transition-all group' : ''}`}
     >
       <div className={`absolute -top-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br ${c.bg} opacity-10`} />
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{typeof value === 'number' ? value.toLocaleString() : value}</p>
+          <p className="mt-2 text-2xl sm:text-3xl font-bold text-gray-900">{typeof value === 'number' ? value.toLocaleString() : value}</p>
           {subtitle && <p className="mt-1 text-xs text-gray-600">{subtitle}</p>}
           {trend && (
             <div className={`mt-2 flex items-center gap-1 text-xs font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-500'}`}>

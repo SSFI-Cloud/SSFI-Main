@@ -188,8 +188,8 @@ export default function PaymentsPage() {
                                 <h2 className="text-3xl font-bold">{formatCurrency(stats?.totalRevenue ?? 0)}</h2>
                             )}
                         </div>
-                        <div className="p-2 bg-gray-200 rounded-lg ">
-                            <IndianRupee className="w-6 h-6" />
+                        <div className="p-2 bg-white/20 rounded-lg">
+                            <IndianRupee className="w-6 h-6 text-white" />
                         </div>
                     </div>
                 </motion.div>

@@ -215,8 +215,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {!sidebarOpen && (
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a1628] px-4 py-3 flex items-center justify-between border-b border-white/5">
           <Link href="/">
-            <div className="relative w-8 h-8">
-              <Image src="/images/logo/light.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
+            <div className="relative w-28 h-10">
+              <Image src="/images/logo/logo-wide.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
             </div>
           </Link>
           <button onClick={() => setSidebarOpen(true)} className="p-2 text-white/60 hover:text-white">
