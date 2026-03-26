@@ -250,6 +250,7 @@ class EmailService {
     // 2. WELCOME / CREDENTIALS
     // ─────────────────────────────────────────────────────────────────────────
     async sendCredentials(to: string, name: string, details: { uid: string; password: string; role: string }): Promise<void> {
+        const esc = EmailService.escapeHtml;
         const subject = `Welcome to SSFI — Your Login Credentials`;
 
         const roleLabel: Record<string, string> = {
@@ -260,10 +261,15 @@ class EmailService {
             GLOBAL_ADMIN: 'Administrator',
         };
 
-        const body = `
-          ${greeting(name, `Welcome to the Speed Skating Federation of India! Your account has been successfully created. Below are your login credentials to access the SSFI portal.`)}
+        const safeName = esc(name);
+        const safeUid = esc(details.uid);
+        const safePassword = esc(details.password);
+        const safeRole = roleLabel[details.role] || esc(details.role);
 
-          ${credentialCard(details.uid, details.password, roleLabel[details.role] || details.role)}
+        const body = `
+          ${greeting(safeName, `Welcome to the Speed Skating Federation of India! Your account has been successfully created. Below are your login credentials to access the SSFI portal.`)}
+
+          ${credentialCard(safeUid, safePassword, safeRole)}
 
           ${alertBox('info', `Login at <strong>ssfiskate.com</strong> using your UID and password. You will be prompted to change your password on first login.`)}
 
@@ -272,7 +278,7 @@ class EmailService {
               <tr><td style="padding:7px 0;color:#374151;font-size:13px;">1.&nbsp;&nbsp;Log in with the credentials above</td></tr>
               <tr><td style="padding:7px 0;color:#374151;font-size:13px;">2.&nbsp;&nbsp;Change your password immediately</td></tr>
               <tr><td style="padding:7px 0;color:#374151;font-size:13px;">3.&nbsp;&nbsp;Complete your profile information</td></tr>
-              <tr><td style="padding:7px 0;color:#374151;font-size:13px;">4.&nbsp;&nbsp;Explore your ${roleLabel[details.role] || details.role} dashboard</td></tr>
+              <tr><td style="padding:7px 0;color:#374151;font-size:13px;">4.&nbsp;&nbsp;Explore your ${safeRole} dashboard</td></tr>
             </table>
           `)}
         `;
@@ -281,7 +287,7 @@ class EmailService {
             title: 'Welcome to SSFI',
             bannerColor: `linear-gradient(135deg,${BRAND_BLUE},#6366F1)`,
             bannerIcon: '👋',
-            bannerText: `Welcome to SSFI, ${name}!`,
+            bannerText: `Welcome to SSFI, ${safeName}!`,
             body,
         });
 
@@ -308,18 +314,27 @@ class EmailService {
             CLUB: 'Club Affiliation',
             STUDENT: 'Student Membership',
         };
+        const esc = EmailService.escapeHtml;
         const typeLabel = typeLabels[data.type] || data.type;
         const isRenewal = data.isRenewal || false;
+
+        const safeName = esc(data.name);
+        const safeUid = esc(data.uid);
+        const safeStateName = data.stateName ? esc(data.stateName) : '';
+        const safeDistrictName = data.districtName ? esc(data.districtName) : '';
+        const safeClubName = data.clubName ? esc(data.clubName) : '';
+        const safeExpiryDate = data.expiryDate ? esc(data.expiryDate) : '';
+        const safeDefaultPassword = data.defaultPassword ? esc(data.defaultPassword) : '';
 
         const subject = isRenewal
             ? `SSFI Membership Renewed — ${typeLabel}`
             : `SSFI Registration Received — ${typeLabel}`;
 
         const detailRows = [
-            data.stateName    ? row('State',       data.stateName)    : '',
-            data.districtName ? row('District',    data.districtName) : '',
-            data.clubName     ? row('Club',        data.clubName)     : '',
-            data.expiryDate   ? row('Valid Until', `<strong>${data.expiryDate}</strong>`) : '',
+            safeStateName     ? row('State',       safeStateName)    : '',
+            safeDistrictName  ? row('District',    safeDistrictName) : '',
+            safeClubName      ? row('Club',        safeClubName)     : '',
+            safeExpiryDate    ? row('Valid Until', `<strong>${safeExpiryDate}</strong>`) : '',
             row('Registration Type', typeLabel),
             row('Status', isRenewal
                 ? `<span style="color:#15803D;font-weight:700;">Renewed</span>`
@@ -327,20 +342,20 @@ class EmailService {
         ].filter(Boolean).join('');
 
         const body = `
-          ${greeting(data.name, isRenewal
+          ${greeting(safeName, isRenewal
             ? `Your SSFI <strong>${typeLabel}</strong> membership has been renewed successfully. Thank you for continuing to be part of the Speed Skating Federation of India.`
             : `Thank you for registering with the Speed Skating Federation of India. Your <strong>${typeLabel}</strong> application has been received and is currently under review by our team.`
           )}
 
-          ${uidBox('Your SSFI UID', data.uid)}
+          ${uidBox('Your SSFI UID', safeUid)}
 
           ${sectionCard('APPLICATION DETAILS', `<table width="100%" cellpadding="0" cellspacing="0" border="0">${detailRows}</table>`)}
 
-          ${data.defaultPassword && !isRenewal ? credentialCard(data.uid, data.defaultPassword, typeLabel) : ''}
+          ${safeDefaultPassword && !isRenewal ? credentialCard(safeUid, safeDefaultPassword, typeLabel) : ''}
 
           ${!isRenewal ? alertBox('info', `Your application is <strong>pending admin review</strong>. You will receive a separate email notification once it has been approved or if any action is required. Please save your SSFI UID for future reference.`) : ''}
 
-          ${isRenewal ? alertBox('success', `Your membership is now active ${data.expiryDate ? `and valid until <strong>${data.expiryDate}</strong>` : ''}. You can continue to access all SSFI services and events.`) : ''}
+          ${isRenewal ? alertBox('success', `Your membership is now active ${safeExpiryDate ? `and valid until <strong>${safeExpiryDate}</strong>` : ''}. You can continue to access all SSFI services and events.`) : ''}
         `;
 
         const bannerColor = isRenewal
@@ -377,19 +392,28 @@ class EmailService {
             CLUB: 'Club',
             STUDENT: 'Student',
         };
+        const esc = EmailService.escapeHtml;
         const typeLabel = typeLabels[data.type] || data.type;
         const subject = `SSFI Application Approved — ${typeLabel}`;
 
+        const safeName = esc(data.name);
+        const safeUid = esc(data.uid);
+        const safeStateName = data.stateName ? esc(data.stateName) : '';
+        const safeDistrictName = data.districtName ? esc(data.districtName) : '';
+        const safeClubName = data.clubName ? esc(data.clubName) : '';
+        const safeExpiryDate = data.expiryDate ? esc(data.expiryDate) : '';
+        const safeLoginPassword = data.loginPassword ? esc(data.loginPassword) : '';
+
         const detailRows = [
-            data.stateName    ? row('State',       data.stateName)    : '',
-            data.districtName ? row('District',    data.districtName) : '',
-            data.clubName     ? row('Club',        data.clubName)     : '',
+            safeStateName     ? row('State',       safeStateName)    : '',
+            safeDistrictName  ? row('District',    safeDistrictName) : '',
+            safeClubName      ? row('Club',        safeClubName)     : '',
             row('Role', typeLabel, true),
-            data.expiryDate ? row('Membership Valid Until', `<strong style="color:#15803D;">${data.expiryDate}</strong>`) : '',
+            safeExpiryDate ? row('Membership Valid Until', `<strong style="color:#15803D;">${safeExpiryDate}</strong>`) : '',
         ].filter(Boolean).join('');
 
         const body = `
-          ${greeting(data.name, `We are pleased to inform you that your <strong>${typeLabel}</strong> application with the Speed Skating Federation of India has been <strong style="color:#15803D;">approved</strong>. Welcome to the SSFI family!`)}
+          ${greeting(safeName, `We are pleased to inform you that your <strong>${typeLabel}</strong> application with the Speed Skating Federation of India has been <strong style="color:#15803D;">approved</strong>. Welcome to the SSFI family!`)}
 
           <!-- Approved badge -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
@@ -397,14 +421,14 @@ class EmailService {
               <td align="center" style="background:linear-gradient(135deg,#15803D,#166534);border-radius:12px;padding:24px;">
                 <p style="margin:0 0 4px;font-size:13px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:2px;">Application Status</p>
                 <p style="margin:0 0 10px;font-size:28px;font-weight:800;color:#ffffff;">APPROVED ✓</p>
-                <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.6);">SSFI UID: <strong style="color:#fff;font-family:'Courier New',monospace;">${data.uid}</strong></p>
+                <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.6);">SSFI UID: <strong style="color:#fff;font-family:'Courier New',monospace;">${safeUid}</strong></p>
               </td>
             </tr>
           </table>
 
           ${sectionCard('MEMBERSHIP DETAILS', `<table width="100%" cellpadding="0" cellspacing="0" border="0">${detailRows}</table>`)}
 
-          ${data.loginPassword ? credentialCard(data.uid, data.loginPassword, typeLabel) : ''}
+          ${safeLoginPassword ? credentialCard(safeUid, safeLoginPassword, typeLabel) : ''}
 
           ${alertBox('success', `You now have full access to the SSFI portal and all services associated with your <strong>${typeLabel}</strong> role. Log in to your dashboard to get started.`)}
         `;
@@ -435,16 +459,21 @@ class EmailService {
             CLUB: 'Club',
             STUDENT: 'Student',
         };
+        const esc = EmailService.escapeHtml;
         const typeLabel = typeLabels[data.type] || data.type;
         const subject = `SSFI Application Update — ${typeLabel}`;
 
+        const safeName = esc(data.name);
+        const safeUid = esc(data.uid);
+        const safeReason = data.reason ? esc(data.reason) : '';
+
         const body = `
-          ${greeting(data.name, `We regret to inform you that your <strong>${typeLabel}</strong> application with the Speed Skating Federation of India could not be approved at this time.`)}
+          ${greeting(safeName, `We regret to inform you that your <strong>${typeLabel}</strong> application with the Speed Skating Federation of India could not be approved at this time.`)}
 
           <!-- UID reference -->
-          ${uidBox('Application Reference', data.uid, '#DC2626')}
+          ${uidBox('Application Reference', safeUid, '#DC2626')}
 
-          ${data.reason ? sectionCard('REASON FOR REJECTION', `<p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">${data.reason}</p>`) : ''}
+          ${safeReason ? sectionCard('REASON FOR REJECTION', `<p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">${safeReason}</p>`) : ''}
 
           ${alertBox('warning', `If you believe this decision was made in error, or if you would like to reapply after addressing the concerns raised, please contact the SSFI office at <a href="mailto:${process.env.SMTP_USER || 'info@ssfiskate.com'}" style="color:#92400E;font-weight:700;">${process.env.SMTP_USER || 'info@ssfiskate.com'}</a>.`)}
 
@@ -489,27 +518,39 @@ class EmailService {
         totalFee: number;
         paymentStatus: string;
     }): Promise<void> {
-        const subject = `Event Registration Confirmed — ${data.confirmationNumber}`;
+        const esc = EmailService.escapeHtml;
+        const subject = `Event Registration Confirmed — ${esc(data.confirmationNumber)}`;
+
+        const safeStudentName = esc(data.studentName);
+        const safeConfirmationNumber = esc(data.confirmationNumber);
+        const safeEventName = esc(data.eventName);
+        const safeSsfiUid = esc(data.ssfiUid);
+        const safeVenue = esc(data.venue);
+        const safeCity = esc(data.city);
+        const safeAgeCategory = esc(data.ageCategory);
+        const safeSkateCategory = esc(data.skateCategory.replace(/_/g, ' '));
+        const safeEventDate = esc(data.eventDate);
+        const safeEventEndDate = data.eventEndDate ? esc(data.eventEndDate) : '';
 
         const racesFormatted = data.selectedRaces.length > 0
             ? data.selectedRaces.map(r =>
-                `<tr><td style="padding:5px 0;color:#374151;font-size:13px;">⛸&nbsp;&nbsp;${r.replace(/_/g, ' ')}</td></tr>`
+                `<tr><td style="padding:5px 0;color:#374151;font-size:13px;">⛸&nbsp;&nbsp;${esc(r.replace(/_/g, ' '))}</td></tr>`
               ).join('')
             : `<tr><td style="padding:5px 0;color:#9CA3AF;font-size:13px;font-style:italic;">No specific races selected</td></tr>`;
 
         const body = `
-          ${greeting(data.studentName, `Your registration for <strong>${data.eventName}</strong> has been received successfully. Please find your registration details below.`)}
+          ${greeting(safeStudentName, `Your registration for <strong>${safeEventName}</strong> has been received successfully. Please find your registration details below.`)}
 
-          ${uidBox('Confirmation Number', data.confirmationNumber)}
+          ${uidBox('Confirmation Number', safeConfirmationNumber)}
 
           ${sectionCard('EVENT DETAILS', `
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              ${row('Event Name', `<strong>${data.eventName}</strong>`)}
-              ${row('Date', data.eventDate + (data.eventEndDate ? ` &ndash; ${data.eventEndDate}` : ''))}
-              ${row('Venue', `${data.venue}, ${data.city}`)}
-              ${row('Athlete UID', `<span style="font-family:'Courier New',monospace;">${data.ssfiUid}</span>`)}
-              ${row('Age Category', data.ageCategory)}
-              ${row('Skate Category', data.skateCategory.replace(/_/g, ' '))}
+              ${row('Event Name', `<strong>${safeEventName}</strong>`)}
+              ${row('Date', safeEventDate + (safeEventEndDate ? ` &ndash; ${safeEventEndDate}` : ''))}
+              ${row('Venue', `${safeVenue}, ${safeCity}`)}
+              ${row('Athlete UID', `<span style="font-family:'Courier New',monospace;">${safeSsfiUid}</span>`)}
+              ${row('Age Category', safeAgeCategory)}
+              ${row('Skate Category', safeSkateCategory)}
               ${row('Entry Fee', `<strong>₹${data.totalFee.toLocaleString('en-IN')}</strong>`)}
               ${row('Payment Status', payBadge(data.paymentStatus))}
             </table>
@@ -519,7 +560,7 @@ class EmailService {
 
           ${data.paymentStatus !== 'PAID' && data.paymentStatus !== 'COMPLETED'
             ? alertBox('warning', `Your registration is confirmed but <strong>payment is pending</strong>. Please complete payment before the deadline to secure your spot. Unpaid registrations may be cancelled.`)
-            : alertBox('success', `Payment received. Your spot is confirmed. Please carry your Confirmation Number <strong>${data.confirmationNumber}</strong> on the event day.`)
+            : alertBox('success', `Payment received. Your spot is confirmed. Please carry your Confirmation Number <strong>${safeConfirmationNumber}</strong> on the event day.`)
           }
 
           ${alertBox('info', `Please arrive at the venue at least <strong>30 minutes before</strong> your scheduled race. Carry a valid ID proof and your SSFI UID card.`)}
@@ -552,7 +593,17 @@ class EmailService {
         amount: string | number | { toString(): string };
         paymentStatus: string;
     }): Promise<void> {
-        const subject = `Beginner Certification Registered — ${data.registrationNumber}`;
+        const esc = EmailService.escapeHtml;
+        const safeStudentName = esc(data.studentName);
+        const safeRegNumber = esc(data.registrationNumber);
+        const safeProgramTitle = esc(data.programTitle);
+        const safeVenue = esc(data.venue);
+        const safeCity = esc(data.city);
+        const safeState = esc(data.state);
+        const safeStartDate = esc(data.startDate);
+        const safeEndDate = esc(data.endDate);
+
+        const subject = `Beginner Certification Registered — ${safeRegNumber}`;
 
         const categoryLabel: Record<string, string> = {
             SPEED_SKATING:  'Speed Skating',
@@ -560,7 +611,7 @@ class EmailService {
             INLINE_HOCKEY:  'Inline Hockey',
             GENERAL:        'General Skating',
         };
-        const catDisplay = categoryLabel[data.programCategory] || data.programCategory;
+        const catDisplay = categoryLabel[data.programCategory] || esc(data.programCategory);
 
         const categoryIcon: Record<string, string> = {
             SPEED_SKATING: '⚡',
@@ -571,9 +622,9 @@ class EmailService {
         const catIcon = categoryIcon[data.programCategory] || '⛸️';
 
         const body = `
-          ${greeting(data.studentName, `Congratulations! Your registration for the <strong>${data.programTitle}</strong> beginner certification program has been received. Here are your details.`)}
+          ${greeting(safeStudentName, `Congratulations! Your registration for the <strong>${safeProgramTitle}</strong> beginner certification program has been received. Here are your details.`)}
 
-          ${uidBox('Registration Number', data.registrationNumber, '#7C3AED')}
+          ${uidBox('Registration Number', safeRegNumber, '#7C3AED')}
 
           <!-- Category badge -->
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
@@ -586,23 +637,23 @@ class EmailService {
 
           ${sectionCard('PROGRAM DETAILS', `
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              ${row('Program', `<strong>${data.programTitle}</strong>`)}
+              ${row('Program', `<strong>${safeProgramTitle}</strong>`)}
               ${row('Category', catDisplay)}
-              ${row('Start Date', data.startDate)}
-              ${row('End Date', data.endDate)}
-              ${row('Venue', data.venue)}
-              ${row('Location', `${data.city}, ${data.state}`)}
+              ${row('Start Date', safeStartDate)}
+              ${row('End Date', safeEndDate)}
+              ${row('Venue', safeVenue)}
+              ${row('Location', `${safeCity}, ${safeState}`)}
               ${row('Program Fee', `<strong>₹${Number(data.amount).toLocaleString('en-IN')}</strong>`)}
               ${row('Payment Status', payBadge(data.paymentStatus))}
             </table>
           `)}
 
           ${data.paymentStatus !== 'PAID'
-            ? alertBox('warning', `Payment for this program is <strong>pending</strong>. Please complete your payment to confirm your enrollment. Your registration number is <strong>${data.registrationNumber}</strong>.`)
-            : alertBox('success', `You are successfully enrolled in the program. Please report to the venue on <strong>${data.startDate}</strong> with your registration number and a valid photo ID.`)
+            ? alertBox('warning', `Payment for this program is <strong>pending</strong>. Please complete your payment to confirm your enrollment. Your registration number is <strong>${safeRegNumber}</strong>.`)
+            : alertBox('success', `You are successfully enrolled in the program. Please report to the venue on <strong>${safeStartDate}</strong> with your registration number and a valid photo ID.`)
           }
 
-          ${alertBox('info', `Please carry your registration number <strong>${data.registrationNumber}</strong> and a government-issued photo ID on the day of the program. Contact us at <a href="mailto:${process.env.SMTP_USER || 'info@ssfiskate.com'}" style="color:#1E40AF;">${process.env.SMTP_USER || 'info@ssfiskate.com'}</a> for any queries.`)}
+          ${alertBox('info', `Please carry your registration number <strong>${safeRegNumber}</strong> and a government-issued photo ID on the day of the program. Contact us at <a href="mailto:${process.env.SMTP_USER || 'info@ssfiskate.com'}" style="color:#1E40AF;">${process.env.SMTP_USER || 'info@ssfiskate.com'}</a> for any queries.`)}
         `;
 
         const html = layout({
@@ -701,7 +752,10 @@ class EmailService {
             CLUB_OWNER: 'Club Owner',
             STUDENT: 'Student',
         };
-        const typeLabel = roleLabel[data.role] || data.role;
+        const esc = EmailService.escapeHtml;
+        const typeLabel = roleLabel[data.role] || esc(data.role);
+        const safeName = esc(data.name);
+        const safeUid = esc(data.uid);
         const expiryStr = data.expiryDate.toLocaleDateString('en-IN', {
             year: 'numeric', month: 'long', day: 'numeric',
         });
@@ -719,9 +773,9 @@ class EmailService {
                 : `Your SSFI <strong>${typeLabel}</strong> membership will expire on <strong>${expiryStr}</strong> (${data.daysUntilExpiry} days from now). Please plan to renew before the expiry date.`;
 
         const body = `
-          ${greeting(data.name, urgencyMessage)}
+          ${greeting(safeName, urgencyMessage)}
 
-          ${uidBox('Your SSFI UID', data.uid, isExpired ? '#DC2626' : isUrgent ? '#D97706' : BRAND_BLUE)}
+          ${uidBox('Your SSFI UID', safeUid, isExpired ? '#DC2626' : isUrgent ? '#D97706' : BRAND_BLUE)}
 
           ${sectionCard('MEMBERSHIP DETAILS', `
             <table width="100%" cellpadding="0" cellspacing="0" border="0">

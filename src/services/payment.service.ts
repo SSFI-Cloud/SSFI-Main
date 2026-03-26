@@ -154,8 +154,8 @@ export class PaymentService {
         }
 
         if (!keySecret) {
-            console.warn('Razorpay key secret not configured');
-            return true; // Allow in development
+            console.error('Razorpay key secret not configured — rejecting payment verification');
+            return false;
         }
 
         const body = razorpay_order_id + '|' + razorpay_payment_id;
