@@ -127,6 +127,8 @@ export default function EventHighlightCards() {
                           fill
                           className="object-contain object-bottom rounded-2xl"
                           sizes="(max-width: 768px) 100vw, 33vw"
+                          loading="lazy"
+                          quality={65}
                         />
                       </div>
                     </div>
