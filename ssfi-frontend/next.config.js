@@ -35,7 +35,7 @@ const nextConfig = {
   compress: true,
   // Enable experimental optimizations
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'date-fns', 'react-hook-form', 'zod'],
   },
   async rewrites() {
     return [

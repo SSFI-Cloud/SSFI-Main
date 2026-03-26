@@ -12,17 +12,17 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 
 const syne = Syne({
   subsets: ['latin'],
-  weight: ['500', '600', '700'],
+  weight: ['600', '700'],
   variable: '--font-headline',
   display: 'swap',
 });
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ['latin'],
-  weight: ['700', '900'],
-  style: ['normal', 'italic'],
+  weight: ['900'],
+  style: ['italic'],
   variable: '--font-hero',
-  display: 'optional',  // Don't block render for decorative hero font
+  display: 'optional',
 });
 
 import ScrollNavigation from '@/components/ui/ScrollNavigation';
