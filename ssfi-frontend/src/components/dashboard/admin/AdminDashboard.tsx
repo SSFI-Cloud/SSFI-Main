@@ -60,7 +60,7 @@ export default function AdminDashboard() {
         ]}
         actions={
           <>
-            <Link href="/dashboard/approvals" className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors" title="Pending Approvals">
+            <Link href="/dashboard" className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors" title="Pending Approvals">
               <Bell className="w-5 h-5" />
             </Link>
             <Link href="/dashboard/settings" className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors" title="Settings">
