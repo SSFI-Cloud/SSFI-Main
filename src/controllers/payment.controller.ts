@@ -344,6 +344,16 @@ class PaymentController {
                 return res.status(404).json({ status: 'error', message: 'Payment not found' });
             }
 
+            // Ownership check: only the payment owner or admin can view the receipt
+            const requestingUserId = req.user?.id;
+            const requestingUserRole = req.user?.role;
+            if (
+                payment.userId !== requestingUserId &&
+                requestingUserRole !== 'GLOBAL_ADMIN'
+            ) {
+                return res.status(403).json({ status: 'error', message: 'Not authorized to view this receipt' });
+            }
+
             const userName =
                 payment.user?.student?.name ||
                 payment.user?.clubOwner?.name ||
