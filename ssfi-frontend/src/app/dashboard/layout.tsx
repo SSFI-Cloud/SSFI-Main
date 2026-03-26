@@ -113,10 +113,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const roleColorCls = roleColors[roleConfig?.color] || roleColors.blue;
 
-  const Sidebar = () => (
+  const Sidebar = ({ onClose }: { onClose?: () => void }) => (
     <aside className="fixed top-0 left-0 z-40 h-screen w-64 bg-[#0a1628] flex flex-col border-r border-white/5">
-      {/* Logo */}
-      <div className="p-5 border-b border-white/10 flex justify-center">
+      {/* Logo + close button on mobile */}
+      <div className="p-5 border-b border-white/10 flex items-center justify-center relative">
+        {onClose && (
+          <button onClick={onClose} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors lg:hidden">
+            <X className="w-5 h-5" />
+          </button>
+        )}
         <Link href="/" className="flex items-center justify-center">
           <div className="relative w-36 h-20">
             <Image src="/images/logo/logo-wide.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
@@ -206,17 +211,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-[#f5f6f8]">
-      {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a1628] px-4 py-3 flex items-center justify-between">
-        <Link href="/">
-          <div className="relative w-8 h-8">
-            <Image src="/images/logo/light.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
-          </div>
-        </Link>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-white/60 hover:text-white">
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
+      {/* Mobile header — hidden when sidebar is open */}
+      {!sidebarOpen && (
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a1628] px-4 py-3 flex items-center justify-between border-b border-white/5">
+          <Link href="/">
+            <div className="relative w-8 h-8">
+              <Image src="/images/logo/light.webp" alt="Speed Skating Federation of India" fill className="object-contain" />
+            </div>
+          </Link>
+          <button onClick={() => setSidebarOpen(true)} className="p-2 text-white/60 hover:text-white">
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
@@ -231,7 +238,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="lg:hidden fixed inset-0 z-30 bg-black/50" onClick={() => setSidebarOpen(false)} />
             <motion.div initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }} transition={{ type: 'spring', damping: 25 }}
               className="lg:hidden fixed top-0 left-0 z-40 h-screen w-64">
-              <Sidebar />
+              <Sidebar onClose={() => setSidebarOpen(false)} />
             </motion.div>
           </>
         )}
