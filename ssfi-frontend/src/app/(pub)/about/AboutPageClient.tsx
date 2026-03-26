@@ -273,7 +273,7 @@ export default function AboutPageClient({ initialMilestones, initialStats, initi
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">Over two decades of building India&apos;s speed skating ecosystem — measured in impact.</p>
           </motion.div>
 
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4 md:gap-5 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-5 max-w-6xl mx-auto">
             {stats.map((stat, index) => (
               <motion.div
                 key={stat.label}

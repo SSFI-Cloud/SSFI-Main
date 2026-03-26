@@ -231,17 +231,17 @@ export default function BeginnerProgramClient() {
 
                     {/* Stats bar */}
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                        className="mt-16 flex flex-wrap justify-center gap-4 md:gap-6">
+                        className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto">
                         {[
                             { icon: Users, value: 5000, suffix: '+', label: 'Kids Enrolled' },
                             { icon: Award, value: 28, suffix: '', label: 'States Active' },
                             { icon: Trophy, value: 500, suffix: '+', label: 'Medals Awarded' },
                             { icon: Star, value: 98, suffix: '%', label: 'Success Rate' },
                         ].map((s, i) => (
-                            <div key={i} className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.06] backdrop-blur-sm">
+                            <div key={i} className="flex flex-col items-center gap-1.5 px-4 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] text-center">
                                 <s.icon className="w-5 h-5 text-emerald-400" />
                                 <span className="text-xl font-extrabold text-white"><Counter target={s.value} suffix={s.suffix} /></span>
-                                <span className="text-dark-400 text-sm">{s.label}</span>
+                                <span className="text-dark-400 text-xs sm:text-sm">{s.label}</span>
                             </div>
                         ))}
                     </motion.div>
@@ -328,7 +328,7 @@ export default function BeginnerProgramClient() {
                     </motion.div>
 
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-                        className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
                         {whoCanJoin.map((item, i) => (
                             <motion.div key={i} variants={fadeUp}
                                 className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-green-500/25 hover:bg-green-500/[0.03] transition-all group">

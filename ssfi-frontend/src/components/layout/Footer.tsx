@@ -66,10 +66,10 @@ const Footer = () => {
       {/* ── Main Footer ── */}
       <div className="bg-gray-950">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-8">
 
             {/* Col 1 — Brand + Newsletter */}
-            <div className="sm:col-span-2 lg:col-span-4">
+            <div className="col-span-2 lg:col-span-4">
               <div className="mb-4">
                 <Image src="/images/logo/logo-wide.webp" alt="Speed Skating Federation of India" width={180} height={60} className="object-contain" />
               </div>
@@ -117,7 +117,7 @@ const Footer = () => {
             </div>
 
             {/* Col 2 — Navigation */}
-            <div className="lg:col-span-2">
+            <div className="col-span-1 lg:col-span-2">
               <h4 className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-5">Navigation</h4>
               <ul className="space-y-3">
                 {[
@@ -140,7 +140,7 @@ const Footer = () => {
             </div>
 
             {/* Col 3 — Programs */}
-            <div className="lg:col-span-2">
+            <div className="col-span-1 lg:col-span-2">
               <h4 className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-5">Programs</h4>
               <ul className="space-y-3">
                 {[
@@ -160,7 +160,7 @@ const Footer = () => {
             </div>
 
             {/* Col 4 — Legal */}
-            <div className="lg:col-span-2">
+            <div className="col-span-1 lg:col-span-2">
               <h4 className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-5">Legal</h4>
               <ul className="space-y-3">
                 {[
@@ -178,7 +178,7 @@ const Footer = () => {
             </div>
 
             {/* Col 5 — Contact */}
-            <div className="lg:col-span-2">
+            <div className="col-span-1 lg:col-span-2">
               <h4 className="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-5">Get in Touch</h4>
               <ul className="space-y-4">
                 <li>
