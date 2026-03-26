@@ -162,7 +162,7 @@ const Header = () => {
             {/* Logo — wide version for desktop/tablet, square for mobile */}
             <Link href="/" className="flex items-center group">
               {/* Mobile: square logo */}
-              <div className="relative w-16 h-16 flex items-center justify-center md:hidden">
+              <div className="relative w-20 h-20 flex items-center justify-center md:hidden">
                 <Image
                   src="/images/logo/light.webp"
                   alt="SSFI"
