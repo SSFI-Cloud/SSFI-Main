@@ -11,7 +11,7 @@ export function StatsSection({ overview }: { overview: DashboardOverview }) {
       <StatCard title="Total Districts" value={overview.totalDistricts || 0} icon={MapPin}    color="teal"   href="/dashboard/districts"  delay={0.07}/>
       <StatCard title="Total Clubs"     value={overview.totalClubs     || 0} icon={Building2} color="purple" href="/dashboard/clubs"       delay={0.14}/>
       <StatCard title="Total Students"  value={overview.totalStudents  || 0} icon={Users}     color="teal"  href="/dashboard/students"   delay={0.21}/>
-      <StatCard title="Total Events"    value={overview.totalEvents    || 0} icon={Trophy}    color="red"    href="/dashboard/events"     delay={0.28}/>
+      <StatCard title="Total Events"    value={overview.totalEvents    || 0} icon={Trophy}    color="teal"   href="/dashboard/events"     delay={0.28}/>
     </div>
   );
 }
