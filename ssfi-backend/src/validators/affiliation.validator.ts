@@ -29,25 +29,17 @@ export type RegistrationWindowQuery = z.infer<typeof registrationWindowQuerySche
 // Shared schemas
 const genderEnum = z.enum(['MALE', 'FEMALE', 'OTHER']);
 const phoneSchema = z.string().min(10).max(15);
-const aadhaarSchema = z.string().length(12);
-
 export const stateSecretaryRegistrationSchema = z.object({
     name: z.string().min(2),
     gender: genderEnum,
     email: z.string().email(),
     phone: phoneSchema,
-    aadhaarNumber: aadhaarSchema,
-    stateId: z.number().int().or(z.string().transform(val => parseInt(val, 10))), // Handle string input for API
+    stateId: z.number().int().or(z.string().transform(val => parseInt(val, 10))),
     residentialAddress: z.string().min(5),
-    identityProof: z.string().optional().or(z.literal('')), // Legacy — now optional since KYC replaces it
+    identityProof: z.string().optional().or(z.literal('')),
     profilePhoto: z.string().optional(),
-    // KYC verification fields (from SurePass Aadhaar OTP)
-    kycVerified: z.literal(true, {
-        errorMap: () => ({ message: 'Aadhaar KYC verification is required' }),
-    }),
-    kycVerifiedName: z.string().min(1),
-    kycVerifiedDob: z.string().optional(),
-    kycProfileImage: z.string().optional().or(z.literal('')),
+    logo: z.string().optional(),
+    associationRegistrationCopy: z.string().optional(),
 });
 export type StateSecretaryRegistration = z.infer<typeof stateSecretaryRegistrationSchema>;
 
@@ -67,14 +59,6 @@ export const clubRegistrationSchema = z.object({
     districtId: z.number().int().or(z.string().transform(val => parseInt(val, 10))),
     address: z.string().min(5),
     clubLogo: z.string().optional(),
-    // Contact Person KYC (SurePass Aadhaar OTP)
-    contactPersonAadhaar: aadhaarSchema,
-    kycVerified: z.literal(true, {
-        errorMap: () => ({ message: 'Contact person KYC verification is required' }),
-    }),
-    kycVerifiedName: z.string().min(1),
-    kycVerifiedDob: z.string().optional(),
-    kycProfileImage: z.string().optional().or(z.literal('')),
 });
 export type ClubRegistration = z.infer<typeof clubRegistrationSchema>;
 
