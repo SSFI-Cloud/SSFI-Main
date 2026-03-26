@@ -229,12 +229,12 @@ export default function RenewalManagement() {
 
             {/* Tabs and Filters */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-                <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b border-gray-100">
                     {/* Tabs */}
                     <div className="flex gap-2">
                         <button
                             onClick={() => setActiveTab('expiring')}
-                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'expiring'
+                            className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'expiring'
                                     ? 'bg-amber-100 text-amber-600'
                                     : 'text-gray-500 hover:text-gray-900'
                                 }`}
@@ -243,7 +243,7 @@ export default function RenewalManagement() {
                         </button>
                         <button
                             onClick={() => setActiveTab('expired')}
-                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === 'expired'
+                            className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'expired'
                                     ? 'bg-red-100 text-red-600'
                                     : 'text-gray-500 hover:text-gray-900'
                                 }`}
@@ -254,14 +254,14 @@ export default function RenewalManagement() {
 
                     {/* Filters */}
                     <div className="flex items-center gap-3">
-                        <div className="relative">
+                        <div className="relative flex-1 sm:flex-initial">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                             <input
                                 type="text"
                                 placeholder="Search..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:border-emerald-500 w-48"
+                                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:border-emerald-500 w-full sm:w-48"
                             />
                         </div>
 
