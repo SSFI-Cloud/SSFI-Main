@@ -248,7 +248,7 @@ const Header = () => {
                             Dashboard
                           </Link>
                           <Link
-                            href="/profile"
+                            href="/dashboard/settings"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                           >
