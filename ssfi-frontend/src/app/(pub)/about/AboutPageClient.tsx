@@ -93,7 +93,14 @@ export default function AboutPageClient({ initialMilestones, initialStats, initi
   const statsData = initialStats || { students: 5600, clubs: 800, states: 36, districts: 640, totalEvents: 50, championships: 25 };
 
   // Team members from CMS, filtered to only real members (not TBD/empty)
-  const allTeamMembers = (initialTeam && initialTeam.length > 0 ? initialTeam : HIERARCHY_FALLBACK).filter(isRealMember);
+  // Merge local static photos over CMS upload URLs (Railway ephemeral FS loses uploads on redeploy)
+  const fallbackPhotoMap: Record<string, string> = {};
+  HIERARCHY_FALLBACK.forEach(m => { fallbackPhotoMap[m.role] = m.photo; });
+  const rawTeam = initialTeam && initialTeam.length > 0 ? initialTeam.map((m: any) => ({
+    ...m,
+    photo: m.photo?.startsWith('/uploads/') ? (fallbackPhotoMap[m.role] || m.photo) : m.photo,
+  })) : HIERARCHY_FALLBACK;
+  const allTeamMembers = rawTeam.filter(isRealMember);
   // Split into top chain (President, General Secretary, etc.) and bottom row (Joint Secretary, Treasurer, etc.)
   const topRoles = ['Chief Patron', 'President', 'Vice President', 'General Secretary'];
   const hierarchyTop = allTeamMembers.filter(m => topRoles.includes(m.role));

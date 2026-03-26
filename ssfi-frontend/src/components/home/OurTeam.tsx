@@ -29,8 +29,16 @@ export default function OurTeam({ members }: OurTeamProps) {
   const [team, setTeam] = useState<TeamMember[]>(FALLBACK_TEAM);
 
   // Accept members from parent (aggregate endpoint)
+  // Merge local static photos over CMS upload URLs (Railway ephemeral FS loses uploads on redeploy)
+  const fallbackPhotoMap: Record<string, string> = {};
+  FALLBACK_TEAM.forEach(m => { fallbackPhotoMap[m.role] = m.photo; });
   useEffect(() => {
-    if (Array.isArray(members) && members.length > 0) setTeam(members);
+    if (Array.isArray(members) && members.length > 0) {
+      setTeam(members.map((m: any) => ({
+        ...m,
+        photo: m.photo?.startsWith('/uploads/') ? (fallbackPhotoMap[m.role] || m.photo) : m.photo,
+      })));
+    }
   }, [members]);
 
   const getPhotoSrc = (photo?: string) => {
