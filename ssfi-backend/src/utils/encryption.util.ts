@@ -1,7 +1,11 @@
 import crypto from 'crypto';
 
 const ALGORITHM = process.env.ENCRYPTION_ALGORITHM || 'aes-256-cbc';
-const KEY = process.env.ENCRYPTION_KEY || '12345678901234567890123456789012'; // 32 chars for aes-256
+
+if (!process.env.ENCRYPTION_KEY) {
+    throw new Error('ENCRYPTION_KEY environment variable is required. The application cannot start without a secure encryption key.');
+}
+const KEY = process.env.ENCRYPTION_KEY;
 
 /**
  * Encrypt Aadhaar number for secure storage
