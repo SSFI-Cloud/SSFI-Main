@@ -24,6 +24,21 @@ if (!process.env.VIPS_CONCURRENCY) process.env.VIPS_CONCURRENCY = isRailway ? '2
 import sharp from 'sharp';
 sharp.concurrency(isRailway ? 2 : 1);
 
+// ── Validate critical environment variables ──
+const REQUIRED_ENV_VARS = [
+  'DATABASE_URL',
+  'JWT_SECRET',
+  'ENCRYPTION_KEY',
+  'RAZORPAY_KEY_ID',
+  'RAZORPAY_KEY_SECRET',
+] as const;
+
+const missingVars = REQUIRED_ENV_VARS.filter((v) => !process.env[v]);
+if (missingVars.length > 0) {
+  console.error(`FATAL: Missing required environment variables: ${missingVars.join(', ')}`);
+  process.exit(1);
+}
+
 // Import routes
 import authRoutes from './routes/auth.routes';
 // import adminRoutes from './routes/admin.routes';

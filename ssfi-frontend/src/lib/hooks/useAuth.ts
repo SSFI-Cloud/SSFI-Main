@@ -44,8 +44,17 @@ export const useAuth = () => {
             // Check if we have user data in localStorage
             const storedUser = localStorage.getItem('user');
             if (storedUser) {
-                setUser(JSON.parse(storedUser));
-                setIsAuthenticated(true);
+                try {
+                    setUser(JSON.parse(storedUser));
+                    setIsAuthenticated(true);
+                } catch {
+                    // Corrupted localStorage data — clear it and stay unauthenticated
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('accessToken');
+                    setIsAuthenticated(false);
+                    setUser(null);
+                    setToken(null);
+                }
             }
         } catch (error) {
             console.error('Auth verification failed', error);
@@ -77,6 +86,16 @@ export const useAuth = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('renewal-banner-dismissed');
+        // Clear any registration draft data
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith('registration-') || key.startsWith('reg-draft-'))) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
         setUser(null);
         setToken(null);
         setIsAuthenticated(false);

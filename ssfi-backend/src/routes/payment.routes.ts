@@ -1,7 +1,8 @@
 // Payment Routes
 import express from 'express';
 import { paymentController } from '../controllers/payment.controller';
-import { authenticate as protect } from '../middleware/auth.middleware';
+import { authenticate as protect, requireRole } from '../middleware/auth.middleware';
+import { UserRole } from '@prisma/client';
 
 const router = express.Router();
 
@@ -41,13 +42,13 @@ router.get('/', paymentController.getPayments);
 router.get('/:id/receipt', paymentController.getReceipt);
 
 // ========================================
-// Admin Routes (TODO: Add admin middleware)
+// Admin Routes
 // ========================================
 
 // Get all payments with filters (admin)
-router.get('/admin', paymentController.getPaymentsAdmin);
+router.get('/admin', requireRole(UserRole.GLOBAL_ADMIN), paymentController.getPaymentsAdmin);
 
 // Initiate refund (admin)
-router.post('/refund', paymentController.initiateRefund);
+router.post('/refund', requireRole(UserRole.GLOBAL_ADMIN), paymentController.initiateRefund);
 
 export default router;
