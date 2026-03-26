@@ -335,16 +335,16 @@ model ClubOwner {
   // Personal Details
   name          String
   gender        Gender
-  aadhaarNumber String @unique
+  aadhaarNumber String? @unique  // Made optional — KYC removed for clubs
 
   // Address
-  addressLine1 String
+  addressLine1 String?  // Made optional — new flow uses Club.address
   addressLine2 String?
-  city         String
-  pincode      String
+  city         String?  // Made optional
+  pincode      String?  // Made optional
 
   // Documents
-  identityProof String
+  identityProof String?  // Made optional — KYC removed
   profilePhoto  String?
 
   createdAt DateTime @default(now())
@@ -963,11 +963,11 @@ model StateSecretary {
   gender               String
   email                String
   phone                String
-  aadhaarNumber        String
+  aadhaarNumber        String?   // Made optional — KYC removed for secretaries
   stateId              Int
   state                State     @relation(fields: [stateId], references: [id], onDelete: Restrict)
   residentialAddress   String
-  identityProof               String? // Legacy — now optional since KYC replaces it
+  identityProof               String?
   profilePhoto                String?
   logo                        String? @db.LongText
   associationRegistrationCopy String? @db.LongText
@@ -977,7 +977,7 @@ model StateSecretary {
   approvedBy           String?
   rejectionRemarks     String?
 
-  // KYC Verification (SurePass Aadhaar OTP)
+  // KYC fields (legacy — no longer collected, kept for existing data)
   kycVerified     Boolean   @default(false)
   kycVerifiedAt   DateTime?
   kycVerifiedName String?
@@ -1001,13 +1001,13 @@ model DistrictSecretary {
   gender               String
   email                String
   phone                String
-  aadhaarNumber        String
+  aadhaarNumber        String?   // Made optional — KYC removed for secretaries
   stateId              Int
   state                State     @relation(fields: [stateId], references: [id])
   districtId           Int
   district             District  @relation(fields: [districtId], references: [id], onDelete: Restrict)
   residentialAddress   String
-  identityProof               String? // Legacy — now optional since KYC replaces it
+  identityProof               String?
   profilePhoto                String?
   logo                        String? @db.LongText
   associationRegistrationCopy String? @db.LongText
@@ -1017,7 +1017,7 @@ model DistrictSecretary {
   approvedBy           String?
   rejectionRemarks     String?
 
-  // KYC Verification (SurePass Aadhaar OTP)
+  // KYC fields (legacy — no longer collected, kept for existing data)
   kycVerified     Boolean   @default(false)
   kycVerifiedAt   DateTime?
   kycVerifiedName String?

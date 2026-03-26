@@ -8,6 +8,7 @@ import logger from '../utils/logger.util';
 const BRAND_NAVY   = '#0B1F3A';
 const BRAND_BLUE   = '#1A4BAF';
 const BRAND_LIGHT  = '#E8F0FE';
+const LOGO_URL     = `${process.env.BACKEND_URL || 'https://api.ssfiskate.com'}/uploads/signatures/logo.png`;
 
 /** Wraps every email in the master shell (header + footer) */
 function layout(opts: {
@@ -32,15 +33,12 @@ function layout(opts: {
 
       <!-- ── HEADER ── -->
       <tr>
-        <td style="background:linear-gradient(135deg,${BRAND_NAVY} 0%,#162d50 100%);padding:32px 40px;text-align:center;">
+        <td style="background:#ffffff;padding:28px 40px 20px;text-align:center;border-bottom:3px solid ${BRAND_NAVY};">
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td align="center">
-                <!-- Logo mark -->
-                <div style="display:inline-block;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.25);border-radius:14px;padding:10px 22px;margin-bottom:14px;">
-                  <span style="color:#ffffff;font-size:22px;font-weight:800;letter-spacing:3px;font-family:Georgia,serif;">SSFI</span>
-                </div>
-                <p style="margin:0;color:rgba(255,255,255,0.5);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;">Speed Skating Federation of India</p>
+                <!-- SSFI Logo -->
+                <img src="${LOGO_URL}" alt="SSFI — Speed Skating Federation of India" width="220" style="display:block;margin:0 auto 8px;max-width:220px;height:auto;" />
               </td>
             </tr>
           </table>

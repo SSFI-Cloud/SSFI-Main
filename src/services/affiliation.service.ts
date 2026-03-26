@@ -14,7 +14,7 @@ import {
 } from '../validators/affiliation.validator';
 import { StudentRegistration } from '../validators/student.validator';
 import { AppError } from '../utils/errors';
-import { encryptAadhaar } from '../utils/encryption.util';
+
 import { generateUID } from './uid.service';
 import logger from '../utils/logger.util';
 import { paymentService } from './payment.service';
@@ -337,15 +337,6 @@ export const initiateStateSecretaryRegistration = async (
     throw new AppError('This state already has a secretary application pending or approved', 409);
   }
 
-  // Check for duplicate Aadhaar
-  const existingAadhaar = await prisma.stateSecretary.findFirst({
-    where: { aadhaarNumber: data.aadhaarNumber },
-  });
-
-  if (existingAadhaar) {
-    throw new AppError('An application with this Aadhaar number already exists', 409);
-  }
-
   // Check for existing user with same phone/email
   const existingUser = await prisma.user.findFirst({
     where: {
@@ -387,9 +378,6 @@ export const initiateStateSecretaryRegistration = async (
     stateId: data.stateId,
   });
 
-  // Encrypt Aadhaar
-  const encryptedAadhaar = encryptAadhaar(data.aadhaarNumber);
-
   // Get Fee
   const window = await prisma.registrationWindow.findUnique({ where: { id: Number(windowId) } });
   if (!window) throw new AppError('Registration window not found', 404);
@@ -402,21 +390,14 @@ export const initiateStateSecretaryRegistration = async (
       gender: data.gender,
       email: data.email,
       phone: data.phone,
-      aadhaarNumber: encryptedAadhaar,
       stateId: data.stateId,
       residentialAddress: data.residentialAddress,
       identityProof: data.identityProof || null,
-      profilePhoto: data.profilePhoto || data.kycProfileImage || null,
+      profilePhoto: data.profilePhoto || null,
       logo: data.logo || null,
       associationRegistrationCopy: data.associationRegistrationCopy || null,
       registrationWindowId: windowId,
       status: 'PAYMENT_PENDING',
-      // KYC verification data
-      kycVerified: data.kycVerified || false,
-      kycVerifiedAt: data.kycVerified ? new Date() : null,
-      kycVerifiedName: data.kycVerifiedName || null,
-      kycVerifiedDob: data.kycVerifiedDob || null,
-      kycProfileImage: data.kycProfileImage || null,
     },
     include: {
       state: { select: { id: true, name: true, code: true } },
@@ -692,15 +673,6 @@ export const initiateDistrictSecretaryRegistration = async (
     throw new AppError('This district already has a secretary application pending or approved', 409);
   }
 
-  // Check for duplicate Aadhaar
-  const existingAadhaar = await prisma.districtSecretary.findFirst({
-    where: { aadhaarNumber: data.aadhaarNumber },
-  });
-
-  if (existingAadhaar) {
-    throw new AppError('An application with this Aadhaar number already exists', 409);
-  }
-
   // Check for existing user with same phone/email
   const existingUser = await prisma.user.findFirst({
     where: {
@@ -783,7 +755,6 @@ export const initiateDistrictSecretaryRegistration = async (
       }
 
       const uid = existingUser.uid;
-      const encryptedAadhaar = encryptAadhaar(data.aadhaarNumber);
 
       const secretary = await prisma.districtSecretary.create({
         data: {
@@ -792,22 +763,15 @@ export const initiateDistrictSecretaryRegistration = async (
           gender: data.gender,
           email: data.email,
           phone: data.phone,
-          aadhaarNumber: encryptedAadhaar,
           stateId: data.stateId,
           districtId: data.districtId,
           residentialAddress: data.residentialAddress,
           identityProof: data.identityProof || null,
-          profilePhoto: data.profilePhoto || data.kycProfileImage || null,
+          profilePhoto: data.profilePhoto || null,
           logo: data.logo || null,
           associationRegistrationCopy: data.associationRegistrationCopy || null,
           registrationWindowId: String(windowId),
           status: 'PAYMENT_PENDING',
-          // KYC verification data
-          kycVerified: data.kycVerified || false,
-          kycVerifiedAt: data.kycVerified ? new Date() : null,
-          kycVerifiedName: data.kycVerifiedName || null,
-          kycVerifiedDob: data.kycVerifiedDob || null,
-          kycProfileImage: data.kycProfileImage || null,
         },
       });
 
@@ -855,9 +819,6 @@ export const initiateDistrictSecretaryRegistration = async (
     districtId: data.districtId,
   });
 
-  // Encrypt Aadhaar
-  const encryptedAadhaar = encryptAadhaar(data.aadhaarNumber);
-
   // Create User credentials (inactive until payment)
   const { userId, password: defaultPassword } = await createUserCredentials(
     uid,
@@ -875,20 +836,13 @@ export const initiateDistrictSecretaryRegistration = async (
       gender: data.gender,
       email: data.email,
       phone: data.phone,
-      aadhaarNumber: encryptedAadhaar,
       stateId: data.stateId,
       districtId: data.districtId,
       residentialAddress: data.residentialAddress,
       identityProof: data.identityProof || null,
-      profilePhoto: data.profilePhoto || data.kycProfileImage || null,
+      profilePhoto: data.profilePhoto || null,
       registrationWindowId: String(windowId),
       status: 'PAYMENT_PENDING',
-      // KYC verification data
-      kycVerified: data.kycVerified || false,
-      kycVerifiedAt: data.kycVerified ? new Date() : null,
-      kycVerifiedName: data.kycVerifiedName || null,
-      kycVerifiedDob: data.kycVerifiedDob || null,
-      kycProfileImage: data.kycProfileImage || null,
     },
   });
 
@@ -1260,13 +1214,6 @@ export const initiateClubRegistration = async (
       logo: data.clubLogo || null,
       registrationWindowId: windowId,
       status: 'PAYMENT_PENDING',
-      // Contact Person KYC verification data
-      contactPersonAadhaar: data.contactPersonAadhaar || null,
-      kycVerified: data.kycVerified || false,
-      kycVerifiedAt: data.kycVerified ? new Date() : null,
-      kycVerifiedName: data.kycVerifiedName || null,
-      kycVerifiedDob: data.kycVerifiedDob || null,
-      kycProfileImage: data.kycProfileImage || null,
     },
     include: {
       state: { select: { id: true, name: true, code: true } },
@@ -1304,11 +1251,7 @@ export const initiateClubRegistration = async (
         clubId: club.id,
         name: data.contactPersonName || 'Club Owner',
         gender: 'MALE', // Default, update later
-        aadhaarNumber: `TEMP-${data.phone}`, // Placeholder
-        addressLine1: data.address || 'Address',
-        city: 'City',
-        pincode: '000000',
-        identityProof: 'temp_proof.jpg'
+        addressLine1: data.address || null,
       }
     });
   }
