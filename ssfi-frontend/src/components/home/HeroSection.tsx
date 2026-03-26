@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useInView } from 'framer-motion';
 
 /* ─── Types ─── */
 interface CMSBanner {
@@ -284,7 +283,7 @@ const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: heroCSS }} />
+      <style>{heroCSS}</style>
 
       <section
         className="relative overflow-hidden bg-[#06101e]"
@@ -326,15 +325,17 @@ const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
         {/* ─── Slides ─── */}
         {slides.map((s, i) => {
           const isActive = i === current;
+          const isNext = i === (current + 1) % N;
+          const shouldLoad = isActive || isNext || i === 0;
           return (
             <div key={s.id} className={`absolute inset-0 transition-none ${isActive ? 'z-[2] opacity-100' : 'z-[1] opacity-0 pointer-events-none'}`}>
-              {/* BG Image with Ken Burns */}
+              {/* BG Image with Ken Burns — only load active + next slide */}
               <div className="absolute inset-0" style={{
                 animation: isActive ? 'hero-ken 7s ease forwards' : 'none',
                 transform: isActive ? undefined : 'scale(1.08)',
-                willChange: 'transform',
+                willChange: isActive ? 'transform' : 'auto',
               }}>
-                <Image src={s.image} alt={s.titleLine1} fill className="object-cover" style={{ objectPosition: 'center 25%' }} priority={i === 0} quality={75} sizes="100vw" />
+                {shouldLoad && <Image src={s.image} alt={s.titleLine1} fill className="object-cover" style={{ objectPosition: 'center 25%' }} priority={i === 0} loading={i === 0 ? 'eager' : 'lazy'} quality={70} sizes="100vw" />}
               </div>
 
               {/* Overlays */}
@@ -402,7 +403,7 @@ const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
               <div className="absolute right-4 sm:right-[4%] bottom-14 sm:bottom-14 z-10 hidden sm:flex gap-[1px]"
                 style={{ opacity: 0, transform: 'translateY(14px)', animation: isActive ? 'hero-up 0.5s ease 0.62s forwards' : 'none' }}>
                 {s.stats.map((st, si) => (
-                  <div key={si} className="text-center backdrop-blur-sm"
+                  <div key={si} className="text-center"
                     style={{
                       background: 'rgba(8,18,34,0.88)',
                       border: '1px solid rgba(255,255,255,0.08)',
@@ -458,11 +459,22 @@ const HeroSection = ({ banners, stats: propStats }: HeroSectionProps) => {
   );
 };
 
-/* ─── Animated Counter ─── */
+/* ─── Animated Counter (no framer-motion — uses native IntersectionObserver) ─── */
 function AnimatedCounter({ target, suffix = '', duration = 2000 }: { target: number; suffix?: string; duration?: number }) {
   const [count, setCount] = useState(0);
+  const [isInView, setIsInView] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsInView(true); observer.disconnect(); } },
+      { rootMargin: '-80px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!isInView || target === 0) return;

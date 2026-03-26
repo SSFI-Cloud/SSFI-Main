@@ -3,8 +3,8 @@
 import dynamic from 'next/dynamic';
 import HeroSection from '@/components/home/HeroSection';
 
-// Eagerly loaded — above the fold
-import EventHighlightCards from '@/components/home/EventHighlightCards';
+// Lazy loaded — below hero fold, pulls in framer-motion
+const EventHighlightCards = dynamic(() => import('@/components/home/EventHighlightCards'), { ssr: false });
 
 // Lazy loaded — below the fold (reduces initial JS bundle by ~80KB+)
 const CoachCertification = dynamic(() => import('@/components/home/CoachCertification'), { ssr: false });
