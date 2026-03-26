@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Bell, Settings, Calendar, UserPlus, TrendingUp, Trophy, RefreshCw } from 'lucide-react';
+import { Settings, Calendar, UserPlus, TrendingUp, Trophy, RefreshCw } from 'lucide-react';
 
 import { DashboardHero, QuickAction } from '../shared/DashboardComponents';
 import { useDashboard } from '@/lib/hooks/useDashboard';
@@ -59,14 +59,9 @@ export default function AdminDashboard() {
           { label: 'Pending Reviews', value: (dashboard.pendingApprovals?.total || 0).toLocaleString() },
         ]}
         actions={
-          <>
-            <Link href="/dashboard" className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors" title="Pending Approvals">
-              <Bell className="w-5 h-5" />
-            </Link>
-            <Link href="/dashboard/settings" className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors" title="Settings">
-              <Settings className="w-5 h-5" />
-            </Link>
-          </>
+          <Link href="/dashboard/settings" className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors" title="Settings">
+            <Settings className="w-5 h-5" />
+          </Link>
         }
       />
 
