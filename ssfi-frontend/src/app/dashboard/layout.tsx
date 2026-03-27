@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, Building2, MapPin, Trophy, Calendar, CreditCard,
-  FileText, Settings, Bell, LogOut, Menu, X, ChevronDown, Globe, UserPlus,
+  FileText, Settings, LogOut, Menu, X, ChevronDown, Globe, UserPlus,
   ClipboardList, Clock, GraduationCap, Award, Medal, ChevronRight, Heart,
 } from 'lucide-react';
 import Image from 'next/image';
