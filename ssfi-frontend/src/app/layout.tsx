@@ -88,12 +88,21 @@ export const metadata: Metadata = {
     title: 'SSFI - Speed Skating Federation of India',
     description:
       'Official governing body for speed skating in India. Register, compete, and grow with SSFI.',
+    images: [
+      {
+        url: `${BASE_URL}/images/logo/favicon.webp`,
+        width: 512,
+        height: 512,
+        alt: 'SSFI - Speed Skating Federation of India',
+      },
+    ],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: 'SSFI - Speed Skating Federation of India',
     description:
       'Official governing body for speed skating in India. Register, compete, and grow with SSFI.',
+    images: [`${BASE_URL}/images/logo/favicon.webp`],
   },
   robots: {
     index: true,
