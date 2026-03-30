@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { resolveImageUrl } from '@/lib/utils/resolveImageUrl';
 import {
   Calendar,
   MapPin,
@@ -47,7 +48,7 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
       <div className="relative h-48 overflow-hidden">
         {event.bannerImage ? (
           <img
-            src={event.bannerImage}
+            src={resolveImageUrl(event.bannerImage)}
             alt={event.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
