@@ -57,7 +57,7 @@ export default function AffiliationLookupStep({ type, onFound, onNew }: Affiliat
               value={identifier}
               onChange={(e) => { setIdentifier(e.target.value); reset(); }}
               onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
-              placeholder={`Enter your registered phone or SSFI UID`}
+              placeholder={`Enter phone, SSFI UID, or serial (e.g. S0978)`}
               className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-sm"
             />
           </div>
@@ -72,7 +72,7 @@ export default function AffiliationLookupStep({ type, onFound, onNew }: Affiliat
           </button>
         </div>
         <p className="mt-1.5 text-xs text-gray-400">
-          Enter your registered mobile number (e.g. 9876543210) or your SSFI UID (e.g. SSFI-25-KA-...)
+          Enter your mobile number (e.g. 9876543210), full SSFI UID, or just the serial code (e.g. S0978)
         </p>
       </div>
 

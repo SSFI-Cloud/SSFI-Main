@@ -38,12 +38,14 @@ export interface Event {
     allowMultipleCategories?: boolean;
     requiresApproval?: boolean;
     currentEntries: number;
+    winnersCount?: number;
     bannerImage?: string;
     brochureUrl?: string;
     createdAt: string;
     updatedAt: string;
     _count?: {
         registrations: number;
+        raceResults?: number;
     };
 }
 

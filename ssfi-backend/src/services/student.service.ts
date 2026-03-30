@@ -183,13 +183,9 @@ export const createStudent = async (data: any) => {
       throw new AppError("Club must be associated with a State and District. Please check Club URL or configuration.", 400);
     }
 
-    const year = new Date().getFullYear().toString().slice(-2);
-    const stateCode = club.state.code;
-    const districtCode = club.district.code;
-
-    const lastUser = await tx.user.findFirst({ orderBy: { id: 'desc' } });
-    const nextId = (lastUser?.id || 0) + 1;
-    const uid = `SSFI-${year}-${stateCode}-${districtCode}-${String(nextId).padStart(4, '0')}`;
+    // Generate UID using uid.service (SSFI/BS/{StateCode}/{Year}/S{NNNN})
+    const uidService = (await import('./uid.service')).default;
+    const uid = await uidService.generateStudentUID(club.stateId!);
 
     const email = data.email && data.email.trim() !== '' ? data.email : null;
 
@@ -208,6 +204,7 @@ export const createStudent = async (data: any) => {
     const student = await tx.student.create({
       data: {
         userId: user.id,
+        membershipId: uid, // SSFI/BS/TN/26/S4878 format
         name: data.name,
         fatherName: data.fatherName,
         dateOfBirth: new Date(data.dob),
