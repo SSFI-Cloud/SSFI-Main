@@ -90,29 +90,26 @@ export const uploadImage = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const cfg = UPLOAD_CONFIGS[type as keyof typeof UPLOAD_CONFIGS];
-  const filename = `${uuidv4()}.webp`;
-  const outputPath = path.join(cfg.dir, filename);
 
   try {
     // Process with sharp: resize to exact dimensions, crop from position, convert to WebP
-    await sharp(req.file.buffer)
+    const processedBuffer = await sharp(req.file.buffer)
       .resize(cfg.width, cfg.height, {
         fit: 'cover',         // crop to fill — no letterboxing
         position: cfg.position, // 'top' for team photos, 'center' for hero/news
       })
       .webp({ quality: 85 })
-      .toFile(outputPath);
+      .toBuffer();
 
-    const url = `/uploads/${type}/${filename}`;
+    // Return as base64 data URI — stored in DB, survives redeployments
+    const base64 = `data:image/webp;base64,${processedBuffer.toString('base64')}`;
 
     return successResponse(res, {
       statusCode: 201,
       message: 'Image uploaded and processed successfully',
-      data: { url, filename, type },
+      data: { url: base64, type },
     });
   } catch (err) {
-    // Clean up partial file if sharp failed
-    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
     throw new AppError('Image processing failed. Please try a different image.', 500);
   }
 });

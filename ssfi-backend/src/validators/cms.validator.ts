@@ -62,9 +62,11 @@ export const createBannerSchema = z.object({
   metadata: z.object({
     badge: z.string().optional(),
     highlight: z.string().optional(),
+    stroke: z.string().optional(),
     description: z.string().optional(),
     secondaryCtaText: z.string().optional(),
     secondaryCtaLink: z.string().optional(),
+    ghostWord: z.string().optional(),
     gradient: z.string().optional(),
   }).optional(),
 });
