@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +10,7 @@ import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import {
   User, Mail, Phone, MapPin, Camera,
-  ChevronLeft, Check, Loader2, X, RefreshCw, Building2, Shield,
+  ChevronLeft, Check, Loader2, X, RefreshCw, Building2, Shield, Home,
 } from 'lucide-react';
 
 import { useDistrictSecretaryRegistration } from '@/lib/hooks/useAffiliation';
@@ -158,9 +159,15 @@ export default function DistrictSecretaryRegistrationForm() {
       {/* Hero */}
       <div className="bg-gradient-to-br from-[#0a1628] via-[#0c2340] to-[#162d50] text-white">
         <div className="max-w-4xl mx-auto px-4 py-10">
-          <button onClick={() => router.push('/register')} className="flex items-center gap-2 text-white/60 hover:text-white mb-6 text-sm transition-colors">
-            <ChevronLeft className="w-4 h-4" /> Back to Registration
-          </button>
+          <div className="flex items-center gap-3 mb-6">
+            <Link href="/" className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors">
+              <Home className="w-3.5 h-3.5" /> Home
+            </Link>
+            <span className="text-white/30">/</span>
+            <button onClick={() => router.push('/register')} className="text-white/60 hover:text-white text-sm transition-colors">Registration</button>
+            <span className="text-white/30">/</span>
+            <span className="text-white/80 text-sm">District Secretary</span>
+          </div>
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-teal-500/20 border border-teal-500/30 rounded-2xl flex items-center justify-center flex-shrink-0">
               <Building2 className="w-7 h-7 text-teal-400" />

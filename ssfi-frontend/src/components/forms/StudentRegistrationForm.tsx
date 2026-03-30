@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import {
@@ -142,9 +143,15 @@ export default function StudentRegistrationForm() {
       {/* Hero */}
       <div className="bg-gradient-to-br from-[#0a1628] via-[#0c2340] to-[#162d50] text-white">
         <div className="max-w-5xl mx-auto px-4 py-10">
-          <button onClick={() => router.push('/register')} className="flex items-center gap-2 text-white/60 hover:text-white mb-6 text-sm transition-colors">
-            <ChevronLeft className="w-4 h-4" /> Back to Registration
-          </button>
+          <div className="flex items-center gap-3 mb-6">
+            <Link href="/" className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors">
+              <Home className="w-3.5 h-3.5" /> Home
+            </Link>
+            <span className="text-white/30">/</span>
+            <button onClick={() => router.push('/register')} className="text-white/60 hover:text-white text-sm transition-colors">Registration</button>
+            <span className="text-white/30">/</span>
+            <span className="text-white/80 text-sm">Student</span>
+          </div>
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-green-500/20 border border-green-500/30 rounded-2xl flex items-center justify-center flex-shrink-0">
               <User className="w-7 h-7 text-green-400" />

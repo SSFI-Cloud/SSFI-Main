@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +10,7 @@ import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import {
   User, Mail, Phone, MapPin, Camera,
-  ChevronLeft, Check, Loader2, X, RefreshCw, Shield, Crown,
+  ChevronLeft, Check, Loader2, X, RefreshCw, Shield, Crown, Home, Upload,
 } from 'lucide-react';
 
 import { useStateSecretaryRegistration } from '@/lib/hooks/useAffiliation';
@@ -26,9 +27,9 @@ const formSchema = z.object({
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
   stateId: z.string().min(1, 'Please select a state'),
   residentialAddress: z.string().min(10, 'Address must be at least 10 characters').max(500),
-  profilePhoto: z.string().min(1, 'Profile photo is required'),
+  profilePhoto: z.string().min(1, 'Secretary photo is required'),
   logo: z.string().min(1, 'Association logo is required'),
-  associationRegistrationCopy: z.string().min(1, 'Association registration copy is required'),
+  associationRegistrationCopy: z.string().min(1, 'Registration copy is required'),
   presidentName: z.string().min(2, 'President name is required').max(100),
   presidentPhoto: z.string().optional(),
   isSelfSecretary: z.boolean().optional(),
@@ -40,6 +41,26 @@ type Mode = 'choose' | 'renew' | 'new';
 
 const inputCls = (err?: boolean) =>
   `w-full px-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:border-emerald-500 text-sm transition-all ${err ? 'border-red-400 focus:ring-red-400/20' : 'border-gray-200 focus:ring-emerald-500/20'}`;
+
+/* Compact photo upload box */
+function PhotoBox({ preview, onUpload, onRemove, label, error, accept = 'image/*' }: {
+  preview: string | null; onUpload: () => void; onRemove: () => void;
+  label: string; error?: boolean; accept?: string;
+}) {
+  return preview ? (
+    <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+      <img src={preview} alt={label} className="w-full h-full object-cover" />
+      <button type="button" onClick={onRemove} className="absolute top-1 right-1 p-0.5 bg-red-500 rounded-full text-white hover:bg-red-600">
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  ) : (
+    <div onClick={onUpload} className={`w-24 h-24 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 transition-all flex-shrink-0 ${error ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50'}`}>
+      <Camera className="w-5 h-5 text-gray-400" />
+      <span className="text-[10px] text-gray-500 text-center leading-tight">{label}</span>
+    </div>
+  );
+}
 
 export default function StateSecretaryRegistrationForm() {
   const router = useRouter();
@@ -68,7 +89,6 @@ export default function StateSecretaryRegistrationForm() {
 
   useEffect(() => { fetchStates(); }, [fetchStates]);
 
-  // When "I am the secretary" is checked, sync name from presidentName
   useEffect(() => {
     if (isSelfSecretary && presidentName) {
       setValue('name', presidentName);
@@ -76,10 +96,9 @@ export default function StateSecretaryRegistrationForm() {
   }, [isSelfSecretary, presidentName, setValue]);
 
   const handleFileUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
     field: 'profilePhoto' | 'logo' | 'associationRegistrationCopy' | 'presidentPhoto',
     setPreview: (v: string | null) => void
-  ) => {
+  ) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -89,23 +108,6 @@ export default function StateSecretaryRegistrationForm() {
       setValue(field, b64, { shouldValidate: true });
     };
     reader.readAsDataURL(file);
-  };
-
-  const handlePhotoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const b64 = reader.result as string;
-      setPhotoPreview(b64);
-      setValue('profilePhoto', b64, { shouldValidate: true });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const removePhoto = () => {
-    setPhotoPreview(null);
-    setValue('profilePhoto', '');
   };
 
   const openRazorpay = (order: any, onVerify: (r: any) => Promise<void>) => {
@@ -171,9 +173,17 @@ export default function StateSecretaryRegistrationForm() {
       {/* Hero */}
       <div className="bg-gradient-to-br from-[#0a1628] via-[#0c2340] to-[#162d50] text-white">
         <div className="max-w-4xl mx-auto px-4 py-10">
-          <button onClick={() => router.push('/register')} className="flex items-center gap-2 text-white/60 hover:text-white mb-6 text-sm transition-colors">
-            <ChevronLeft className="w-4 h-4" /> Back to Registration
-          </button>
+          <div className="flex items-center gap-3 mb-6">
+            <Link href="/" className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors">
+              <Home className="w-3.5 h-3.5" /> Home
+            </Link>
+            <span className="text-white/30">/</span>
+            <button onClick={() => router.push('/register')} className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors">
+              Registration
+            </button>
+            <span className="text-white/30">/</span>
+            <span className="text-white/80 text-sm">State Secretary</span>
+          </div>
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-emerald-500/20 border border-emerald-500/30 rounded-2xl flex items-center justify-center flex-shrink-0">
               <Shield className="w-7 h-7 text-emerald-400" />
@@ -252,46 +262,35 @@ export default function StateSecretaryRegistrationForm() {
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-                {/* President Details */}
+                {/* President Details — compact */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                  <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-2">
                     <Crown className="w-4 h-4 text-amber-500" />
-                    <h2 className="font-semibold text-gray-900">President Details</h2>
+                    <h2 className="font-semibold text-gray-900 text-sm">President Details</h2>
                   </div>
-                  <div className="p-6 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">President Name <span className="text-red-400">*</span></label>
+                  <div className="p-5 space-y-3">
+                    <div className="flex gap-4 items-start">
+                      <div className="flex-1">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">President Name <span className="text-red-400">*</span></label>
                         <input {...register('presidentName')} placeholder="Enter president's full name" className={inputCls(!!errors.presidentName)} />
                         {errors.presidentName && <p className="mt-1 text-xs text-red-500">{errors.presidentName.message}</p>}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">President Photo</label>
-                        <div className="w-32">
-                          {presidentPhotoPreview ? (
-                            <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
-                              <img src={presidentPhotoPreview} alt="President" className="w-full h-full object-cover" />
-                              <button type="button" onClick={() => { setPresidentPhotoPreview(null); setValue('presidentPhoto', ''); }} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div onClick={() => presidentPhotoRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1.5 transition-all border-gray-200 bg-gray-50 hover:border-amber-300 hover:bg-amber-50">
-                              <Camera className="w-6 h-6 text-gray-400" />
-                              <span className="text-xs text-gray-500 text-center">Photo</span>
-                            </div>
-                          )}
-                          <input ref={presidentPhotoRef} type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'presidentPhoto', setPresidentPhotoPreview)} className="hidden" />
-                        </div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Photo</label>
+                        <PhotoBox
+                          preview={presidentPhotoPreview}
+                          onUpload={() => presidentPhotoRef.current?.click()}
+                          onRemove={() => { setPresidentPhotoPreview(null); setValue('presidentPhoto', ''); }}
+                          label="President"
+                        />
+                        <input ref={presidentPhotoRef} type="file" accept="image/*" onChange={handleFileUpload('presidentPhoto', setPresidentPhotoPreview)} className="hidden" />
                       </div>
                     </div>
-
-                    {/* Checkbox: I am also the State Secretary */}
-                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-emerald-50 hover:border-emerald-200 transition-all">
+                    <label className="flex items-center gap-3 cursor-pointer p-2.5 rounded-xl border border-gray-100 bg-gray-50 hover:bg-emerald-50 hover:border-emerald-200 transition-all">
                       <input type="checkbox" {...register('isSelfSecretary')} className="w-4 h-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500/20" />
                       <div>
                         <span className="text-sm font-medium text-gray-700">I am also the State Secretary</span>
-                        <p className="text-xs text-gray-500 mt-0.5">Your name will be auto-filled as the secretary name below</p>
+                        <p className="text-xs text-gray-400">Name will be auto-filled below</p>
                       </div>
                     </label>
                   </div>
@@ -299,28 +298,28 @@ export default function StateSecretaryRegistrationForm() {
 
                 {/* Secretary / Personal Details */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                  <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-2">
                     <User className="w-4 h-4 text-emerald-500" />
-                    <h2 className="font-semibold text-gray-900">Secretary Details</h2>
+                    <h2 className="font-semibold text-gray-900 text-sm">Secretary Details</h2>
                   </div>
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Secretary Name <span className="text-red-400">*</span></label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Secretary Name <span className="text-red-400">*</span></label>
                       <input
                         {...register('name')}
                         placeholder="Enter secretary's full name"
                         className={`${inputCls(!!errors.name)} ${isSelfSecretary ? 'bg-gray-100 text-gray-500' : ''}`}
                         readOnly={!!isSelfSecretary}
                       />
-                      {isSelfSecretary && <p className="mt-1 text-xs text-emerald-600">Auto-filled from president name</p>}
-                      {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
+                      {isSelfSecretary && <p className="mt-0.5 text-xs text-emerald-600">Auto-filled from president name</p>}
+                      {errors.name && <p className="mt-0.5 text-xs text-red-500">{errors.name.message}</p>}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Gender <span className="text-red-400">*</span></label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Gender <span className="text-red-400">*</span></label>
                       <div className="flex gap-2">
                         {GENDERS.map((g) => (
-                          <label key={g.value} className={`flex-1 flex items-center justify-center px-3 py-2.5 rounded-xl border cursor-pointer text-sm font-medium transition-all ${watch('gender') === g.value ? 'bg-emerald-50 border-emerald-400 text-emerald-600' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>
+                          <label key={g.value} className={`flex-1 flex items-center justify-center px-2 py-2.5 rounded-xl border cursor-pointer text-sm font-medium transition-all ${watch('gender') === g.value ? 'bg-emerald-50 border-emerald-400 text-emerald-600' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>
                             <input {...register('gender')} type="radio" value={g.value} className="sr-only" />
                             {g.label}
                           </label>
@@ -329,132 +328,108 @@ export default function StateSecretaryRegistrationForm() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">State <span className="text-red-400">*</span></label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">State <span className="text-red-400">*</span></label>
                       <select {...register('stateId')} className={inputCls(!!errors.stateId)}>
                         <option value="">Select your state</option>
                         {states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
-                      {errors.stateId && <p className="mt-1 text-xs text-red-500">{errors.stateId.message}</p>}
+                      {errors.stateId && <p className="mt-0.5 text-xs text-red-500">{errors.stateId.message}</p>}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-red-400">*</span></label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Email <span className="text-red-400">*</span></label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input {...register('email')} type="email" placeholder="your@email.com" className={`${inputCls(!!errors.email)} pl-9`} />
                       </div>
-                      {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+                      {errors.email && <p className="mt-0.5 text-xs text-red-500">{errors.email.message}</p>}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Mobile Number <span className="text-red-400">*</span></label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Mobile Number <span className="text-red-400">*</span></label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <span className="absolute left-9 top-1/2 -translate-y-1/2 text-gray-400 text-sm border-r border-gray-200 pr-2">+91</span>
                         <input {...register('phone')} type="tel" maxLength={10} placeholder="10-digit number" className={`${inputCls(!!errors.phone)} pl-20`} />
                       </div>
-                      {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>}
+                      {errors.phone && <p className="mt-0.5 text-xs text-red-500">{errors.phone.message}</p>}
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Residential Address <span className="text-red-400">*</span></label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Residential Address <span className="text-red-400">*</span></label>
                       <div className="relative">
                         <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                        <textarea {...register('residentialAddress')} rows={3} placeholder="Enter your complete address" className={`${inputCls(!!errors.residentialAddress)} pl-9 resize-none`} />
+                        <textarea {...register('residentialAddress')} rows={2} placeholder="Enter your complete address" className={`${inputCls(!!errors.residentialAddress)} pl-9 resize-none`} />
                       </div>
-                      {errors.residentialAddress && <p className="mt-1 text-xs text-red-500">{errors.residentialAddress.message}</p>}
+                      {errors.residentialAddress && <p className="mt-0.5 text-xs text-red-500">{errors.residentialAddress.message}</p>}
                     </div>
                   </div>
                 </div>
 
-                {/* Association Logo */}
+                {/* Documents & Photos — all in one compact card */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-emerald-500" />
-                    <h2 className="font-semibold text-gray-900">Association Logo <span className="text-red-400">*</span></h2>
+                  <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-emerald-500" />
+                    <h2 className="font-semibold text-gray-900 text-sm">Documents & Photos</h2>
                   </div>
-                  <div className="p-6">
-                    <div className="w-40">
-                      {logoPreview ? (
-                        <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
-                          <img src={logoPreview} alt="Logo" className="w-full h-full object-contain bg-white p-2" />
-                          <button type="button" onClick={() => { setLogoPreview(null); setValue('logo', ''); }} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div onClick={() => logoRef.current?.click()} className={`aspect-square rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.logo ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50'}`}>
-                          <Shield className="w-7 h-7 text-gray-400" />
-                          <span className="text-xs text-gray-500 text-center">Association Logo</span>
-                          <span className="text-xs text-gray-400">PNG, JPG</span>
-                        </div>
-                      )}
-                      <input ref={logoRef} type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo', setLogoPreview)} className="hidden" />
-                    </div>
-                    {errors.logo && <p className="mt-2 text-xs text-red-500">{errors.logo.message}</p>}
-                  </div>
-                </div>
-
-                {/* Association Registration Copy */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-emerald-500" />
-                    <h2 className="font-semibold text-gray-900">Association Registration Copy <span className="text-red-400">*</span></h2>
-                  </div>
-                  <div className="p-6">
-                    {regCopyPreview ? (
-                      <div className="relative inline-block">
-                        <div className="px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
-                          <Check className="w-4 h-4 text-emerald-500" />
-                          <span className="text-sm text-emerald-700 font-medium">Document uploaded</span>
-                          <button type="button" onClick={() => { setRegCopyPreview(null); setValue('associationRegistrationCopy', ''); }} className="ml-2 text-red-400 hover:text-red-600">
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
+                  <div className="p-5 space-y-4">
+                    {/* Row: Secretary Photo + Logo + Reg Copy */}
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* Secretary Photo */}
+                      <div className="flex flex-col items-center gap-1.5">
+                        <PhotoBox
+                          preview={photoPreview}
+                          onUpload={() => photoRef.current?.click()}
+                          onRemove={() => { setPhotoPreview(null); setValue('profilePhoto', ''); }}
+                          label="Secretary Photo"
+                          error={!!errors.profilePhoto}
+                        />
+                        <span className="text-xs text-gray-500 font-medium text-center">Secretary Photo <span className="text-red-400">*</span></span>
+                        <input ref={photoRef} type="file" accept="image/*" onChange={handleFileUpload('profilePhoto', setPhotoPreview)} className="hidden" />
+                        {errors.profilePhoto && <p className="text-[10px] text-red-500">Required</p>}
                       </div>
-                    ) : (
-                      <div onClick={() => regCopyRef.current?.click()} className={`p-6 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center gap-2 transition-all ${errors.associationRegistrationCopy ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50'}`}>
-                        <Camera className="w-7 h-7 text-gray-400" />
-                        <span className="text-sm text-gray-500">Upload registration certificate</span>
-                        <span className="text-xs text-gray-400">Image or PDF, up to 5MB</span>
-                      </div>
-                    )}
-                    <input ref={regCopyRef} type="file" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'associationRegistrationCopy', setRegCopyPreview)} className="hidden" />
-                    {errors.associationRegistrationCopy && <p className="mt-2 text-xs text-red-500">{errors.associationRegistrationCopy.message}</p>}
-                  </div>
-                </div>
 
-                {/* Secretary Profile Photo */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <Camera className="w-4 h-4 text-emerald-500" />
-                    <h2 className="font-semibold text-gray-900">Secretary Profile Photo <span className="text-red-400">*</span></h2>
-                  </div>
-                  <div className="p-6">
-                    <div className="w-40">
-                      {photoPreview ? (
-                        <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
-                          <img src={photoPreview} alt="Photo" className="w-full h-full object-cover" />
-                          <button type="button" onClick={removePhoto} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div onClick={() => photoRef.current?.click()} className={`aspect-square rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.profilePhoto ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50'}`}>
-                          <Camera className="w-7 h-7 text-gray-400" />
-                          <span className="text-xs text-gray-500 text-center">Passport photo</span>
-                          <span className="text-xs text-gray-400">JPG, PNG up to 5MB</span>
-                        </div>
-                      )}
-                      <input ref={photoRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" />
+                      {/* Association Logo */}
+                      <div className="flex flex-col items-center gap-1.5">
+                        <PhotoBox
+                          preview={logoPreview}
+                          onUpload={() => logoRef.current?.click()}
+                          onRemove={() => { setLogoPreview(null); setValue('logo', ''); }}
+                          label="Association Logo"
+                          error={!!errors.logo}
+                        />
+                        <span className="text-xs text-gray-500 font-medium text-center">Association Logo <span className="text-red-400">*</span></span>
+                        <input ref={logoRef} type="file" accept="image/*" onChange={handleFileUpload('logo', setLogoPreview)} className="hidden" />
+                        {errors.logo && <p className="text-[10px] text-red-500">Required</p>}
+                      </div>
+
+                      {/* Registration Copy */}
+                      <div className="flex flex-col items-center gap-1.5">
+                        {regCopyPreview ? (
+                          <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 flex items-center justify-center bg-emerald-50 flex-shrink-0">
+                            <Check className="w-6 h-6 text-emerald-500" />
+                            <button type="button" onClick={() => { setRegCopyPreview(null); setValue('associationRegistrationCopy', ''); }} className="absolute top-1 right-1 p-0.5 bg-red-500 rounded-full text-white hover:bg-red-600">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div onClick={() => regCopyRef.current?.click()} className={`w-24 h-24 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 transition-all flex-shrink-0 ${errors.associationRegistrationCopy ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50'}`}>
+                            <Shield className="w-5 h-5 text-gray-400" />
+                            <span className="text-[10px] text-gray-500 text-center leading-tight">Reg. Copy</span>
+                          </div>
+                        )}
+                        <span className="text-xs text-gray-500 font-medium text-center">Reg. Certificate <span className="text-red-400">*</span></span>
+                        <input ref={regCopyRef} type="file" accept="image/*,.pdf" onChange={handleFileUpload('associationRegistrationCopy', setRegCopyPreview)} className="hidden" />
+                        {errors.associationRegistrationCopy && <p className="text-[10px] text-red-500">Required</p>}
+                      </div>
                     </div>
-                    {errors.profilePhoto && <p className="mt-2 text-xs text-red-500">{errors.profilePhoto.message}</p>}
+                    <p className="text-xs text-gray-400 text-center">JPG, PNG up to 5MB each. Registration certificate can also be PDF.</p>
                   </div>
                 </div>
 
                 {/* Terms & Submit */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <label className="flex items-start gap-3 cursor-pointer mb-5">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <label className="flex items-start gap-3 cursor-pointer mb-4">
                     <input type="checkbox" {...register('termsAccepted')} className="mt-0.5 w-4 h-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500/20" />
                     <span className="text-sm text-gray-600">
                       I declare that all information provided is accurate. I agree to SSFI's{' '}
@@ -462,9 +437,9 @@ export default function StateSecretaryRegistrationForm() {
                       <a href="/privacy" className="text-emerald-500 hover:underline">Privacy Policy</a>.
                     </span>
                   </label>
-                  {errors.termsAccepted && <p className="mb-4 text-xs text-red-500">{errors.termsAccepted.message}</p>}
+                  {errors.termsAccepted && <p className="mb-3 text-xs text-red-500">{errors.termsAccepted.message}</p>}
 
-                  <button type="submit" disabled={isLoading} className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25">
+                  <button type="submit" disabled={isLoading} className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-60 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25">
                     {isLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : <><Check className="w-5 h-5" /> Submit & Pay Registration Fee</>}
                   </button>
                 </div>
