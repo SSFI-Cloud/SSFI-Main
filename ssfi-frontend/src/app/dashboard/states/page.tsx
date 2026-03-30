@@ -31,6 +31,8 @@ interface State {
     code: string;
     logo?: string;
     website?: string;
+    presidentName?: string;
+    presidentPhoto?: string;
     districtsCount: number;
     clubsCount: number;
     skatersCount: number;
