@@ -109,6 +109,9 @@ export interface StateSecretaryFormData {
   profilePhoto: string;
   logo: string;
   associationRegistrationCopy: string;
+  presidentName?: string;
+  presidentPhoto?: string;
+  isSelfSecretary?: boolean;
   termsAccepted: boolean;
 }
 

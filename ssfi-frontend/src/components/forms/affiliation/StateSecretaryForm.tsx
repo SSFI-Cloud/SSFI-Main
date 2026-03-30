@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import {
   User, Mail, Phone, MapPin, Camera,
-  ChevronLeft, Check, Loader2, X, RefreshCw, Shield,
+  ChevronLeft, Check, Loader2, X, RefreshCw, Shield, Crown,
 } from 'lucide-react';
 
 import { useStateSecretaryRegistration } from '@/lib/hooks/useAffiliation';
@@ -29,6 +29,9 @@ const formSchema = z.object({
   profilePhoto: z.string().min(1, 'Profile photo is required'),
   logo: z.string().min(1, 'Association logo is required'),
   associationRegistrationCopy: z.string().min(1, 'Association registration copy is required'),
+  presidentName: z.string().min(2, 'President name is required').max(100),
+  presidentPhoto: z.string().optional(),
+  isSelfSecretary: z.boolean().optional(),
   termsAccepted: z.boolean().refine((v) => v === true, 'You must accept the terms'),
 });
 type FormData = z.infer<typeof formSchema>;
@@ -45,9 +48,11 @@ export default function StateSecretaryRegistrationForm() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [regCopyPreview, setRegCopyPreview] = useState<string | null>(null);
+  const [presidentPhotoPreview, setPresidentPhotoPreview] = useState<string | null>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
   const regCopyRef = useRef<HTMLInputElement>(null);
+  const presidentPhotoRef = useRef<HTMLInputElement>(null);
 
   const { initiate, verify, isLoading } = useStateSecretaryRegistration();
   const { initiateRenewal, verifyRenewal, isLoading: renewLoading } = useRenewal();
@@ -55,14 +60,24 @@ export default function StateSecretaryRegistrationForm() {
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { gender: 'MALE' },
+    defaultValues: { gender: 'MALE', isSelfSecretary: false },
   });
+
+  const isSelfSecretary = watch('isSelfSecretary');
+  const presidentName = watch('presidentName');
 
   useEffect(() => { fetchStates(); }, [fetchStates]);
 
+  // When "I am the secretary" is checked, sync name from presidentName
+  useEffect(() => {
+    if (isSelfSecretary && presidentName) {
+      setValue('name', presidentName);
+    }
+  }, [isSelfSecretary, presidentName, setValue]);
+
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: 'profilePhoto' | 'logo' | 'associationRegistrationCopy',
+    field: 'profilePhoto' | 'logo' | 'associationRegistrationCopy' | 'presidentPhoto',
     setPreview: (v: string | null) => void
   ) => {
     const file = e.target.files?.[0];
@@ -236,16 +251,68 @@ export default function StateSecretaryRegistrationForm() {
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {/* Personal Details */}
+
+                {/* President Details */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-amber-500" />
+                    <h2 className="font-semibold text-gray-900">President Details</h2>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">President Name <span className="text-red-400">*</span></label>
+                        <input {...register('presidentName')} placeholder="Enter president's full name" className={inputCls(!!errors.presidentName)} />
+                        {errors.presidentName && <p className="mt-1 text-xs text-red-500">{errors.presidentName.message}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">President Photo</label>
+                        <div className="w-32">
+                          {presidentPhotoPreview ? (
+                            <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
+                              <img src={presidentPhotoPreview} alt="President" className="w-full h-full object-cover" />
+                              <button type="button" onClick={() => { setPresidentPhotoPreview(null); setValue('presidentPhoto', ''); }} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div onClick={() => presidentPhotoRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1.5 transition-all border-gray-200 bg-gray-50 hover:border-amber-300 hover:bg-amber-50">
+                              <Camera className="w-6 h-6 text-gray-400" />
+                              <span className="text-xs text-gray-500 text-center">Photo</span>
+                            </div>
+                          )}
+                          <input ref={presidentPhotoRef} type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'presidentPhoto', setPresidentPhotoPreview)} className="hidden" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Checkbox: I am also the State Secretary */}
+                    <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-emerald-50 hover:border-emerald-200 transition-all">
+                      <input type="checkbox" {...register('isSelfSecretary')} className="w-4 h-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500/20" />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">I am also the State Secretary</span>
+                        <p className="text-xs text-gray-500 mt-0.5">Your name will be auto-filled as the secretary name below</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Secretary / Personal Details */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                     <User className="w-4 h-4 text-emerald-500" />
-                    <h2 className="font-semibold text-gray-900">Personal Details</h2>
+                    <h2 className="font-semibold text-gray-900">Secretary Details</h2>
                   </div>
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name <span className="text-red-400">*</span></label>
-                      <input {...register('name')} placeholder="Enter your full name" className={inputCls(!!errors.name)} />
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Secretary Name <span className="text-red-400">*</span></label>
+                      <input
+                        {...register('name')}
+                        placeholder="Enter secretary's full name"
+                        className={`${inputCls(!!errors.name)} ${isSelfSecretary ? 'bg-gray-100 text-gray-500' : ''}`}
+                        readOnly={!!isSelfSecretary}
+                      />
+                      {isSelfSecretary && <p className="mt-1 text-xs text-emerald-600">Auto-filled from president name</p>}
                       {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
                     </div>
 
@@ -357,11 +424,11 @@ export default function StateSecretaryRegistrationForm() {
                   </div>
                 </div>
 
-                {/* Profile Photo */}
+                {/* Secretary Profile Photo */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
                     <Camera className="w-4 h-4 text-emerald-500" />
-                    <h2 className="font-semibold text-gray-900">Profile Photo</h2>
+                    <h2 className="font-semibold text-gray-900">Secretary Profile Photo <span className="text-red-400">*</span></h2>
                   </div>
                   <div className="p-6">
                     <div className="w-40">

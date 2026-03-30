@@ -40,6 +40,9 @@ export const stateSecretaryRegistrationSchema = z.object({
     profilePhoto: z.string().optional(),
     logo: z.string().optional(),
     associationRegistrationCopy: z.string().optional(),
+    presidentName: z.string().min(2).optional(),
+    presidentPhoto: z.string().optional(),
+    isSelfSecretary: z.boolean().optional().or(z.string().transform(val => val === 'true')),
 });
 export type StateSecretaryRegistration = z.infer<typeof stateSecretaryRegistrationSchema>;
 
