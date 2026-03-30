@@ -295,6 +295,17 @@ export const initiateStateSecretaryRegistration = async (
         },
       });
 
+      // Save president info to State record if provided (retry path)
+      if (data.presidentName) {
+        await prisma.state.update({
+          where: { id: data.stateId },
+          data: {
+            presidentName: data.presidentName,
+            presidentPhoto: data.presidentPhoto || null,
+          },
+        });
+      }
+
       // Search for existing user to link payment
       let userId = 1; // Default fallback
       const existingUser = await prisma.user.findFirst({
@@ -403,6 +414,17 @@ export const initiateStateSecretaryRegistration = async (
       state: { select: { id: true, name: true, code: true } },
     },
   });
+
+  // Save president info to State record if provided
+  if (data.presidentName) {
+    await prisma.state.update({
+      where: { id: data.stateId },
+      data: {
+        presidentName: data.presidentName,
+        presidentPhoto: data.presidentPhoto || null,
+      },
+    });
+  }
 
   // Handle User for Payment linkage
   // If user doesn't exist, we might need a placeholder or create a partial user?
