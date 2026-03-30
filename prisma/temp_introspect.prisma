@@ -1,0 +1,1015 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model banners {
+  id             String    @id
+  title          String
+  subtitle       String?
+  imageUrl       String
+  mobileImageUrl String?
+  linkUrl        String?
+  linkText       String?
+  position       String    @default("HOME_HERO")
+  startDate      DateTime?
+  endDate        DateTime?
+  status         String    @default("DRAFT")
+  sortOrder      Int       @default(0)
+  createdBy      String?
+  updatedBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+
+  @@index([position])
+  @@index([startDate, endDate])
+  @@index([status])
+}
+
+model certificates {
+  id                Int      @id @default(autoincrement())
+  eventId           Int
+  studentId         Int
+  certificateNumber String   @unique
+  position          String?
+  category          String?
+  pdfPath           String?
+  issuedAt          DateTime @default(now())
+  createdAt         DateTime @default(now())
+  events            events   @relation(fields: [eventId], references: [id])
+  students          students @relation(fields: [studentId], references: [id])
+
+  @@unique([eventId, studentId])
+  @@index([studentId], map: "certificates_studentId_fkey")
+}
+
+model club_owners {
+  id            Int                @id @default(autoincrement())
+  userId        Int                @unique
+  clubId        Int                @unique
+  name          String
+  gender        club_owners_gender
+  aadhaarNumber String             @unique
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  pincode       String
+  identityProof String
+  profilePhoto  String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime
+  clubs         clubs              @relation(fields: [clubId], references: [id])
+  users         users              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model clubs {
+  id                   Int                   @id @default(autoincrement())
+  uid                  String?               @unique
+  districtId           Int
+  stateId              Int?
+  name                 String
+  code                 String
+  registrationNo       String?               @unique
+  establishedYear      Int?
+  contactPerson        String?
+  phone                String?
+  email                String?
+  address              String?
+  addressLine1         String?
+  addressLine2         String?
+  city                 String?
+  pincode              String?
+  logo                 String?
+  website              String?
+  isActive             Boolean               @default(true)
+  registrationWindowId String?
+  status               String                @default("PENDING")
+  approvedAt           DateTime?
+  approvedBy           String?
+  rejectionRemarks     String?
+  verified             Int?                  @default(0)
+  verifiedBy           Int?                  @default(0)
+  clubName             String?               @db.VarChar(255)
+  mobileNumber         String?               @db.VarChar(20)
+  emailAddress         String?               @db.VarChar(255)
+  clubAddress          String?               @db.Text
+  tshirtSize           String?               @db.VarChar(50)
+  logoPath             String?               @db.VarChar(255)
+  passport             String?               @db.VarChar(100)
+  proof                String?               @db.VarChar(100)
+  club                 String?               @db.VarChar(255)
+  certificate          String?               @db.VarChar(100)
+  membershipId         String?               @db.VarChar(100)
+  aadhaarNumber        String?               @db.VarChar(50)
+  createdBy            String?
+  updatedBy            String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime
+  club_owners          club_owners?
+  districts            districts             @relation(fields: [districtId], references: [id])
+  states               states?               @relation(fields: [stateId], references: [id])
+  event_registrations  event_registrations[]
+  students             students[]
+
+  @@unique([districtId, code])
+  @@index([stateId], map: "clubs_stateId_fkey")
+}
+
+model coach_trainings {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?  @db.Text
+  venue       String
+  startDate   DateTime
+  endDate     DateTime
+  duration    String
+  price       Decimal  @db.Decimal(10, 2)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+}
+
+model configs {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String   @db.Text
+  description String?
+  updatedAt   DateTime
+}
+
+model district_persons {
+  id            Int                     @id @default(autoincrement())
+  userId        Int                     @unique
+  districtId    Int                     @unique
+  name          String
+  gender        district_persons_gender
+  aadhaarNumber String                  @unique
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  pincode       String
+  identityProof String
+  profilePhoto  String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime
+  districts     districts               @relation(fields: [districtId], references: [id])
+  users         users                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model district_secretaries {
+  id                   String    @id
+  uid                  String    @unique
+  name                 String
+  gender               String
+  email                String
+  phone                String
+  aadhaarNumber        String
+  stateId              Int
+  districtId           Int
+  residentialAddress   String
+  identityProof        String
+  profilePhoto         String?
+  registrationWindowId String
+  status               String    @default("PENDING")
+  approvedAt           DateTime?
+  approvedBy           String?
+  rejectionRemarks     String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime
+  districts            districts @relation(fields: [districtId], references: [id])
+  states               states    @relation(fields: [stateId], references: [id])
+
+  @@index([districtId])
+  @@index([email])
+  @@index([stateId])
+  @@index([status])
+  @@index([uid])
+}
+
+model districts {
+  id                   Int                    @id @default(autoincrement())
+  stateId              Int
+  name                 String
+  code                 String
+  logo                 String?
+  isActive             Boolean                @default(true)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime
+  clubs                clubs[]
+  district_persons     district_persons?
+  district_secretaries district_secretaries[]
+  states               states                 @relation(fields: [stateId], references: [id])
+  event_registrations  event_registrations[]
+  events               events[]
+  students             students[]
+
+  @@unique([stateId, code])
+}
+
+model event_registrations {
+  id                       Int                       @id @default(autoincrement())
+  eventId                  Int
+  studentId                Int
+  clubId                   Int?
+  ageCategory              String
+  remarks                  String?
+  status                   String                    @default("PENDING")
+  paymentStatus            String                    @default("PENDING")
+  amountPaid               Decimal                   @default(0.00) @db.Decimal(10, 2)
+  registrationDate         DateTime                  @default(now())
+  confirmedAt              DateTime?
+  cancelledAt              DateTime?
+  registeredBy             String?
+  eventLevelTypeId         Int?                      @db.UnsignedInt
+  eligibleEventLevelId     Int?                      @db.UnsignedInt
+  sessionId                Int?
+  result                   Boolean?                  @default(false)
+  prizeAnnouncementPlace   String?                   @db.VarChar(100)
+  isPresent                Boolean?                  @default(false)
+  suitSize                 String
+  paymentId                String?
+  orderId                  String?                   @db.VarChar(100)
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime
+  adminAddedAt             DateTime?
+  adminAddedBy             String?
+  cancellationReason       String?
+  cancelledBy              String?
+  confirmationNumber       String                    @unique
+  districtId               Int?
+  entryFee                 Decimal                   @db.Decimal(10, 2)
+  lateFee                  Decimal                   @default(0.00) @db.Decimal(10, 2)
+  paidAt                   DateTime?
+  paymentDetails           Json?
+  paymentMethod            String?
+  selectedRaces            Json
+  skateCategory            String
+  stateId                  Int?
+  totalFee                 Decimal                   @db.Decimal(10, 2)
+  transactionId            String?
+  clubs                    clubs?                    @relation(fields: [clubId], references: [id])
+  districts                districts?                @relation(fields: [districtId], references: [id])
+  tbl_eligible_event_level tbl_eligible_event_level? @relation(fields: [eligibleEventLevelId], references: [id])
+  events                   events                    @relation(fields: [eventId], references: [id])
+  tbl_event_level_type     tbl_event_level_type?     @relation(fields: [eventLevelTypeId], references: [id])
+  states                   states?                   @relation(fields: [stateId], references: [id])
+  students                 students                  @relation(fields: [studentId], references: [id])
+  payments                 payments?
+
+  @@unique([eventId, studentId])
+  @@index([clubId])
+  @@index([districtId])
+  @@index([eligibleEventLevelId], map: "event_registrations_eligibleEventLevelId_fkey")
+  @@index([eventLevelTypeId], map: "event_registrations_eventLevelTypeId_fkey")
+  @@index([stateId])
+  @@index([status])
+  @@index([studentId], map: "event_registrations_studentId_fkey")
+}
+
+model events {
+  id                      Int                   @id @default(autoincrement())
+  creatorId               Int
+  code                    String                @unique
+  name                    String
+  description             String?               @db.Text
+  shortDescription        String?
+  category                events_category
+  eventType               String                @default("COMPETITION")
+  eventLevel              String                @default("NATIONAL")
+  disciplines             Json?
+  status                  events_status         @default(DRAFT)
+  stateId                 Int?
+  districtId              Int?
+  eligibleStates          Json?
+  eligibleDistricts       Json?
+  eventDate               DateTime
+  eventEndDate            DateTime?
+  registrationStartDate   DateTime
+  registrationEndDate     DateTime
+  minParticipants         Int?
+  maxParticipants         Int?
+  venue                   String?
+  venueAddress            String?
+  city                    String?
+  entryFee                Decimal               @db.Decimal(10, 2)
+  lateFee                 Decimal?              @db.Decimal(10, 2)
+  lateFeeStartDate        DateTime?
+  ageCategories           Json?
+  allowMultipleCategories Boolean               @default(false)
+  requiresApproval        Boolean               @default(false)
+  publishResults          Boolean               @default(false)
+  certificateConfig       Json?
+  certificateTitle        String?
+  associationName         String?
+  associationRegNo        String?
+  certificateFromDate     DateTime?
+  certificateToDate       DateTime?
+  secretarySignature      String?
+  presidentSignature      String?
+  bannerImage             String?
+  gallery                 Json?
+  eventLevelTypeId        Int?                  @db.UnsignedInt
+  sessionId               Int?                  @default(4)
+  eventFees               Decimal?              @db.Decimal(10, 2)
+  titleOfChampionship     String?               @db.VarChar(255)
+  eventImage              String?               @db.VarChar(255)
+  eventRemarks            String?               @db.Text
+  regNo                   String?               @db.VarChar(100)
+  createdBy               String?
+  updatedBy               String?
+  completedAt             DateTime?
+  cancelledAt             DateTime?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime
+  certificates            certificates[]
+  event_registrations     event_registrations[]
+  users                   users                 @relation(fields: [creatorId], references: [id])
+  districts               districts?            @relation(fields: [districtId], references: [id])
+  tbl_event_level_type    tbl_event_level_type? @relation(fields: [eventLevelTypeId], references: [id])
+  states                  states?               @relation(fields: [stateId], references: [id])
+  gallery_albums          gallery_albums[]
+
+  @@index([category])
+  @@index([code])
+  @@index([creatorId], map: "events_creatorId_fkey")
+  @@index([districtId], map: "events_districtId_fkey")
+  @@index([eventDate])
+  @@index([eventLevelTypeId], map: "events_eventLevelTypeId_fkey")
+  @@index([stateId], map: "events_stateId_fkey")
+  @@index([status])
+}
+
+model fee_structures {
+  id              Int      @id @default(autoincrement())
+  entityType      String
+  registrationFee Decimal  @db.Decimal(10, 2)
+  renewalFee      Decimal  @db.Decimal(10, 2)
+  isActive        Boolean  @default(true)
+  effectiveFrom   DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+
+  @@index([entityType])
+  @@index([isActive])
+}
+
+model front_cms_setting {
+  id                      Int     @id @default(autoincrement())
+  application_title       String  @db.VarChar(255)
+  url_alias               String? @db.VarChar(255)
+  cms_active              Int     @default(0) @db.TinyInt
+  online_admission        Int     @default(0) @db.TinyInt
+  theme                   String  @db.VarChar(255)
+  captcha_status          String  @db.VarChar(20)
+  recaptcha_site_key      String  @db.VarChar(255)
+  recaptcha_secret_key    String  @db.VarChar(255)
+  address                 String  @db.VarChar(350)
+  mobile_no               String  @db.VarChar(60)
+  fax                     String  @db.VarChar(60)
+  receive_contact_email   String  @db.VarChar(255)
+  email                   String  @db.VarChar(60)
+  copyright_text          String  @db.VarChar(255)
+  fav_icon                String  @db.VarChar(255)
+  logo                    String  @db.VarChar(255)
+  footer_about_text       String  @db.VarChar(300)
+  working_hours           String  @db.VarChar(300)
+  google_analytics        String? @db.Text
+  primary_color           String  @default("#ff685c") @db.VarChar(100)
+  menu_color              String  @default("#fff") @db.VarChar(100)
+  hover_color             String  @default("#f04133") @db.VarChar(100)
+  text_color              String  @default("#232323") @db.VarChar(100)
+  text_secondary_color    String  @default("#383838") @db.VarChar(100)
+  footer_background_color String  @default("#383838") @db.VarChar(100)
+  footer_text_color       String  @default("#8d8d8d") @db.VarChar(100)
+  copyright_bg_color      String  @default("#262626") @db.VarChar(100)
+  copyright_text_color    String  @default("#8d8d8d") @db.VarChar(100)
+  border_radius           String  @default("0") @db.VarChar(100)
+  facebook_url            String  @db.VarChar(100)
+  twitter_url             String  @db.VarChar(100)
+  youtube_url             String  @db.VarChar(100)
+  google_plus             String  @db.VarChar(100)
+  linkedin_url            String  @db.VarChar(100)
+  pinterest_url           String  @db.VarChar(100)
+  instagram_url           String  @db.VarChar(100)
+  branch_id               Int
+}
+
+model gallery_albums {
+  id            String          @id
+  name          String
+  slug          String          @unique
+  description   String?         @db.Text
+  coverImage    String?
+  eventId       Int?
+  status        String          @default("DRAFT")
+  sortOrder     Int             @default(0)
+  createdBy     String?
+  updatedBy     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime
+  category      String?
+  events        events?         @relation(fields: [eventId], references: [id])
+  gallery_items gallery_items[]
+
+  @@index([eventId], map: "gallery_albums_eventId_fkey")
+}
+
+model gallery_items {
+  id             String         @id
+  albumId        String
+  type           String         @default("IMAGE")
+  url            String
+  thumbnailUrl   String?
+  title          String?
+  description    String?
+  sortOrder      Int            @default(0)
+  createdBy      String?
+  updatedBy      String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+  gallery_albums gallery_albums @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  @@index([albumId])
+  @@index([type])
+}
+
+model global_settings {
+  id                     Int      @id @default(autoincrement())
+  institute_name         String   @db.VarChar(255)
+  institution_code       String   @db.VarChar(255)
+  reg_prefix             String   @db.VarChar(255)
+  institute_email        String   @db.VarChar(100)
+  address                String   @db.Text
+  mobileno               String   @db.VarChar(100)
+  currency               String   @db.VarChar(100)
+  currency_symbol        String   @db.VarChar(100)
+  sms_service_provider   String   @db.VarChar(100)
+  session_id             Int
+  translation            String   @db.VarChar(100)
+  footer_text            String   @db.VarChar(255)
+  animations             String   @db.VarChar(100)
+  timezone               String   @db.VarChar(100)
+  date_format            String   @db.VarChar(100)
+  facebook_url           String   @db.VarChar(255)
+  twitter_url            String   @db.VarChar(255)
+  linkedin_url           String   @db.VarChar(255)
+  youtube_url            String   @db.VarChar(255)
+  cron_secret_key        String?  @db.VarChar(255)
+  preloader_backend      Boolean  @default(true)
+  footer_branch_switcher Boolean  @default(true)
+  cms_default_branch     Int
+  image_extension        String?  @db.Text
+  image_size             Float    @default(1024)
+  file_extension         String?  @db.Text
+  pid                    String?  @db.VarChar(255)
+  file_size              Float?   @default(1024)
+  created_at             DateTime @default(now()) @db.Timestamp(0)
+  updated_at             DateTime
+}
+
+model menus {
+  id        String   @id
+  name      String
+  location  String
+  items     Json
+  isActive  Boolean  @default(true)
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model news {
+  id              String    @id
+  title           String
+  slug            String    @unique
+  content         String    @db.Text
+  excerpt         String?   @db.Text
+  featuredImage   String?
+  category        String?
+  tags            Json?
+  metaTitle       String?
+  metaDescription String?   @db.Text
+  metaKeywords    String?
+  status          String    @default("DRAFT")
+  publishedAt     DateTime?
+  isFeatured      Boolean   @default(false)
+  allowComments   Boolean   @default(false)
+  views           Int       @default(0)
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+
+  @@index([category])
+  @@index([slug])
+  @@index([status])
+}
+
+model news_articles {
+  id            Int       @id @default(autoincrement())
+  title         String    @db.VarChar(255)
+  slug          String    @unique @db.VarChar(255)
+  excerpt       String    @db.Text
+  content       String    @db.LongText
+  category      String    @db.VarChar(100)
+  author        String    @db.VarChar(100)
+  featuredImage String?   @db.VarChar(255)
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime
+
+  @@index([category])
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@index([slug])
+}
+
+model pages {
+  id              String    @id
+  title           String
+  slug            String    @unique
+  content         String    @db.Text
+  excerpt         String?   @db.Text
+  featuredImage   String?
+  template        String    @default("default")
+  metaTitle       String?
+  metaDescription String?   @db.Text
+  metaKeywords    String?
+  status          String    @default("DRAFT")
+  publishedAt     DateTime?
+  sortOrder       Int       @default(0)
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+}
+
+model payment_failures {
+  id                Int      @id @default(autoincrement())
+  order_id          String?  @db.VarChar(255)
+  payment_id        String?  @db.VarChar(255)
+  error_code        String?  @db.VarChar(100)
+  error_description String?  @db.Text
+  error_source      String?  @db.VarChar(100)
+  error_reason      String?  @db.VarChar(255)
+  amount            Int?
+  created_at        DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([created_at])
+  @@index([order_id])
+  @@index([payment_id])
+}
+
+model payments {
+  id                  Int                  @id @default(autoincrement())
+  userId              Int
+  amount              Decimal              @db.Decimal(10, 2)
+  currency            String               @default("INR")
+  paymentType         String
+  status              payments_status      @default(PENDING)
+  razorpayOrderId     String?              @unique
+  razorpayPaymentId   String?              @unique
+  razorpaySignature   String?
+  description         String?
+  eventRegistrationId Int?                 @unique
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime
+  event_registrations event_registrations? @relation(fields: [eventRegistrationId], references: [id])
+  users               users                @relation(fields: [userId], references: [id])
+
+  @@index([paymentType])
+  @@index([status])
+  @@index([userId], map: "payments_userId_fkey")
+}
+
+model permission {
+  id                 Int                @id @default(autoincrement())
+  module_id          Int
+  permission_name    String             @db.VarChar(100)
+  permission_slug    String             @db.VarChar(100)
+  created_at         DateTime?          @default(now())
+  updated_at         DateTime?          @default(now())
+  permission_modules permission_modules @relation(fields: [module_id], references: [id], onDelete: Cascade)
+  staff_privileges   staff_privileges[]
+
+  @@index([module_id])
+  @@index([permission_slug])
+}
+
+model permission_modules {
+  id          Int          @id @default(autoincrement())
+  module_name String       @db.VarChar(100)
+  module_slug String       @db.VarChar(100)
+  created_at  DateTime?    @default(now())
+  updated_at  DateTime?    @default(now())
+  permission  permission[]
+}
+
+model registration_windows {
+  id           String    @id
+  type         String
+  title        String
+  description  String?
+  instructions String?
+  startDate    DateTime
+  endDate      DateTime
+  fee          Float     @default(0)
+  isActive     Boolean   @default(true)
+  createdBy    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  deletedAt    DateTime?
+  deletedBy    String?
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@index([type])
+}
+
+model roles {
+  id               Int                @id @default(autoincrement())
+  role_name        String             @db.VarChar(100)
+  description      String?            @db.Text
+  created_at       DateTime?          @default(now())
+  updated_at       DateTime?          @default(now())
+  staff_privileges staff_privileges[]
+  tbl_user         tbl_user[]
+}
+
+model site_settings {
+  id                 String   @id
+  siteName           String   @default("SSFI")
+  siteTagline        String?
+  logo               String?
+  favicon            String?
+  contactEmail       String?
+  contactPhone       String?
+  address            String?  @db.Text
+  footerText         String?  @db.Text
+  socialLinks        Json?
+  googleAnalyticsId  String?
+  maintenanceMode    Boolean  @default(false)
+  maintenanceMessage String?  @db.Text
+  createdBy          String?
+  updatedBy          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime
+}
+
+model staff_privileges {
+  id            Int        @id @default(autoincrement())
+  role_id       Int
+  permission_id Int
+  can_view      Boolean    @default(false)
+  can_add       Boolean    @default(false)
+  can_edit      Boolean    @default(false)
+  can_delete    Boolean    @default(false)
+  created_at    DateTime?  @default(now())
+  updated_at    DateTime?  @default(now())
+  permission    permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+  roles         roles      @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@unique([role_id, permission_id])
+  @@index([permission_id])
+}
+
+model state_persons {
+  id            Int                  @id @default(autoincrement())
+  userId        Int                  @unique
+  stateId       Int                  @unique
+  name          String
+  gender        state_persons_gender
+  aadhaarNumber String               @unique
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  pincode       String
+  identityProof String
+  profilePhoto  String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime
+  states        states               @relation(fields: [stateId], references: [id])
+  users         users                @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model state_secretaries {
+  id                   String    @id
+  uid                  String    @unique
+  name                 String
+  gender               String
+  email                String
+  phone                String
+  aadhaarNumber        String
+  stateId              Int
+  residentialAddress   String
+  identityProof        String
+  profilePhoto         String?
+  registrationWindowId String
+  status               String    @default("PENDING")
+  approvedAt           DateTime?
+  approvedBy           String?
+  rejectionRemarks     String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime
+  states               states    @relation(fields: [stateId], references: [id])
+
+  @@index([email])
+  @@index([stateId], map: "state_secretaries_stateId_fkey")
+  @@index([status])
+  @@index([uid])
+}
+
+model states {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @unique
+  code                 String                 @unique
+  logo                 String?
+  website              String?
+  isActive             Boolean                @default(true)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime
+  clubs                clubs[]
+  district_secretaries district_secretaries[]
+  districts            districts[]
+  event_registrations  event_registrations[]
+  events               events[]
+  state_persons        state_persons?
+  state_secretaries    state_secretaries[]
+  students             students[]
+}
+
+model students {
+  id                  Int                    @id @default(autoincrement())
+  userId              Int                    @unique
+  stateId             Int
+  districtId          Int
+  clubId              Int
+  name                String
+  dateOfBirth         DateTime
+  gender              students_gender
+  bloodGroup          students_bloodGroup?
+  aadhaarNumber       String                 @unique
+  fatherName          String
+  motherName          String?
+  schoolName          String
+  academicBoard       students_academicBoard
+  nomineeName         String
+  nomineeAge          Int
+  nomineeRelation     String
+  coachName           String
+  coachPhone          String
+  addressLine1        String
+  addressLine2        String?
+  city                String
+  pincode             String
+  aadhaarCard         String
+  profilePhoto        String?
+  membershipId        String?                @db.VarChar(100)
+  categoryTypeId      Int?                   @db.UnsignedInt
+  verified            Int?                   @default(0)
+  verifiedBy          Int?                   @default(0)
+  iAm                 String?                @db.VarChar(100)
+  coachMobileNumber   String?
+  residentialAddress  String?                @db.Text
+  identityProof       String?                @db.VarChar(255)
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime
+  certificates        certificates[]
+  event_registrations event_registrations[]
+  tbl_category_type   tbl_category_type?     @relation(fields: [categoryTypeId], references: [id])
+  clubs               clubs                  @relation(fields: [clubId], references: [id])
+  districts           districts              @relation(fields: [districtId], references: [id])
+  states              states                 @relation(fields: [stateId], references: [id])
+  users               users                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tbl_session_renewal tbl_session_renewal[]
+
+  @@index([categoryTypeId], map: "students_categoryTypeId_fkey")
+  @@index([clubId], map: "students_clubId_fkey")
+  @@index([districtId], map: "students_districtId_fkey")
+  @@index([stateId], map: "students_stateId_fkey")
+}
+
+model tbl_category_type {
+  id                       Int                        @id @default(autoincrement()) @db.UnsignedInt
+  cat_name                 String                     @db.VarChar(255)
+  created_at               DateTime?                  @default(now())
+  updated_at               DateTime?                  @default(now())
+  students                 students[]
+  tbl_eligible_event_level tbl_eligible_event_level[]
+}
+
+model tbl_eligible_event_level {
+  id                   Int                   @id @default(autoincrement()) @db.UnsignedInt
+  category_type_id     Int                   @db.UnsignedInt
+  event_level_type_id  Int                   @db.UnsignedInt
+  event_level_name     String                @db.VarChar(255)
+  created_at           DateTime?             @default(now())
+  updated_at           DateTime?             @default(now())
+  event_registrations  event_registrations[]
+  tbl_category_type    tbl_category_type     @relation(fields: [category_type_id], references: [id], onDelete: Cascade)
+  tbl_event_level_type tbl_event_level_type  @relation(fields: [event_level_type_id], references: [id], onDelete: Cascade)
+
+  @@index([category_type_id], map: "tbl_eligible_event_level_category_type_id_fkey")
+  @@index([event_level_type_id], map: "tbl_eligible_event_level_event_level_type_id_fkey")
+}
+
+model tbl_event_level_type {
+  id                       Int                        @id @default(autoincrement()) @db.UnsignedInt
+  event_level              String                     @db.VarChar(255)
+  created_at               DateTime?                  @default(now())
+  updated_at               DateTime?                  @default(now())
+  event_registrations      event_registrations[]
+  events                   events[]
+  tbl_eligible_event_level tbl_eligible_event_level[]
+}
+
+model tbl_session {
+  id                  Int                   @id @default(autoincrement()) @db.UnsignedInt
+  session_name        String                @db.VarChar(255)
+  start_date          DateTime              @db.Date
+  end_date            DateTime              @db.Date
+  is_active           Boolean               @default(false)
+  created_at          DateTime?             @default(now())
+  updated_at          DateTime?             @default(now())
+  tbl_session_renewal tbl_session_renewal[]
+}
+
+model tbl_session_renewal {
+  id          Int         @id @default(autoincrement()) @db.UnsignedInt
+  skater_id   Int
+  session_id  Int         @db.UnsignedInt
+  payment_id  String?     @db.VarChar(100)
+  order_id    String?     @db.VarChar(100)
+  amount      Decimal     @db.Decimal(10, 2)
+  status      String?     @db.VarChar(50)
+  created_at  DateTime?   @default(now())
+  updated_at  DateTime?   @default(now())
+  tbl_session tbl_session @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  students    students    @relation(fields: [skater_id], references: [id], onDelete: Cascade)
+
+  @@index([session_id], map: "tbl_session_renewal_session_id_fkey")
+  @@index([skater_id], map: "tbl_session_renewal_skater_id_fkey")
+}
+
+model tbl_user {
+  id                  Int       @id @default(autoincrement())
+  branch_id           Int
+  user_id             String    @db.VarChar(50)
+  role_id             Int?
+  club_id             Int?
+  username            String    @db.VarChar(100)
+  member_id           String?   @db.VarChar(100)
+  password            String    @db.VarChar(255)
+  status              String    @default("active")
+  full_name           String    @db.VarChar(255)
+  gender              String
+  email_address       String    @db.VarChar(255)
+  mobile_number       String    @db.VarChar(15)
+  aadhar_number       String    @db.VarChar(20)
+  residential_address String    @db.Text
+  state_id            Int
+  district_id         Int
+  identity_proof      String    @db.VarChar(255)
+  profile_photo       String    @db.VarChar(255)
+  remember_token      String?   @db.VarChar(255)
+  last_login          DateTime?
+  created_at          DateTime? @default(now())
+  updated_at          DateTime? @default(now())
+  roles               roles?    @relation(fields: [role_id], references: [id])
+
+  @@index([email_address])
+  @@index([role_id], map: "tbl_user_role_id_fkey")
+  @@index([status])
+  @@index([user_id])
+  @@index([username])
+}
+
+model users {
+  id               Int                  @id @default(autoincrement())
+  uid              String               @unique
+  email            String?              @unique
+  phone            String               @unique
+  password         String
+  role             users_role
+  otp              String?
+  otpExpiry        DateTime?
+  otpVerified      Boolean              @default(false)
+  isActive         Boolean              @default(true)
+  isApproved       Boolean              @default(false)
+  approvalStatus   users_approvalStatus @default(PENDING)
+  registrationDate DateTime             @default(now())
+  expiryDate       DateTime?
+  lastRenewalDate  DateTime?
+  refreshToken     String?              @db.Text
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime
+  lastLogin        DateTime?
+  club_owners      club_owners?
+  district_persons district_persons?
+  events           events[]
+  payments         payments[]
+  state_persons    state_persons?
+  students         students?
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+  @@index([uid])
+}
+
+model whatsapp_api {
+  id              Int       @id @default(autoincrement())
+  api_url         String?   @db.Text
+  access_token    String?   @db.Text
+  phone_number_id String?   @db.VarChar(100)
+  is_active       Boolean   @default(false)
+  created_at      DateTime? @default(now())
+  updated_at      DateTime? @default(now())
+}
+
+enum club_owners_gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum district_persons_gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum state_persons_gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum payments_status {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum users_role {
+  GLOBAL_ADMIN
+  STATE_SECRETARY
+  DISTRICT_SECRETARY
+  CLUB_OWNER
+  STUDENT
+}
+
+enum events_category {
+  NATIONAL
+  STATE
+  DISTRICT
+}
+
+enum students_gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum students_bloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+enum events_status {
+  DRAFT
+  PUBLISHED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum users_approvalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum students_academicBoard {
+  STATE_BOARD
+  CBSE
+  ICSE
+  IB
+  OTHER
+}
