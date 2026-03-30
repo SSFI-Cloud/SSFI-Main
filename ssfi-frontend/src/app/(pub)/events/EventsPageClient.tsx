@@ -20,6 +20,8 @@ import {
   Zap,
   ArrowRight,
   SlidersHorizontal,
+  Medal,
+  List,
 } from 'lucide-react';
 
 import Image from 'next/image';
@@ -152,12 +154,72 @@ function EventCardLight({ event, index }: { event: Event; index: number }) {
   );
 }
 
+/* ── Past Events Table Row ── */
+function EventTableRow({ event, index }: { event: Event; index: number }) {
+  const lc = getLevelColor(event.eventLevel);
+  const regCount = event._count?.registrations || 0;
+  const winnersCount = event.winnersCount || event._count?.raceResults || 0;
+  const eventDate = new Date(event.eventDate);
+
+  return (
+    <motion.tr
+      initial={{ opacity: 0, y: 8 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.03 }}
+      className="group hover:bg-emerald-50/40 transition-colors border-b border-gray-100 last:border-0"
+    >
+      <td className="py-3 px-4">
+        <Link href={`/events/${event.id}`} className="flex items-center gap-3 min-w-0">
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${lc.dot}`} />
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-emerald-600 transition-colors">
+              {event.name}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {event.venue}, {event.city}
+            </p>
+          </div>
+        </Link>
+      </td>
+      <td className="py-3 px-4 hidden sm:table-cell">
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${lc.bg} ${lc.text} border ${lc.border}`}>
+          {event.eventLevel?.replace('_', ' ')}
+        </span>
+      </td>
+      <td className="py-3 px-4 text-center">
+        <span className="text-sm text-gray-500">
+          {eventDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </span>
+      </td>
+      <td className="py-3 px-4 text-center">
+        <div className="flex items-center justify-center gap-1.5">
+          <Users className="w-3.5 h-3.5 text-gray-400" />
+          <span className="text-sm font-medium text-gray-700">{regCount}</span>
+        </div>
+      </td>
+      <td className="py-3 px-4 text-center hidden md:table-cell">
+        <div className="flex items-center justify-center gap-1.5">
+          <Medal className="w-3.5 h-3.5 text-amber-400" />
+          <span className="text-sm font-medium text-gray-700">{winnersCount}</span>
+        </div>
+      </td>
+      <td className="py-3 px-4 text-right">
+        <Link href={`/events/${event.id}`}
+          className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+          View →
+        </Link>
+      </td>
+    </motion.tr>
+  );
+}
+
 /* ═══════════════════════ MAIN PAGE ═══════════════════════ */
 export default function EventsPageClient() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<EventQueryParams>({
-    page: 1, limit: 12, sortBy: 'eventDate', sortOrder: 'desc',
+    page: 1, limit: 100, sortBy: 'eventDate', sortOrder: 'desc',
   });
 
   const { fetchEvents, data, isLoading, error } = useEvents();
@@ -177,11 +239,30 @@ export default function EventsPageClient() {
     setFilters(p => ({ ...p, [key]: value || undefined, page: 1 }));
   const clearFilters = () => {
     setSearchQuery('');
-    setFilters({ page: 1, limit: 12, sortBy: 'eventDate', sortOrder: 'desc' });
+    setFilters({ page: 1, limit: 100, sortBy: 'eventDate', sortOrder: 'desc' });
   };
   const activeFilterCount = Object.keys(filters).filter(
     k => !['page','limit','sortBy','sortOrder','upcoming'].includes(k) && filters[k as keyof EventQueryParams]
   ).length;
+
+  // Split events: first 9 as cards (recent/live), rest as table
+  const allEvents = data?.events || [];
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+  // Sort: live/ongoing first, then by date descending
+  const sortedEvents = [...allEvents].sort((a, b) => {
+    const aLive = a.status === 'ONGOING' || a.status === 'REGISTRATION_OPEN';
+    const bLive = b.status === 'ONGOING' || b.status === 'REGISTRATION_OPEN';
+    if (aLive && !bLive) return -1;
+    if (!aLive && bLive) return 1;
+    return new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime();
+  });
+
+  const cardEvents = sortedEvents.slice(0, 9);
+  const tableEvents = sortedEvents.slice(9).filter(
+    e => new Date(e.eventDate) >= oneYearAgo
+  );
 
   return (
     <div className="min-h-screen bg-[#f5f6f8]">
@@ -345,40 +426,66 @@ export default function EventsPageClient() {
             <p className="text-gray-400 text-sm">{data?.total || 0} events found</p>
           </div>
 
-          {/* GRID */}
+          {/* CONTENT */}
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24">
               <div className="relative w-14 h-14 mb-4">
                 <div className="absolute inset-0 rounded-full border-[3px] border-gray-200" />
                 <div className="absolute inset-0 rounded-full border-[3px] border-t-emerald-500 animate-spin" />
               </div>
-              <p className="text-gray-400 text-sm">Loading events…</p>
+              <p className="text-gray-400 text-sm">Loading events...</p>
             </div>
           ) : error ? (
             <div className="text-center py-24">
               <p className="text-red-500 font-medium">{error}</p>
             </div>
-          ) : data?.events && data.events.length > 0 ? (
+          ) : allEvents.length > 0 ? (
             <>
+              {/* ══════ CARDS SECTION (up to 9 recent events) ══════ */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data.events.map((event, i) => (
+                {cardEvents.map((event, i) => (
                   <EventCardLight key={event.id} event={event} index={i} />
                 ))}
               </div>
 
-              {/* Pagination */}
-              {data.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-3 mt-12">
-                  <button onClick={() => setFilters(p => ({ ...p, page: p.page! - 1 }))} disabled={filters.page === 1}
-                    className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 text-sm font-medium hover:border-emerald-300 hover:text-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm">
-                    ← Previous
-                  </button>
-                  <span className="px-4 py-2 text-gray-400 text-sm">Page {filters.page} of {data.totalPages}</span>
-                  <button onClick={() => setFilters(p => ({ ...p, page: p.page! + 1 }))} disabled={filters.page === data.totalPages}
-                    className="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 text-sm font-medium hover:border-emerald-300 hover:text-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm">
-                    Next →
-                  </button>
-                </div>
+              {/* ══════ TABLE SECTION (older events within 1 year) ══════ */}
+              {tableEvents.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="mt-12"
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
+                      <List className="w-4.5 h-4.5 text-gray-500" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">Past Events</h2>
+                      <p className="text-xs text-gray-400">Events from the last 12 months</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50/80 border-b border-gray-100">
+                          <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3 px-4">Event</th>
+                          <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider py-3 px-4 hidden sm:table-cell">Level</th>
+                          <th className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-3 px-4">Date</th>
+                          <th className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-3 px-4">Participants</th>
+                          <th className="text-center text-xs font-semibold text-gray-500 uppercase tracking-wider py-3 px-4 hidden md:table-cell">Winners</th>
+                          <th className="py-3 px-4"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tableEvents.map((event, i) => (
+                          <EventTableRow key={event.id} event={event} index={i} />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
               )}
             </>
           ) : (

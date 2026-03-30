@@ -312,7 +312,7 @@ export default function EventRegistrationPage() {
                     value={uid}
                     onChange={e => { setUid(e.target.value); setLookupError(''); setStudentData(null); }}
                     onKeyDown={e => e.key === 'Enter' && handleLookup()}
-                    placeholder="e.g. SSFI/BS/TN/25/S0001"
+                    placeholder="e.g. S0978 or SSFI/BS/TN/25/S0978"
                     className={`flex-1 px-4 py-3 bg-gray-50 border ${lookupError ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-emerald-400'} rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm font-mono transition-colors`}
                   />
                   <button

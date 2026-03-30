@@ -54,14 +54,21 @@ const checkEventLevelEligibility = async (studentId: number, eventLevel: string)
 // ==========================================
 
 export const lookupStudentForEvent = async (membershipId: string, eventId: number) => {
-    // Find student by membershipId OR user.uid (handle both formats)
+    const trimmed = membershipId.trim();
+
+    // Build search conditions: full membershipId, user.uid, or short serial (e.g. S0978)
+    const searchConditions: any[] = [
+        { membershipId: trimmed },
+        { user: { uid: trimmed } },
+    ];
+
+    // If input looks like a short serial (e.g. S0978, S1234), also search by endsWith
+    if (/^S\d{4,}$/i.test(trimmed)) {
+        searchConditions.push({ membershipId: { endsWith: `/${trimmed.toUpperCase()}` } });
+    }
+
     const student = await prisma.student.findFirst({
-        where: {
-            OR: [
-                { membershipId: membershipId.trim() },
-                { user: { uid: membershipId.trim() } },
-            ],
-        },
+        where: { OR: searchConditions },
         include: {
             club: { select: { id: true, name: true, code: true } },
             district: { select: { id: true, name: true } },
@@ -112,7 +119,7 @@ export const lookupStudentForEvent = async (membershipId: string, eventId: numbe
     }
 
     // Check event status
-    if (event.status !== 'PUBLISHED' && event.status !== 'ONGOING') {
+    if (!['PUBLISHED', 'ONGOING', 'REGISTRATION_OPEN'].includes(event.status)) {
         throw new AppError('Registration is not open for this event', 400);
     }
 

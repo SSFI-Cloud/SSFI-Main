@@ -26,6 +26,7 @@ const formatEvent = (event: any) => ({
   lateFee: Number(event.lateFee),
   maxParticipants: event.maxParticipants,
   currentEntries: event._count?.registrations || 0,
+  winnersCount: event._count?.raceResults || 0,
   ageCategories: event.ageCategories,
   bannerImage: event.bannerImage,
   createdAt: event.createdAt,
@@ -126,7 +127,7 @@ export const updateEvent = async (id: number, data: any, userId: number, userRol
       bannerImage: data.bannerImage,
     },
     include: {
-      _count: { select: { registrations: true } },
+      _count: { select: { registrations: true, raceResults: true } },
       state: true,
       district: true
     }
@@ -319,7 +320,7 @@ export const getAllEvents = async (query: any, user?: any) => {
         state: { select: { id: true, name: true } },
         district: { select: { id: true, name: true } },
         _count: {
-          select: { registrations: true }
+          select: { registrations: true, raceResults: true }
         }
       },
     }),
@@ -331,12 +332,10 @@ export const getAllEvents = async (query: any, user?: any) => {
 
   return {
     events: formattedEvents,
-    meta: {
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / Number(limit)),
-    },
+    total,
+    page: Number(page),
+    limit: Number(limit),
+    totalPages: Math.ceil(total / Number(limit)),
   };
 };
 
@@ -347,7 +346,7 @@ export const getEventById = async (id: number) => {
       state: true,
       district: true,
       creator: { select: { id: true, email: true } },
-      _count: { select: { registrations: true } } // needed for count
+      _count: { select: { registrations: true, raceResults: true } } // needed for count
     }
   });
   return event ? formatEvent(event) : null;
@@ -360,7 +359,7 @@ export const getEventByCode = async (code: string) => {
       state: true,
       district: true,
       creator: { select: { id: true, email: true } },
-      _count: { select: { registrations: true } }
+      _count: { select: { registrations: true, raceResults: true } }
     }
   });
   return event ? formatEvent(event) : null;
@@ -378,7 +377,7 @@ export const updateEventStatus = async (id: number, status: string, remarks?: st
     include: {
       state: true,
       district: true,
-      _count: { select: { registrations: true } },
+      _count: { select: { registrations: true, raceResults: true } },
     },
   });
   return formatEvent(event);

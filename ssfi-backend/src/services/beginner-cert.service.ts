@@ -78,16 +78,21 @@ class BeginnerCertService {
   // ────────── STUDENT LOOKUP ──────────
 
   async lookupStudentByUID(uid: string) {
-    // Normalize UID (handle both slash and dash formats)
+    // Normalize UID (handle full UID, user.uid, or short serial like S0978)
     const normalizedUid = uid.trim();
 
+    const searchConditions: any[] = [
+      { membershipId: normalizedUid },
+      { user: { uid: normalizedUid } },
+    ];
+
+    // Support short serial lookup (e.g. S0978)
+    if (/^S\d{4,}$/i.test(normalizedUid)) {
+      searchConditions.push({ membershipId: { endsWith: `/${normalizedUid.toUpperCase()}` } });
+    }
+
     const student = await prisma.student.findFirst({
-      where: {
-        OR: [
-          { membershipId: normalizedUid },
-          { user: { uid: normalizedUid } },
-        ],
-      },
+      where: { OR: searchConditions },
       include: {
         user: {
           select: {

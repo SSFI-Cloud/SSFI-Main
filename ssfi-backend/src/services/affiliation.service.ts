@@ -1776,24 +1776,9 @@ export const registerStudent = async (
       throw new AppError('Invalid state or district selection', 400);
     }
 
-    // 3. Generate UID
-    const year = new Date().getFullYear().toString().slice(-2);
-    // UID Format: SSFI-YY-STATE-DIST-XXXX (e.g. SSFI-24-KA-BLR-0001)
-
-    // Get count of students in this district for this year to generate sequence
-    // This is simple sequence generation. Ideally use a separate sequence table or atomic increment.
-    // For now, count existing + 1.
-    const count = await tx.student.count({
-      where: {
-        districtId: Number(data.districtId),
-        createdAt: {
-          gte: new Date(new Date().getFullYear(), 0, 1),
-        },
-      },
-    });
-
-    const sequence = (count + 1).toString().padStart(4, '0');
-    const uid = `SSFI-${year}-${state.code}-${district.code}-${sequence}`;
+    // 3. Generate UID using uid.service (SSFI/BS/{StateCode}/{Year}/S{NNNN})
+    const uidService = (await import('./uid.service')).default;
+    const uid = await uidService.generateStudentUID(Number(data.stateId));
 
     // 4. Create User credentials
     const { userId } = await createUserCredentials(
@@ -1824,6 +1809,7 @@ export const registerStudent = async (
     const student = await tx.student.create({
       data: {
         userId,
+        membershipId: uid, // SSFI/BS/TN/26/S4878 format
         stateId: Number(data.stateId),
         districtId: Number(data.districtId),
         clubId: Number(data.clubId),
@@ -2007,7 +1993,8 @@ export const lookupMember = async (
   type: RegistrationType,
   identifier: string // phone number OR uid
 ) => {
-  const isUid = identifier.toUpperCase().startsWith('SSFI-');
+  const isUid = identifier.toUpperCase().startsWith('SSFI') || /^S\d{4,}$/i.test(identifier);
+  const isShortSerial = /^S\d{4,}$/i.test(identifier);
 
   if (type === 'STATE_SECRETARY') {
     const record = await prisma.stateSecretary.findFirst({
@@ -2084,11 +2071,17 @@ export const lookupMember = async (
   }
 
   if (type === 'STUDENT') {
-    // Students don't have phone directly - look through User or Student table
+    // Students: search by phone, full membershipId, user.uid, or short serial (e.g. S0978)
+    const studentSearchConditions: any[] = isUid
+      ? [
+          { membershipId: identifier },
+          { user: { uid: identifier } },
+          ...(isShortSerial ? [{ membershipId: { endsWith: `/${identifier.toUpperCase()}` } }] : []),
+        ]
+      : [{ user: { phone: identifier } }];
+
     const student = await prisma.student.findFirst({
-      where: isUid
-        ? { user: { uid: identifier } }
-        : { user: { phone: identifier } },
+      where: { OR: studentSearchConditions },
       include: {
         user: { select: { uid: true, phone: true, email: true, expiryDate: true, accountStatus: true } },
         state: { select: { name: true } },
@@ -2099,7 +2092,7 @@ export const lookupMember = async (
     if (!student) throw new AppError('No Student found with this phone/UID', 404);
     return {
       type: 'STUDENT',
-      uid: student.user.uid,
+      uid: student.membershipId || student.user.uid,
       name: student.name,
       phone: student.user.phone,
       email: student.user.email,
