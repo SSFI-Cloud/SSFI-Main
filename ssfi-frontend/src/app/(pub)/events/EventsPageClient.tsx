@@ -88,14 +88,27 @@ function EventCardLight({ event, index }: { event: Event; index: number }) {
             {event.eventLevel?.replace('_', ' ')}
           </span>
         </div>
-        {daysUntil > 0 && daysUntil <= 30 && (
-          <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          {event.status === 'COMPLETED' ? (
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-500 text-white shadow-lg shadow-red-500/30">
+              Completed
+            </span>
+          ) : event.status === 'CANCELLED' ? (
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-500/80 text-white shadow-lg">
+              Cancelled
+            </span>
+          ) : event.status === 'ONGOING' ? (
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white flex items-center gap-1 shadow-lg shadow-emerald-500/30">
+              <Zap className="w-3 h-3" />
+              Live
+            </span>
+          ) : daysUntil > 0 && daysUntil <= 30 ? (
             <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white flex items-center gap-1 shadow-lg shadow-emerald-500/30">
               <Flame className="w-3 h-3" />
               {daysUntil === 1 ? 'Tomorrow' : `${daysUntil}d left`}
             </span>
-          </div>
-        )}
+          ) : null}
+        </div>
       </div>
 
       {/* Body */}
