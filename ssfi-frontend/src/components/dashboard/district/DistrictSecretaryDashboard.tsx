@@ -20,7 +20,7 @@ export default function DistrictSecretaryDashboard() {
   const [renewalInfo, setRenewalInfo] = useState<RenewalStatus | null>(null);
 
   useEffect(() => {
-    (async () => {
+    const loadDashboard = async (retryCount = 0): Promise<void> => {
       try {
         const { data } = await dashboardService.getDashboardStats();
         if (data) {
@@ -41,9 +41,15 @@ export default function DistrictSecretaryDashboard() {
           setEvents((data.recentActivity?.events || []).slice(0, 4).map((e: any) => ({ id: e.id, name: e.name, date: e.eventDate, registrations: e._count?.registrations || 0 })));
           setClubs((data.recentActivity?.clubs || []).slice(0, 5).map((c: any) => ({ id: c.id, name: c.name, uid: c.uid, students: c._count?.students || 0, status: c.status })));
         }
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    })();
+      } catch (e) {
+        if (retryCount < 1) {
+          await new Promise(r => setTimeout(r, 1500));
+          return loadDashboard(retryCount + 1);
+        }
+        console.error(e);
+      } finally { setLoading(false); }
+    };
+    loadDashboard();
     renewalService.getRenewalStatus().then(setRenewalInfo).catch(() => {});
   }, []);
 

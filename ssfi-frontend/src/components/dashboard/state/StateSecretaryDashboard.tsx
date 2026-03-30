@@ -37,7 +37,7 @@ export default function StateSecretaryDashboard() {
   const formatCurrency = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
 
   useEffect(() => {
-    (async () => {
+    const loadDashboard = async (retryCount = 0): Promise<void> => {
       try {
         const { data } = await dashboardService.getDashboardStats();
         if (data) {
@@ -57,9 +57,15 @@ export default function StateSecretaryDashboard() {
           setActivities(acts.slice(0, 6));
           setUpcomingEvents((data.recentActivity?.events || []).slice(0, 4).map((e: any) => ({ id: e.id, name: e.name, date: e.eventDate, registrations: e._count?.registrations || 0 })));
         }
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    })();
+      } catch (e) {
+        if (retryCount < 1) {
+          await new Promise(r => setTimeout(r, 1500));
+          return loadDashboard(retryCount + 1);
+        }
+        console.error(e);
+      } finally { setLoading(false); }
+    };
+    loadDashboard();
     renewalService.getRenewalStatus().then(setRenewalInfo).catch(() => {});
   }, []);
 
