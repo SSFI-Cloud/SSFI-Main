@@ -70,6 +70,7 @@ export default function EventDetailClient() {
     const [event, setEvent] = useState<Event | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [bannerError, setBannerError] = useState(false);
 
     useEffect(() => {
         const fetchEvent = async () => {
@@ -205,9 +206,10 @@ export default function EventDetailClient() {
                     style={{ background: `radial-gradient(circle, ${theme.accent}10 0%, transparent 70%)` }} />
 
                 {/* Banner image (if any) */}
-                {event.bannerImage && (
+                {event.bannerImage && !bannerError && (
                     <div className="absolute inset-0">
-                        <img src={resolveImageUrl(event.bannerImage)} alt={event.name || 'Event banner'} className="w-full h-full object-cover opacity-20" />
+                        <img src={resolveImageUrl(event.bannerImage)} alt={event.name || 'Event banner'} className="w-full h-full object-cover opacity-20"
+                            onError={() => setBannerError(true)} />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/80 to-transparent" />
                     </div>
                 )}

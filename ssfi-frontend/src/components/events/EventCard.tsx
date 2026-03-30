@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { resolveImageUrl } from '@/lib/utils/resolveImageUrl';
@@ -26,6 +27,7 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event, index = 0 }: EventCardProps) {
+  const [imgError, setImgError] = useState(false);
   const statusConfig = getStatusConfig(event.status);
   const daysUntil = getDaysUntilEvent(event.eventDate);
   const canRegister = isRegistrationOpen(event);
@@ -46,11 +48,12 @@ export default function EventCard({ event, index = 0 }: EventCardProps) {
     >
       {/* Banner Image */}
       <div className="relative h-48 overflow-hidden">
-        {event.bannerImage ? (
+        {event.bannerImage && !imgError ? (
           <img
             src={resolveImageUrl(event.bannerImage)}
             alt={event.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-emerald-900/40 to-teal-900/40 flex items-center justify-center">
