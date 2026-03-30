@@ -309,7 +309,7 @@ app.get(`/api/${API_VERSION}/notifications/public/active`, cacheMiddleware(300),
     // Live/upcoming events (PUBLISHED/ONGOING/REGISTRATION_OPEN with registration still open)
     const liveEvents = await prisma.event.findMany({
       where: {
-        status: { in: ['PUBLISHED', 'ONGOING', 'REGISTRATION_OPEN'] },
+        status: { in: ['PUBLISHED', 'ONGOING'] },
         registrationEndDate: { gte: now },
       },
       select: { id: true, name: true, eventDate: true, status: true, registrationEndDate: true },
