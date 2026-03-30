@@ -46,6 +46,7 @@ const getLevelColor = (l?: string) => LEVEL_COLORS[l || ''] ?? LEVEL_COLORS.defa
 
 /* ── Inline Event Card (light theme) ── */
 function EventCardLight({ event, index }: { event: Event; index: number }) {
+  const [imgError, setImgError] = useState(false);
   const statusCfg = getStatusConfig(event.status);
   const daysUntil = getDaysUntilEvent(event.eventDate);
   const canRegister = isRegistrationOpen(event);
@@ -68,9 +69,10 @@ function EventCardLight({ event, index }: { event: Event; index: number }) {
 
       {/* Image */}
       <div className="relative h-44 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
-        {event.bannerImage ? (
+        {event.bannerImage && !imgError ? (
           <Image src={resolveImageUrl(event.bannerImage)} alt={event.name} fill unoptimized
-            className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+            className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw"
+            onError={() => setImgError(true)} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className={`w-16 h-16 rounded-2xl ${lc.bg} flex items-center justify-center`}>

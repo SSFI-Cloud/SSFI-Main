@@ -47,6 +47,8 @@ export default function AlbumDetailClient() {
 
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
+    const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
+    const markImgError = (id: string) => setImgErrors(prev => new Set(prev).add(id));
 
     useEffect(() => {
         if (albumSlug) {
@@ -187,12 +189,13 @@ export default function AlbumDetailClient() {
                                         className="break-inside-avoid mb-4 group cursor-pointer"
                                         onClick={() => openLightbox(index)}
                                     >
-                                        <div className="relative rounded-xl overflow-hidden bg-gray-100">
+                                        <div className={`relative rounded-xl overflow-hidden bg-gray-100${imgErrors.has(item.id) ? ' hidden' : ''}`}>
                                             <img
                                                 src={resolveImageUrl(item.thumbnailUrl || item.url)}
                                                 alt={item.title || `Photo ${index + 1}`}
                                                 className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                                                 loading="lazy"
+                                                onError={() => markImgError(item.id)}
                                             />
                                             {/* Hover overlay */}
                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
@@ -273,6 +276,7 @@ export default function AlbumDetailClient() {
                                 src={resolveImageUrl(images[lightboxIndex].url)}
                                 alt={images[lightboxIndex].title || `Photo ${lightboxIndex + 1}`}
                                 className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                             />
                             {images[lightboxIndex].title && (
                                 <p className="text-white/80 text-sm mt-3 font-medium">

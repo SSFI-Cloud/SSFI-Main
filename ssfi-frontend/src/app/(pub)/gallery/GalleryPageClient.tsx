@@ -50,6 +50,8 @@ export default function GalleryPageClient() {
     const { fetchPublicAlbums, data: apiAlbums, isLoading } = usePublicGalleryAlbums();
     const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
     const [activeIndex, setActiveIndex] = useState(0);
+    const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
+    const markImgError = (id: string) => setImgErrors(prev => new Set(prev).add(id));
 
     useEffect(() => {
         fetchPublicAlbums().then((r: GalleryAlbum[]) => { setAlbums(r || []); }).catch(() => { setAlbums([]); });
@@ -160,8 +162,9 @@ export default function GalleryPageClient() {
                                                 transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
                                                 onClick={() => offset !== 0 && goTo(index)}
                                                 style={{ transformStyle: 'preserve-3d' }}>
-                                                {album.coverImage ? (
-                                                    <img src={resolveImageUrl(album.coverImage)} alt={album.title} className="w-full h-full object-cover" />
+                                                {album.coverImage && !imgErrors.has(album.id) ? (
+                                                    <img src={resolveImageUrl(album.coverImage)} alt={album.title} className="w-full h-full object-cover"
+                                                        onError={() => markImgError(album.id)} />
                                                 ) : (
                                                     <div className={`w-full h-full bg-gradient-to-br ${ac.gradient} flex flex-col items-center justify-center gap-4`}>
                                                         <ImageIcon className="w-16 h-16 text-white/40" />
@@ -245,8 +248,9 @@ export default function GalleryPageClient() {
 
                                             {/* Cover */}
                                             <div className="aspect-[4/3] relative overflow-hidden">
-                                                {album.coverImage ? (
-                                                    <Image src={resolveImageUrl(album.coverImage)} alt={album.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" unoptimized />
+                                                {album.coverImage && !imgErrors.has(album.id) ? (
+                                                    <Image src={resolveImageUrl(album.coverImage)} alt={album.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" unoptimized
+                                                        onError={() => markImgError(album.id)} />
                                                 ) : (
                                                     <div className={`w-full h-full bg-gradient-to-br ${ac.gradient} flex items-center justify-center opacity-60`}>
                                                         <ImageIcon className="w-16 h-16 text-white/30" />

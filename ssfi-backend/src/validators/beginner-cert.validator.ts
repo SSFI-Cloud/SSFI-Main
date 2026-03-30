@@ -37,14 +37,18 @@ export const programQuerySchema = z.object({
 
 // ── Registration Validators ──
 
+// Helper: accept both boolean true and string "true" from FormData
+const formDataTrue = (msg: string) =>
+  z.preprocess(v => v === 'true' || v === true ? true : v, z.literal(true, { errorMap: () => ({ message: msg }) }));
+
 export const beginnerRegistrationSchema = z.object({
-  programId: z.number().int().positive(),
+  programId: z.coerce.number().int().positive(),
   fullName: z.string().min(2).max(255),
   fatherName: z.string().min(2).max(255),
   motherName: z.string().optional(),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
   dateOfBirth: z.string().transform(s => new Date(s)),
-  age: z.number().int().min(3).max(25).optional(),
+  age: z.coerce.number().int().min(3).max(25).optional(),
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
   email: z.string().email(),
   whatsapp: z.string().optional(),
@@ -54,7 +58,7 @@ export const beginnerRegistrationSchema = z.object({
   state: z.string().min(1),
   pincode: z.string().regex(/^\d{6}$/, 'Invalid pincode').or(z.string().min(1)),
   bloodGroup: z.string().optional(),
-  skatingExperience: z.number().int().min(0).optional(), // in months
+  skatingExperience: z.coerce.number().int().min(0).optional(), // in months
   currentSkillLevel: z.enum(['BEGINNER', 'BASIC', 'INTERMEDIATE']).optional(),
   clubName: z.string().optional(),
   tshirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL']).optional(),
@@ -63,9 +67,9 @@ export const beginnerRegistrationSchema = z.object({
   guardianPhone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
   guardianEmail: z.string().email().optional(),
   aadhaarNumber: z.string().optional().default('000000000000'), // Not required when registering via SSFI UID (already in DB)
-  declaration1: z.literal(true, { errorMap: () => ({ message: 'Declaration 1 must be accepted' }) }),
-  declaration2: z.literal(true, { errorMap: () => ({ message: 'Declaration 2 must be accepted' }) }),
-  declaration3: z.literal(true, { errorMap: () => ({ message: 'Declaration 3 must be accepted' }) }),
+  declaration1: formDataTrue('Declaration 1 must be accepted'),
+  declaration2: formDataTrue('Declaration 2 must be accepted'),
+  declaration3: formDataTrue('Declaration 3 must be accepted'),
 });
 
 export const markCompleteSchema = z.object({
