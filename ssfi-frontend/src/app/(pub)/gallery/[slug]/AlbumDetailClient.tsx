@@ -17,6 +17,7 @@ import {
     ZoomIn,
 } from 'lucide-react';
 import { usePublicGalleryAlbum } from '@/lib/hooks/useCMS';
+import { resolveImageUrl } from '@/lib/utils/resolveImageUrl';
 
 interface GalleryItem {
     id: string;
@@ -188,7 +189,7 @@ export default function AlbumDetailClient() {
                                     >
                                         <div className="relative rounded-xl overflow-hidden bg-gray-100">
                                             <img
-                                                src={item.thumbnailUrl || item.url}
+                                                src={resolveImageUrl(item.thumbnailUrl || item.url)}
                                                 alt={item.title || `Photo ${index + 1}`}
                                                 className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                                                 loading="lazy"
@@ -269,7 +270,7 @@ export default function AlbumDetailClient() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <img
-                                src={images[lightboxIndex].url}
+                                src={resolveImageUrl(images[lightboxIndex].url)}
                                 alt={images[lightboxIndex].title || `Photo ${lightboxIndex + 1}`}
                                 className="max-w-full max-h-[80vh] object-contain rounded-lg"
                             />

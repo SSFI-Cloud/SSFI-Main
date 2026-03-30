@@ -14,7 +14,9 @@ import {
     Building2,
     Flag,
     Globe,
-    IndianRupee
+    IndianRupee,
+    ImagePlus,
+    X
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -61,6 +63,8 @@ export default function EditEventPage() {
 
     const [states, setStates] = useState<State[]>([]);
     const [raceConfig, setRaceConfig] = useState<RaceConfig | null>(null);
+    const [bannerImage, setBannerImage] = useState<string | null>(null);
+    const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -130,6 +134,10 @@ export default function EditEventPage() {
                 if (event.raceConfig) {
                     setRaceConfig(event.raceConfig);
                 }
+                if (event.bannerImage) {
+                    setBannerImage(event.bannerImage);
+                    setBannerPreview(event.bannerImage);
+                }
             } catch (err: any) {
                 console.error('Failed to fetch event', err);
                 setError(err.response?.data?.message || 'Failed to load event data');
@@ -139,6 +147,22 @@ export default function EditEventPage() {
         };
         if (eventId) fetchEvent();
     }, [eventId]);
+
+    const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            setError('Banner image must be less than 5MB');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64 = reader.result as string;
+            setBannerImage(base64);
+            setBannerPreview(base64);
+        };
+        reader.readAsDataURL(file);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -163,6 +187,7 @@ export default function EditEventPage() {
                 entryFee: Number(formData.baseFee),
                 maxParticipants: Number(formData.maxParticipants),
                 raceConfig: raceConfig,
+                bannerImage: bannerImage,
             });
 
             setSuccess(true);
@@ -307,6 +332,40 @@ export default function EditEventPage() {
                                 className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                             />
                         </div>
+                    </div>
+                </div>
+
+                {/* Banner Image */}
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <ImagePlus className="w-5 h-5 text-emerald-400" />
+                        Event Banner
+                    </h2>
+                    <div className="space-y-3">
+                        {bannerPreview ? (
+                            <div className="relative rounded-xl overflow-hidden border border-gray-200">
+                                <img src={bannerPreview} alt="Banner preview" className="w-full h-48 object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={() => { setBannerImage(null); setBannerPreview(null); }}
+                                    className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ) : (
+                            <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors">
+                                <ImagePlus className="w-8 h-8 text-gray-400 mb-2" />
+                                <span className="text-sm text-gray-500 font-medium">Click to upload banner image</span>
+                                <span className="text-xs text-gray-400 mt-1">JPG, PNG or WebP (max 5MB)</span>
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={handleBannerChange}
+                                    className="hidden"
+                                />
+                            </label>
+                        )}
                     </div>
                 </div>
 
