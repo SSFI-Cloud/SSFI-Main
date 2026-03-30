@@ -30,6 +30,7 @@ import {
     type Event
 } from '@/types/event';
 import apiClient from '@/lib/api/client';
+import { resolveImageUrl } from '@/lib/utils/resolveImageUrl';
 import toast from 'react-hot-toast';
 
 /* ── level-specific theming ──────────────────────────── */
@@ -206,7 +207,7 @@ export default function EventDetailClient() {
                 {/* Banner image (if any) */}
                 {event.bannerImage && (
                     <div className="absolute inset-0">
-                        <img src={event.bannerImage} alt={event.name || 'Event banner'} className="w-full h-full object-cover opacity-20" />
+                        <img src={resolveImageUrl(event.bannerImage)} alt={event.name || 'Event banner'} className="w-full h-full object-cover opacity-20" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/80 to-transparent" />
                     </div>
                 )}
