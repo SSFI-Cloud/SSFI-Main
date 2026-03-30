@@ -6,10 +6,10 @@ import type { DashboardData } from '@/types/dashboard';
 
 export const useDashboard = () => {
     const [data, setData] = useState<DashboardData | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchDashboard = useCallback(async () => {
+    const fetchDashboard = useCallback(async (retryCount = 0) => {
         setIsLoading(true);
         setError(null);
 
@@ -18,10 +18,15 @@ export const useDashboard = () => {
             if (response.data?.success) {
                 setData(response.data.data);
             } else {
-                setError(response.data?.message || 'Failed to load dashboard');
+                throw new Error(response.data?.message || 'Failed to load dashboard');
             }
         } catch (err: any) {
-            setError(err?.response?.data?.message || 'Failed to load dashboard data');
+            // Auto-retry once after delay (handles auth race condition on first load)
+            if (retryCount < 1) {
+                await new Promise(r => setTimeout(r, 1500));
+                return fetchDashboard(retryCount + 1);
+            }
+            setError(err?.response?.data?.message || err?.message || 'Failed to load dashboard data');
         } finally {
             setIsLoading(false);
         }
