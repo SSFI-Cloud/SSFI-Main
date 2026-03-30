@@ -514,6 +514,8 @@ export default function StatesPage() {
                                     code: formData.get('code'),
                                     website: formData.get('website'),
                                     logo: formData.get('logo') || undefined,
+                                    presidentName: formData.get('presidentName') || undefined,
+                                    presidentPhoto: formData.get('presidentPhoto') || undefined,
                                 };
                                 if (!editingState) {
                                     data.secretaryName = formData.get('secretaryName');
@@ -584,6 +586,30 @@ export default function StatesPage() {
                                     placeholder="https://example.com/logo.png"
                                     className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                 />
+                            </div>
+
+                            <div className="space-y-4 pt-4 border-t border-gray-100">
+                                <h3 className="text-lg font-semibold text-gray-900">President Details</h3>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">President Name</label>
+                                    <input
+                                        type="text"
+                                        name="presidentName"
+                                        defaultValue={editingState?.presidentName || ''}
+                                        placeholder="Enter president name"
+                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-500 mb-2">President Photo URL</label>
+                                    <input
+                                        type="url"
+                                        name="presidentPhoto"
+                                        defaultValue={editingState?.presidentPhoto || ''}
+                                        placeholder="https://example.com/photo.jpg"
+                                        className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                    />
+                                </div>
                             </div>
 
                             {!editingState && (

@@ -73,6 +73,7 @@ export const getAllStates = async (query: any) => {
             logo: state.logo,
             website: state.website,
             presidentName: state.presidentName || null,
+            presidentPhoto: state.presidentPhoto || null,
             districtsCount: state._count.districts,
             clubsCount: state._count.clubs,
             skatersCount: state._count.students,
