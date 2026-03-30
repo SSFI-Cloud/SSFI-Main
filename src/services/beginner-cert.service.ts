@@ -15,6 +15,12 @@ class BeginnerCertService {
   }
 
   async updateProgram(id: number, data: any, userId: string) {
+    // Auto-activate when publishing, auto-deactivate when cancelling
+    if (['PUBLISHED', 'REGISTRATION_OPEN'].includes(data.status)) {
+      data.isActive = true;
+    } else if (data.status === 'CANCELLED') {
+      data.isActive = false;
+    }
     return prisma.beginnerCertProgram.update({
       where: { id },
       data: { ...data, updatedBy: userId },
@@ -78,16 +84,21 @@ class BeginnerCertService {
   // ────────── STUDENT LOOKUP ──────────
 
   async lookupStudentByUID(uid: string) {
-    // Normalize UID (handle both slash and dash formats)
+    // Normalize UID (handle full UID, user.uid, or short serial like S0978)
     const normalizedUid = uid.trim();
 
+    const searchConditions: any[] = [
+      { membershipId: normalizedUid },
+      { user: { uid: normalizedUid } },
+    ];
+
+    // Support short serial lookup (e.g. S0978)
+    if (/^S\d{4,}$/i.test(normalizedUid)) {
+      searchConditions.push({ membershipId: { endsWith: `/${normalizedUid.toUpperCase()}` } });
+    }
+
     const student = await prisma.student.findFirst({
-      where: {
-        OR: [
-          { membershipId: normalizedUid },
-          { user: { uid: normalizedUid } },
-        ],
-      },
+      where: { OR: searchConditions },
       include: {
         user: {
           select: {

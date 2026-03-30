@@ -499,7 +499,7 @@ model Event {
   presidentSignature  String?
 
   // Images
-  bannerImage String?
+  bannerImage String? @db.LongText
   gallery     Json? // Array of image URLs
 
   // Metadata
@@ -704,8 +704,8 @@ model Banner {
   id             String    @id @default(cuid())
   title          String
   subtitle       String?
-  imageUrl       String
-  mobileImageUrl String?
+  imageUrl       String  @db.LongText
+  mobileImageUrl String? @db.LongText
   linkUrl        String?
   linkText       String?
   position       String    @default("HOME_HERO") // HOME_HERO, HOME_SECONDARY, SIDEBAR, FOOTER, POPUP
@@ -735,7 +735,7 @@ model News {
   slug          String  @unique
   content       String  @db.Text
   excerpt       String? @db.Text
-  featuredImage String?
+  featuredImage String? @db.LongText
   category      String?
   tags          Json? // Storing as JSON array ["tag1", "tag2"]
 
@@ -769,7 +769,7 @@ model GalleryAlbum {
   slug        String  @unique
   description String? @db.Text
   category    String?
-  coverImage  String?
+  coverImage  String? @db.LongText
   eventId     Int? // Optional link to Event
 
   status    String @default("DRAFT")
@@ -790,8 +790,8 @@ model GalleryItem {
   id           String  @id @default(cuid())
   albumId      String
   type         String  @default("IMAGE") // IMAGE, VIDEO
-  url          String
-  thumbnailUrl String?
+  url          String  @db.LongText
+  thumbnailUrl String? @db.LongText
   title        String?
   description  String?
   sortOrder    Int     @default(0)
@@ -832,7 +832,7 @@ model Page {
   content String  @db.Text
   excerpt String? @db.Text
 
-  featuredImage String?
+  featuredImage String? @db.LongText
   template      String  @default("default")
 
   metaTitle       String?
@@ -856,8 +856,8 @@ model SiteSettings {
   id          String  @id @default(cuid())
   siteName    String  @default("SSFI")
   siteTagline String?
-  logo        String?
-  favicon     String?
+  logo        String? @db.LongText
+  favicon     String? @db.LongText
 
   contactEmail String?
   contactPhone String?
@@ -1558,7 +1558,7 @@ model TeamMember {
   name         String
   role         String
   bio          String?  @db.Text
-  photo        String? // path to uploaded WebP file
+  photo        String? @db.LongText
   email        String?
   linkedinUrl  String?
   displayOrder Int      @default(0)

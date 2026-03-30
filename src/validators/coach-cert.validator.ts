@@ -37,8 +37,12 @@ export const programQuerySchema = z.object({
 
 // ── Registration Validators ──
 
+// Helper: accept both boolean true and string "true" from FormData
+const formDataTrue = (msg: string) =>
+  z.preprocess(v => v === 'true' || v === true ? true : v, z.literal(true, { errorMap: () => ({ message: msg }) }));
+
 export const coachRegistrationSchema = z.object({
-  programId: z.number().int().positive(),
+  programId: z.coerce.number().int().positive(),
   fullName: z.string().min(2).max(255),
   fatherName: z.string().min(2).max(255),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
@@ -51,12 +55,12 @@ export const coachRegistrationSchema = z.object({
   state: z.string().min(2),
   pincode: z.string().regex(/^\d{6}$/, 'Invalid pincode'),
   bloodGroup: z.string().optional(),
-  skatingExperience: z.number().int().min(0).optional(),
+  skatingExperience: z.coerce.number().int().min(0).optional(),
   tshirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL']).optional(),
   aadhaarNumber: z.string().regex(/^\d{12}$/, 'Aadhaar must be 12 digits'),
-  declaration1: z.literal(true, { errorMap: () => ({ message: 'Declaration 1 must be accepted' }) }),
-  declaration2: z.literal(true, { errorMap: () => ({ message: 'Declaration 2 must be accepted' }) }),
-  declaration3: z.literal(true, { errorMap: () => ({ message: 'Declaration 3 must be accepted' }) }),
+  declaration1: formDataTrue('Declaration 1 must be accepted'),
+  declaration2: formDataTrue('Declaration 2 must be accepted'),
+  declaration3: formDataTrue('Declaration 3 must be accepted'),
 });
 
 export const markCompleteSchema = z.object({

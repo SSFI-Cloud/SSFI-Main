@@ -43,18 +43,46 @@ class UIDService {
 
     const stateCode = state.code || state.name.substring(0, 2).toUpperCase();
     const year = this.getCurrentYear();
+    const prefix = `SSFI/BS/${stateCode}/`;
 
-    // Count students in this state for this year
-    const currentYearStart = new Date(new Date().getFullYear(), 0, 1);
-    const count = await prisma.student.count({
+    // Find the highest serial number across ALL years for this state
+    // membershipId format: SSFI/BS/TN/25/S0001 — serial is after the last 'S'
+    const allStudents = await prisma.student.findMany({
       where: {
         stateId,
-        createdAt: { gte: currentYearStart }
-      }
+        membershipId: { startsWith: prefix }
+      },
+      select: { membershipId: true },
     });
 
-    const serial = `S${String(count + 1).padStart(4, '0')}`;
-    return `SSFI/BS/${stateCode}/${year}/${serial}`;
+    let maxSerial = 0;
+    for (const s of allStudents) {
+      if (!s.membershipId) continue;
+      // Extract the numeric part after the last 'S' in the serial segment
+      const parts = s.membershipId.split('/');
+      const serialPart = parts[parts.length - 1]; // e.g. "S0978"
+      if (serialPart && serialPart.startsWith('S')) {
+        const num = parseInt(serialPart.substring(1), 10);
+        if (!isNaN(num) && num > maxSerial) {
+          maxSerial = num;
+        }
+      }
+    }
+
+    const nextSerial = maxSerial + 1;
+    const serial = `S${String(nextSerial).padStart(4, '0')}`;
+
+    // Check for collision in Student table
+    let uid = `${prefix}${year}/${serial}`;
+    let existing = await prisma.student.findFirst({ where: { membershipId: uid } });
+    let attempt = nextSerial;
+    while (existing) {
+      attempt++;
+      uid = `${prefix}${year}/S${String(attempt).padStart(4, '0')}`;
+      existing = await prisma.student.findFirst({ where: { membershipId: uid } });
+    }
+
+    return uid;
   }
 
   /**
