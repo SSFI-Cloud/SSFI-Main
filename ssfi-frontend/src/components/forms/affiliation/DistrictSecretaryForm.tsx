@@ -248,11 +248,11 @@ export default function DistrictSecretaryRegistrationForm() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {/* Personal Details */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                  <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-2">
                     <User className="w-4 h-4 text-teal-500" />
-                    <h2 className="font-semibold text-gray-900">Personal Details</h2>
+                    <h2 className="font-semibold text-gray-900 text-sm">Personal Details</h2>
                   </div>
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name <span className="text-red-400">*</span></label>
                       <input {...register('name')} placeholder="Enter your full name" className={inputCls(!!errors.name)} />
@@ -319,93 +319,74 @@ export default function DistrictSecretaryRegistrationForm() {
                   </div>
                 </div>
 
-                {/* Association Logo */}
+                {/* Documents & Photos — compact grid */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-teal-500" />
-                    <h2 className="font-semibold text-gray-900">Association Logo <span className="text-red-400">*</span></h2>
-                  </div>
-                  <div className="p-6">
-                    <div className="w-40">
-                      {logoPreview ? (
-                        <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
-                          <img src={logoPreview} alt="Logo" className="w-full h-full object-contain bg-white p-2" />
-                          <button type="button" onClick={() => { setLogoPreview(null); setValue('logo', ''); }} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div onClick={() => document.getElementById('district-logo-input')?.click()} className={`aspect-square rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.logo ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
-                          <Shield className="w-7 h-7 text-gray-400" />
-                          <span className="text-xs text-gray-500 text-center">Association Logo</span>
-                          <span className="text-xs text-gray-400">PNG, JPG</span>
-                        </div>
-                      )}
-                      <input id="district-logo-input" type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo', setLogoPreview)} className="hidden" />
-                    </div>
-                    {errors.logo && <p className="mt-2 text-xs text-red-500">{errors.logo.message}</p>}
-                  </div>
-                </div>
-
-                {/* Association Registration Copy */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-teal-500" />
-                    <h2 className="font-semibold text-gray-900">Association Registration Copy <span className="text-red-400">*</span></h2>
-                  </div>
-                  <div className="p-6">
-                    {regCopyPreview ? (
-                      <div className="relative inline-block">
-                        <div className="px-4 py-3 bg-teal-50 border border-teal-200 rounded-xl flex items-center gap-3">
-                          <Check className="w-4 h-4 text-teal-500" />
-                          <span className="text-sm text-teal-700 font-medium">Document uploaded</span>
-                          <button type="button" onClick={() => { setRegCopyPreview(null); setValue('associationRegistrationCopy', ''); }} className="ml-2 text-red-400 hover:text-red-600">
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div onClick={() => document.getElementById('district-regcopy-input')?.click()} className={`p-6 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center gap-2 transition-all ${errors.associationRegistrationCopy ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
-                        <Camera className="w-7 h-7 text-gray-400" />
-                        <span className="text-sm text-gray-500">Upload registration certificate</span>
-                        <span className="text-xs text-gray-400">Image or PDF, up to 5MB</span>
-                      </div>
-                    )}
-                    <input id="district-regcopy-input" type="file" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'associationRegistrationCopy', setRegCopyPreview)} className="hidden" />
-                    {errors.associationRegistrationCopy && <p className="mt-2 text-xs text-red-500">{errors.associationRegistrationCopy.message}</p>}
-                  </div>
-                </div>
-
-                {/* Profile Photo */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                  <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-2">
                     <Camera className="w-4 h-4 text-teal-500" />
-                    <h2 className="font-semibold text-gray-900">Profile Photo</h2>
+                    <h2 className="font-semibold text-gray-900 text-sm">Documents & Photos</h2>
                   </div>
-                  <div className="p-6">
-                    <div className="w-40">
-                      {photoPreview ? (
-                        <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
-                          <img src={photoPreview} alt="Photo" className="w-full h-full object-cover" />
-                          <button type="button" onClick={removePhoto} className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div onClick={() => photoRef.current?.click()} className={`aspect-square rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-2 transition-all ${errors.profilePhoto ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
-                          <Camera className="w-7 h-7 text-gray-400" />
-                          <span className="text-xs text-gray-500 text-center">Passport photo</span>
-                          <span className="text-xs text-gray-400">JPG, PNG up to 5MB</span>
-                        </div>
-                      )}
-                      <input ref={photoRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" />
+                  <div className="p-5">
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* Profile Photo */}
+                      <div className="flex flex-col items-center gap-1.5">
+                        {photoPreview ? (
+                          <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+                            <img src={photoPreview} alt="Photo" className="w-full h-full object-cover" />
+                            <button type="button" onClick={removePhoto} className="absolute top-1 right-1 p-0.5 bg-red-500 rounded-full text-white hover:bg-red-600"><X className="w-3 h-3" /></button>
+                          </div>
+                        ) : (
+                          <div onClick={() => photoRef.current?.click()} className={`w-24 h-24 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 transition-all ${errors.profilePhoto ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
+                            <Camera className="w-5 h-5 text-gray-400" />
+                            <span className="text-[10px] text-gray-500 text-center leading-tight">Profile Photo</span>
+                          </div>
+                        )}
+                        <span className="text-xs text-gray-500 font-medium">Profile Photo <span className="text-red-400">*</span></span>
+                        <input ref={photoRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" />
+                        {errors.profilePhoto && <p className="text-[10px] text-red-500">Required</p>}
+                      </div>
+
+                      {/* Association Logo */}
+                      <div className="flex flex-col items-center gap-1.5">
+                        {logoPreview ? (
+                          <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+                            <img src={logoPreview} alt="Logo" className="w-full h-full object-contain bg-white p-2" />
+                            <button type="button" onClick={() => { setLogoPreview(null); setValue('logo', ''); }} className="absolute top-1 right-1 p-0.5 bg-red-500 rounded-full text-white hover:bg-red-600"><X className="w-3 h-3" /></button>
+                          </div>
+                        ) : (
+                          <div onClick={() => document.getElementById('district-logo-input')?.click()} className={`w-24 h-24 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 transition-all ${errors.logo ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
+                            <Shield className="w-5 h-5 text-gray-400" />
+                            <span className="text-[10px] text-gray-500 text-center leading-tight">Assoc. Logo</span>
+                          </div>
+                        )}
+                        <span className="text-xs text-gray-500 font-medium">Association Logo <span className="text-red-400">*</span></span>
+                        <input id="district-logo-input" type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'logo', setLogoPreview)} className="hidden" />
+                        {errors.logo && <p className="text-[10px] text-red-500">Required</p>}
+                      </div>
+
+                      {/* Registration Copy */}
+                      <div className="flex flex-col items-center gap-1.5">
+                        {regCopyPreview ? (
+                          <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 flex items-center justify-center bg-teal-50 flex-shrink-0">
+                            <Check className="w-6 h-6 text-teal-500" />
+                            <button type="button" onClick={() => { setRegCopyPreview(null); setValue('associationRegistrationCopy', ''); }} className="absolute top-1 right-1 p-0.5 bg-red-500 rounded-full text-white hover:bg-red-600"><X className="w-3 h-3" /></button>
+                          </div>
+                        ) : (
+                          <div onClick={() => document.getElementById('district-regcopy-input')?.click()} className={`w-24 h-24 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 transition-all ${errors.associationRegistrationCopy ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
+                            <Shield className="w-5 h-5 text-gray-400" />
+                            <span className="text-[10px] text-gray-500 text-center leading-tight">Reg. Copy</span>
+                          </div>
+                        )}
+                        <span className="text-xs text-gray-500 font-medium">Reg. Certificate <span className="text-red-400">*</span></span>
+                        <input id="district-regcopy-input" type="file" accept="image/*,.pdf" onChange={(e) => handleFileUpload(e, 'associationRegistrationCopy', setRegCopyPreview)} className="hidden" />
+                        {errors.associationRegistrationCopy && <p className="text-[10px] text-red-500">Required</p>}
+                      </div>
                     </div>
-                    {errors.profilePhoto && <p className="mt-2 text-xs text-red-500">{errors.profilePhoto.message}</p>}
+                    <p className="text-xs text-gray-400 text-center mt-3">JPG, PNG up to 5MB each. Reg. certificate can also be PDF.</p>
                   </div>
                 </div>
 
                 {/* Terms & Submit */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <label className="flex items-start gap-3 cursor-pointer mb-5">
                     <input type="checkbox" {...register('termsAccepted')} className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500/20" />
                     <span className="text-sm text-gray-600">

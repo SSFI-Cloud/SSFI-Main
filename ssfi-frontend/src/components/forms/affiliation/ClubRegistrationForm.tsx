@@ -314,30 +314,31 @@ export default function ClubRegistrationForm() {
                   </div>
                 </div>
 
-                {/* Club Logo */}
+                {/* Club Logo — compact */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100">
-                    <h2 className="font-semibold text-gray-900">Club Logo <span className="text-red-400">*</span></h2>
+                  <div className="px-6 py-3 border-b border-gray-100">
+                    <h2 className="font-semibold text-gray-900 text-sm">Club Logo <span className="text-red-400">*</span></h2>
                   </div>
-                  <div className="p-6">
-                    <div className="w-40">
+                  <div className="p-5 flex items-center gap-4">
+                    <div className="flex-shrink-0">
                       {logoPreview ? (
-                        <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                          <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-3" />
+                        <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                          <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-2" />
                           <button type="button" onClick={() => { setLogoPreview(null); setValue('clubLogo', ''); }}
-                            className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600">
-                            <X className="w-3.5 h-3.5" />
+                            className="absolute top-1 right-1 p-0.5 bg-red-500 rounded-full text-white hover:bg-red-600">
+                            <X className="w-3 h-3" />
                           </button>
                         </div>
                       ) : (
-                        <div onClick={() => logoRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all">
-                          <Upload className="w-6 h-6 text-gray-400" />
-                          <span className="text-xs text-gray-500 text-center">Upload logo<br />PNG, JPG</span>
+                        <div onClick={() => logoRef.current?.click()} className={`w-24 h-24 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-1 transition-all ${errors.clubLogo ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50 hover:border-teal-300 hover:bg-teal-50'}`}>
+                          <Upload className="w-5 h-5 text-gray-400" />
+                          <span className="text-[10px] text-gray-500 text-center">Upload Logo</span>
                         </div>
                       )}
                       <input ref={logoRef} type="file" accept="image/*" onChange={handleLogo} className="hidden" />
                     </div>
-                    {errors.clubLogo && <p className="mt-2 text-xs text-red-500">{errors.clubLogo.message}</p>}
+                    <div className="text-xs text-gray-400">PNG, JPG up to 5MB</div>
+                    {errors.clubLogo && <p className="text-xs text-red-500">{errors.clubLogo.message}</p>}
                   </div>
                 </div>
 
