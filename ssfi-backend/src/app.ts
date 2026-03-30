@@ -306,6 +306,30 @@ app.get(`/api/${API_VERSION}/notifications/public/active`, cacheMiddleware(300),
       });
     }
 
+    // Live/upcoming events (PUBLISHED/ONGOING/REGISTRATION_OPEN with registration still open)
+    const liveEvents = await prisma.event.findMany({
+      where: {
+        status: { in: ['PUBLISHED', 'ONGOING', 'REGISTRATION_OPEN'] },
+        registrationEndDate: { gte: now },
+      },
+      select: { id: true, name: true, eventDate: true, status: true, registrationEndDate: true },
+      orderBy: { eventDate: 'asc' },
+      take: 5,
+    }).catch(() => []);
+
+    for (const e of liveEvents) {
+      const isLive = e.status === 'ONGOING';
+      const eventDateStr = new Date(e.eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      notifications.push({
+        id: `ev-${e.id}`,
+        message: isLive
+          ? `${e.name} is LIVE now! Register to participate.`
+          : `${e.name} — ${eventDateStr}. Register before ${new Date(e.registrationEndDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}!`,
+        link: `/events/${e.id}`,
+        type: isLive ? 'success' : 'info',
+      });
+    }
+
     // Fallback: env-based static notification (set NOTIFICATION_MESSAGE in Hostinger panel)
     if (notifications.length === 0 && process.env.NOTIFICATION_MESSAGE) {
       notifications.push({
