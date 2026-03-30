@@ -15,6 +15,12 @@ class BeginnerCertService {
   }
 
   async updateProgram(id: number, data: any, userId: string) {
+    // Auto-activate when publishing, auto-deactivate when cancelling
+    if (['PUBLISHED', 'REGISTRATION_OPEN'].includes(data.status)) {
+      data.isActive = true;
+    } else if (data.status === 'CANCELLED') {
+      data.isActive = false;
+    }
     return prisma.beginnerCertProgram.update({
       where: { id },
       data: { ...data, updatedBy: userId },
