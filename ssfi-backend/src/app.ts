@@ -186,36 +186,6 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// ── TEMPORARY: Bulk photo upload endpoint ──────────────────────────────
-// Accepts a single .webp file with query params ?secret=...&targetPath=uploads/skaters/profile_photo/2025/06/abc.webp
-// Remove this endpoint after bulk upload is complete!
-import multer from 'multer';
-const bulkUploadSecret = 'ssfi-bulk-upload-2026-temp';
-const bulkStorage = multer.memoryStorage();
-const bulkUpload = multer({ storage: bulkStorage, limits: { fileSize: 10 * 1024 * 1024 } });
-app.post('/api/bulk-upload-photo', bulkUpload.single('file'), async (req: Request, res: Response) => {
-  try {
-    if (req.query.secret !== bulkUploadSecret) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-    const targetPath = req.query.targetPath as string;
-    if (!targetPath || !targetPath.startsWith('uploads/')) {
-      return res.status(400).json({ error: 'Invalid targetPath' });
-    }
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file provided' });
-    }
-    const fs = await import('fs');
-    const fullPath = path.join(process.cwd(), targetPath);
-    const dir = path.dirname(fullPath);
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(fullPath, req.file.buffer);
-    return res.json({ success: true, path: targetPath, size: req.file.size });
-  } catch (err: any) {
-    return res.status(500).json({ error: err.message });
-  }
-});
-// ── END TEMPORARY ──────────────────────────────────────────────────────
 
 // API Routes
 const API_VERSION = process.env.API_VERSION || 'v1';
