@@ -29,11 +29,11 @@ export const getStateDirectory = async (req: Request, res: Response) => {
         },
       }),
 
-      // 2. Latest approved state secretary (name + photo only)
+      // 2. Latest approved state secretary (name + photo + association name)
       prisma.stateSecretary.findFirst({
         where: { stateId, status: 'APPROVED' },
         orderBy: { createdAt: 'desc' },
-        select: { name: true, profilePhoto: true },
+        select: { name: true, profilePhoto: true, associationName: true },
       }),
 
       // 3. All districts with counts + district secretary info
@@ -85,6 +85,7 @@ export const getStateDirectory = async (req: Request, res: Response) => {
           presidentPhoto: state.presidentPhoto || null,
           secretaryName: stateSecretary?.name || null,
           secretaryPhoto: stateSecretary?.profilePhoto || null,
+          associationName: stateSecretary?.associationName || null,
           totalDistricts: activeDistricts.length,
           totalClubs,
           totalStudents,

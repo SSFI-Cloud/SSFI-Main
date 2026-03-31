@@ -168,6 +168,7 @@ export const getStateById = async (id: number) => {
             email: secretary.email,
             phone: secretary.phone,
             residentialAddress: secretary.residentialAddress,
+            associationName: (secretary as any).associationName || null,
             profilePhoto: secretary.profilePhoto,
             status: secretary.status,
             registrationDate: userAccount?.registrationDate || secretary.createdAt,

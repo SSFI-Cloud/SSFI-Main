@@ -27,6 +27,7 @@ interface StateDirectoryData {
     presidentPhoto: string | null;
     secretaryName: string | null;
     secretaryPhoto: string | null;
+    associationName: string | null;
     totalDistricts: number;
     totalClubs: number;
     totalStudents: number;
@@ -218,6 +219,9 @@ export default function StateDirectoryClient() {
                   )}
                   <div>
                     <h2 className="text-xl md:text-2xl font-bold text-white">{data.state.name}</h2>
+                    {data.state.associationName && (
+                      <p className="text-emerald-300 text-sm font-medium">{data.state.associationName}</p>
+                    )}
                     <p className="text-white/70 text-sm font-medium">{data.state.code}</p>
                   </div>
                 </div>

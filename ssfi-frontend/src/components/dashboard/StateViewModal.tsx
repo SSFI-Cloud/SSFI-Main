@@ -14,6 +14,7 @@ interface SecretaryProfile {
     email: string;
     phone: string;
     residentialAddress: string;
+    associationName: string | null;
     profilePhoto: string | null;
     status: string;
     registrationDate: string | null;
@@ -164,10 +165,13 @@ export default function StateViewModal({ state, isLoading, onClose }: StateViewM
                                             </div>
                                         </div>
 
-                                        {/* Personal Details Grid */}
+                                        {/* Association & Personal Details Grid */}
                                         <div>
                                             <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 mt-5 pl-3 border-l-2 border-emerald-500">Personal Details</p>
                                             <div className="bg-white rounded-xl border border-gray-200 px-4">
+                                                {state.secretary.associationName && (
+                                                    <Field icon={Shield} label="State Association" value={state.secretary.associationName} />
+                                                )}
                                                 <Field icon={User} label="Gender" value={state.secretary.gender} />
                                                 <Field icon={Phone} label="Phone" value={state.secretary.phone} />
                                                 <Field icon={Mail} label="Email" value={state.secretary.email} />
