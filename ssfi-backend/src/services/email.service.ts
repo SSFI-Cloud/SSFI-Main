@@ -829,6 +829,138 @@ class EmailService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // BULK EMAIL — Registration Window Open
+    // ─────────────────────────────────────────────────────────────────────────
+    async sendRegistrationOpenNotification(to: string, data: {
+        name: string;
+        windowTitle: string;
+        windowType: string;
+        startDate: string;
+        endDate: string;
+        baseFee: number;
+    }): Promise<void> {
+        const esc = EmailService.escapeHtml;
+        const safeName = esc(data.name);
+        const safeTitle = esc(data.windowTitle);
+        const typeLabel = data.windowType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+        const subject = `SSFI ${typeLabel} Registration is Now Open!`;
+
+        const body = `
+          ${greeting(safeName, `We are excited to inform you that <strong>${safeTitle}</strong> registration is now open at the Speed Skating Federation of India.`)}
+
+          ${sectionCard('REGISTRATION DETAILS', `
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              ${row('Registration Type', `<strong>${typeLabel}</strong>`)}
+              ${row('Opens', `<strong>${esc(data.startDate)}</strong>`)}
+              ${row('Closes', `<strong style="color:#B91C1C;">${esc(data.endDate)}</strong>`)}
+              ${row('Fee', `<strong>₹${data.baseFee.toLocaleString('en-IN')}</strong>`)}
+            </table>
+          `)}
+
+          ${alertBox('info', `Please complete your registration before the deadline. Late registrations may attract additional fees or may not be accepted.`)}
+
+          ${alertBox('success', `Visit <a href="${process.env.FRONTEND_URL || 'https://ssfiskate.com'}" style="color:#15803D;font-weight:700;">ssfiskate.com</a> to register or renew your membership now.`)}
+        `;
+
+        const html = layout({
+            title: subject,
+            bannerColor: 'linear-gradient(135deg,#1A4BAF,#6366F1)',
+            bannerIcon: '📢',
+            bannerText: `${typeLabel} Registration is Open!`,
+            body,
+        });
+
+        await this.send(to, subject, html, `reg-window-open:${data.windowType}`);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BULK EMAIL — New Event Created
+    // ─────────────────────────────────────────────────────────────────────────
+    async sendNewEventNotification(to: string, data: {
+        name: string;
+        eventName: string;
+        eventDate: string;
+        venue: string;
+        city: string;
+        eventLevel: string;
+        registrationEndDate: string;
+    }): Promise<void> {
+        const esc = EmailService.escapeHtml;
+        const safeName = esc(data.name);
+        const safeEventName = esc(data.eventName);
+        const subject = `New Event: ${data.eventName} — Register Now!`;
+
+        const body = `
+          ${greeting(safeName, `A new <strong>${esc(data.eventLevel)}</strong> level event has been announced by SSFI. Check out the details below and register early!`)}
+
+          ${sectionCard('EVENT DETAILS', `
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              ${row('Event', `<strong>${safeEventName}</strong>`)}
+              ${row('Date', `<strong>${esc(data.eventDate)}</strong>`)}
+              ${row('Venue', `${esc(data.venue)}, ${esc(data.city)}`)}
+              ${row('Level', esc(data.eventLevel))}
+              ${row('Register Before', `<strong style="color:#B91C1C;">${esc(data.registrationEndDate)}</strong>`)}
+            </table>
+          `)}
+
+          ${alertBox('info', `Visit <a href="${process.env.FRONTEND_URL || 'https://ssfiskate.com'}/events" style="color:#1E40AF;font-weight:700;">ssfiskate.com/events</a> to view event details and register.`)}
+        `;
+
+        const html = layout({
+            title: subject,
+            bannerColor: 'linear-gradient(135deg,#0D9488,#0891B2)',
+            bannerIcon: '🏆',
+            bannerText: 'New Event Announced!',
+            body,
+        });
+
+        await this.send(to, subject, html, `new-event:${data.eventLevel}`);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BULK SEND UTILITY — batched sending to avoid SMTP rate limits
+    // ─────────────────────────────────────────────────────────────────────────
+    sendBulkInBackground(
+        recipients: { email: string; name: string }[],
+        sendFn: (email: string, name: string) => Promise<void>,
+        tag: string,
+    ): void {
+        const BATCH_SIZE = 50;
+        const BATCH_DELAY_MS = 1000;
+
+        const processBatches = async () => {
+            let sent = 0;
+            let failed = 0;
+
+            for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+                const batch = recipients.slice(i, i + BATCH_SIZE);
+
+                await Promise.allSettled(
+                    batch.map(async (r) => {
+                        try {
+                            await sendFn(r.email, r.name);
+                            sent++;
+                        } catch {
+                            failed++;
+                        }
+                    }),
+                );
+
+                // Delay between batches to avoid rate limiting
+                if (i + BATCH_SIZE < recipients.length) {
+                    await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+                }
+            }
+
+            logger.info(`[bulk-email:${tag}] Completed: ${sent} sent, ${failed} failed out of ${recipients.length}`);
+        };
+
+        processBatches().catch((err) => {
+            logger.error(`[bulk-email:${tag}] Fatal error:`, err);
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // UTILITY
     // ─────────────────────────────────────────────────────────────────────────
     private static escapeHtml(str: string): string {

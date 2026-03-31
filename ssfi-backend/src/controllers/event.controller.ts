@@ -98,6 +98,27 @@ export const getUpcomingEvents = async (req: Request, res: Response, next: NextF
   }
 };
 
+export const deleteEvent = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const result = await eventService.deleteEvent(Number(id));
+    deleteCachePattern('/events');
+    res.status(200).json({ status: 'success', data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const bulkDeleteOldEvents = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await eventService.bulkDeleteOldEvents();
+    deleteCachePattern('/events');
+    res.status(200).json({ status: 'success', data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;

@@ -1194,10 +1194,8 @@ export const initiateClubRegistration = async (
     },
   });
 
-  if (existingUser) {
-    // throw new AppError('A user with this phone number or email already exists. Please use renewal instead.', 409);
-    // Allow if no conflicting role? 
-    // Usually Club Owner is a dedicated role.
+  if (existingUser && existingUser.role === 'CLUB_OWNER') {
+    throw new AppError('A club owner account already exists with this phone number or email. Please use renewal instead of creating a new account.', 409);
   }
 
   // Get district and state info
@@ -1759,13 +1757,21 @@ export const registerStudent = async (
   windowId: number
 ) => {
   return await prisma.$transaction(async (tx) => {
-    // 1. Check if potential duplicate (Aadhaar)
+    // 1. Check if potential duplicate (phone number)
+    const existingUserByPhone = await tx.user.findFirst({
+      where: { phone: data.phone, role: 'STUDENT' },
+    });
+    if (existingUserByPhone) {
+      throw new AppError('An account already exists with this phone number. Please use renewal instead of creating a new account.', 409);
+    }
+
+    // 1b. Check if potential duplicate (Aadhaar)
     const existingStudent = await tx.student.findUnique({
       where: { aadhaarNumber: data.aadhaarNumber },
     });
 
     if (existingStudent) {
-      throw new AppError('A student with this Aadhaar number already exists', 400);
+      throw new AppError('A student with this Aadhaar number already exists. Please use renewal instead of creating a new account.', 409);
     }
 
     // 2. Get location details for UID generation

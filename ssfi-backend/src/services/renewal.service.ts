@@ -492,6 +492,85 @@ export const getExpiredAccounts = async (role?: UserRole) => {
     }));
 };
 
+/**
+ * Verify KYC for renewal — compare Digilocker Aadhaar with stored Aadhaar
+ * @param userId User ID
+ * @param kycData KYC verification result from Digilocker
+ * @returns Whether verification passed
+ */
+export const verifyKycForRenewal = async (
+    userId: number,
+    kycData: { maskedAadhaar: string; fullName: string; dob: string }
+) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { student: { select: { aadhaarNumber: true, name: true } } },
+    });
+
+    if (!user || !user.student) {
+        throw new AppError('Student not found', 404);
+    }
+
+    // Compare last 4 digits of Aadhaar
+    const storedAadhaar = user.student.aadhaarNumber;
+    const kycLast4 = kycData.maskedAadhaar.replace(/\s/g, '').slice(-4);
+    const storedLast4 = storedAadhaar.replace(/\s/g, '').slice(-4);
+
+    if (kycLast4 !== storedLast4) {
+        throw new AppError(
+            'Aadhaar number from Digilocker does not match our records. Please contact SSFI support.',
+            400
+        );
+    }
+
+    // Mark student as KYC verified for this renewal cycle
+    await prisma.student.update({
+        where: { userId },
+        data: { kycVerified: true, kycVerifiedAt: new Date() },
+    });
+
+    return { verified: true, name: kycData.fullName };
+};
+
+/**
+ * Self-service renewal: student renews their own account after KYC + payment
+ */
+export const selfRenew = async (
+    userId: number,
+    paymentId: string,
+    renewalMonths?: number,
+) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, role: true, accountStatus: true, student: { select: { kycVerifiedAt: true } } },
+    });
+
+    if (!user) throw new AppError('User not found', 404);
+    if (user.role !== UserRole.STUDENT) throw new AppError('Only students can self-renew', 403);
+
+    // Check KYC was completed recently (within last 24 hours)
+    const kycVerifiedAt = user.student?.kycVerifiedAt;
+    if (!kycVerifiedAt || (Date.now() - kycVerifiedAt.getTime()) > 24 * 60 * 60 * 1000) {
+        throw new AppError('Please complete Digilocker verification before renewing', 400);
+    }
+
+    const newExpiryDate = await calculateExpiryDate(userId, renewalMonths);
+
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            expiryDate: newExpiryDate,
+            lastRenewalDate: new Date(),
+            accountStatus: AccountStatus.ACTIVE,
+            renewalNotificationSent: false,
+        },
+    });
+
+    console.log(`Student self-renewed: ${updatedUser.uid}. New expiry: ${newExpiryDate}`);
+
+    return updatedUser;
+};
+
 export default {
     calculateExpiryDate,
     checkAccountExpiry,
@@ -503,5 +582,7 @@ export default {
     renewAccount,
     unlockAccount,
     getExpiringAccounts,
-    getExpiredAccounts
+    getExpiredAccounts,
+    verifyKycForRenewal,
+    selfRenew,
 };

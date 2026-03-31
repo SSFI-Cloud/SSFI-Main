@@ -3,6 +3,9 @@
 import { PrismaClient, RegistrationWindow } from '@prisma/client';
 
 import prisma from '../config/prisma';
+import { emailService } from './email.service';
+import logger from '../utils/logger.util';
+
 export type RegistrationType = 'STUDENT' | 'CLUB' | 'STATE_SECRETARY' | 'DISTRICT_SECRETARY';
 
 export interface RegistrationWindowData {
@@ -212,12 +215,75 @@ export async function createWindow(input: CreateWindowInput): Promise<Registrati
         },
     });
 
-    return {
+    const result = {
         ...window,
         title: (window as any).title || (window as any).name,
         type: window.type as RegistrationType,
         isActive: isWindowActive(window),
     } as RegistrationWindowData;
+
+    // Send bulk email notification to relevant users (fire-and-forget)
+    notifyUsersOfWindowOpen(input.type, result).catch((err) => {
+        logger.error('[reg-window] Failed to send open notifications:', err);
+    });
+
+    return result;
+}
+
+/**
+ * Notify relevant users when a registration window opens
+ */
+async function notifyUsersOfWindowOpen(type: string, window: RegistrationWindowData) {
+    // Map window type to user role
+    const roleMap: Record<string, string> = {
+        STUDENT: 'STUDENT',
+        CLUB: 'CLUB_OWNER',
+        STATE_SECRETARY: 'STATE_SECRETARY',
+        DISTRICT_SECRETARY: 'DISTRICT_SECRETARY',
+    };
+
+    const role = roleMap[type];
+    if (!role) return;
+
+    const users = await prisma.user.findMany({
+        where: {
+            role: role as any,
+            email: { not: null },
+        },
+        select: {
+            email: true,
+            student: { select: { name: true } },
+            clubOwner: { select: { name: true } },
+            statePerson: { select: { name: true } },
+            districtPerson: { select: { name: true } },
+        },
+    });
+
+    const recipients = users
+        .filter(u => u.email)
+        .map(u => ({
+            email: u.email!,
+            name: u.student?.name || u.clubOwner?.name || u.statePerson?.name || u.districtPerson?.name || 'Member',
+        }));
+
+    if (recipients.length === 0) return;
+
+    const formatDate = (d: Date) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    emailService.sendBulkInBackground(
+        recipients,
+        (email, name) => emailService.sendRegistrationOpenNotification(email, {
+            name,
+            windowTitle: window.title || type,
+            windowType: type,
+            startDate: formatDate(window.startDate),
+            endDate: formatDate(window.endDate),
+            baseFee: window.baseFee || 0,
+        }),
+        `reg-window-${type}`,
+    );
+
+    logger.info(`[reg-window] Queued ${recipients.length} notification emails for ${type} window open`);
 }
 
 /**

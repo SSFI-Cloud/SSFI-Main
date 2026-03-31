@@ -1,5 +1,7 @@
 import { PrismaClient, Prisma, UserRole, EventCategory } from '@prisma/client';
 import { AppError } from '../utils/errors';
+import { emailService } from './email.service';
+import logger from '../utils/logger.util';
 
 import prisma from '../config/prisma';
 // Helper to format event consistently
@@ -380,7 +382,106 @@ export const updateEventStatus = async (id: number, status: string, remarks?: st
       _count: { select: { registrations: true, raceResults: true } },
     },
   });
+
+  // Send email notifications when event is published
+  if (status === 'PUBLISHED') {
+    notifyStudentsOfNewEvent(event).catch((err) => {
+      logger.error('[event] Failed to send new event notifications:', err);
+    });
+  }
+
   return formatEvent(event);
+};
+
+/**
+ * Notify relevant students when a new event is published.
+ * NATIONAL → all students, STATE → students in that state, DISTRICT → students in that district
+ */
+async function notifyStudentsOfNewEvent(event: any) {
+  const where: any = {};
+
+  if (event.eventLevel === 'DISTRICT' && event.districtId) {
+    where.districtId = event.districtId;
+  } else if (event.eventLevel === 'STATE' && event.stateId) {
+    where.club = { district: { stateId: event.stateId } };
+  }
+  // NATIONAL → no filter, all students
+
+  const students = await prisma.student.findMany({
+    where,
+    select: {
+      name: true,
+      user: { select: { email: true } },
+    },
+  });
+
+  const recipients = students
+    .filter(s => s.user?.email)
+    .map(s => ({ email: s.user!.email!, name: s.name }));
+
+  if (recipients.length === 0) return;
+
+  const formatDate = (d: Date | null) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'TBD';
+
+  emailService.sendBulkInBackground(
+    recipients,
+    (email, name) => emailService.sendNewEventNotification(email, {
+      name,
+      eventName: event.name,
+      eventDate: formatDate(event.eventDate),
+      venue: event.venue || 'TBD',
+      city: event.city || '',
+      eventLevel: event.eventLevel,
+      registrationEndDate: formatDate(event.registrationEndDate),
+    }),
+    `event-${event.eventLevel}-${event.id}`,
+  );
+
+  logger.info(`[event] Queued ${recipients.length} notification emails for ${event.eventLevel} event "${event.name}"`);
+}
+
+export const deleteEvent = async (eventId: number) => {
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  if (!event) throw new AppError('Event not found', 404);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.raceResult.deleteMany({ where: { eventId } });
+    await tx.certificate.deleteMany({ where: { eventId } });
+    // Delete payments linked through event registrations
+    const regIds = (await tx.eventRegistration.findMany({
+      where: { eventId },
+      select: { id: true },
+    })).map(r => r.id);
+    if (regIds.length > 0) {
+      await tx.payment.deleteMany({ where: { eventRegistrationId: { in: regIds } } });
+    }
+    await tx.eventRegistration.deleteMany({ where: { eventId } });
+    await tx.galleryAlbum.deleteMany({ where: { eventId } });
+    await tx.event.delete({ where: { id: eventId } });
+  });
+
+  return { deleted: true, eventName: event.name };
+};
+
+export const bulkDeleteOldEvents = async () => {
+  const oldEvents = await prisma.event.findMany({
+    where: { eventDate: { lt: new Date() } },
+    select: { id: true, name: true },
+  });
+
+  let deletedCount = 0;
+  const errors: string[] = [];
+
+  for (const event of oldEvents) {
+    try {
+      await deleteEvent(event.id);
+      deletedCount++;
+    } catch (err: any) {
+      errors.push(`${event.name}: ${err.message}`);
+    }
+  }
+
+  return { deletedCount, total: oldEvents.length, errors };
 };
 
 export const getUserEvents = async (userId: number, query: any) => {

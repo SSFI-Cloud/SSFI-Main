@@ -20,4 +20,8 @@ router.put('/:id', protect, eventController.updateEvent); // Added update route
 // Protected routes
 router.put('/:id/status', protect, restrictTo(UserRole.GLOBAL_ADMIN), eventController.updateEventStatus);
 
+// Admin-only: delete event
+router.delete('/bulk/old', protect, restrictTo(UserRole.GLOBAL_ADMIN), eventController.bulkDeleteOldEvents);
+router.delete('/:id', protect, restrictTo(UserRole.GLOBAL_ADMIN), eventController.deleteEvent);
+
 export default router;

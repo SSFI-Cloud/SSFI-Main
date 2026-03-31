@@ -61,6 +61,62 @@ router.get('/history', authenticate, async (req, res, next) => {
     }
 });
 
+/**
+ * POST /api/renewal/verify-kyc
+ * Verify KYC for self-service renewal (compare Digilocker Aadhaar with stored)
+ * Body: { maskedAadhaar: string, fullName: string, dob: string }
+ */
+router.post('/verify-kyc', authenticate, async (req, res, next) => {
+    try {
+        if (!req.user) throw new AppError('User not authenticated', 401);
+
+        const { maskedAadhaar, fullName, dob } = req.body;
+        if (!maskedAadhaar) throw new AppError('KYC verification data is required', 400);
+
+        const result = await renewalService.verifyKycForRenewal(req.user.id, {
+            maskedAadhaar,
+            fullName: fullName || '',
+            dob: dob || '',
+        });
+
+        res.json({ success: true, data: result });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * POST /api/renewal/self-renew
+ * Self-service renewal after KYC + payment
+ * Body: { paymentId: string, renewalMonths?: number }
+ */
+router.post('/self-renew', authenticate, async (req, res, next) => {
+    try {
+        if (!req.user) throw new AppError('User not authenticated', 401);
+
+        const { paymentId, renewalMonths } = req.body;
+        if (!paymentId) throw new AppError('Payment ID is required', 400);
+
+        const updatedUser = await renewalService.selfRenew(
+            req.user.id,
+            paymentId,
+            renewalMonths,
+        );
+
+        res.json({
+            success: true,
+            message: 'Membership renewed successfully!',
+            data: {
+                uid: updatedUser.uid,
+                expiryDate: updatedUser.expiryDate,
+                accountStatus: updatedUser.accountStatus,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // ==========================================
 // ADMIN ENDPOINTS (Global Admin only)
 // ==========================================

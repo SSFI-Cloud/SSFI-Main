@@ -41,7 +41,7 @@ if (missingVars.length > 0) {
 
 // Import routes
 import authRoutes from './routes/auth.routes';
-// import adminRoutes from './routes/admin.routes';
+import adminRoutes from './routes/admin.routes';
 import registrationWindowRoutes from './routes/registration-window.routes';
 import stateSecretaryRoutes from './routes/state-secretary.routes';
 import districtSecretaryRoutes from './routes/district-secretary.routes';
@@ -210,7 +210,7 @@ app.use(`/api/${API_VERSION}/homepage`, publicCache);
 app.use(`/api/${API_VERSION}/state-directory`, publicCache);
 
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
-// app.use(`/api/${API_VERSION}/admin`, adminRoutes);
+app.use(`/api/${API_VERSION}/admin`, adminRoutes);
 app.use(`/api/${API_VERSION}/state-secretaries`, stateSecretaryRoutes);
 app.use(`/api/${API_VERSION}/district-secretaries`, districtSecretaryRoutes);
 app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
