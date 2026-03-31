@@ -2,6 +2,19 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/prisma';
 import { AccountStatus, UserRole } from '@prisma/client';
 
+export const resetAllPayments = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await prisma.payment.deleteMany({});
+
+    res.status(200).json({
+      status: 'success',
+      data: { deletedCount: result.count, message: `${result.count} payment records deleted` },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const bulkExpireStudents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await prisma.user.updateMany({

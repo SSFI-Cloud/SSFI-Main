@@ -28,9 +28,17 @@ class BeginnerCertService {
   }
 
   async deleteProgram(id: number) {
-    return prisma.beginnerCertProgram.update({
-      where: { id },
-      data: { status: 'CANCELLED', isActive: false },
+    // Hard delete — remove program and all related registrations/payments
+    return prisma.$transaction(async (tx) => {
+      const regIds = (await tx.beginnerCertRegistration.findMany({
+        where: { programId: id },
+        select: { id: true },
+      })).map(r => r.id);
+      if (regIds.length > 0) {
+        await tx.payment.deleteMany({ where: { beginnerCertRegistrationId: { in: regIds } } });
+      }
+      await tx.beginnerCertRegistration.deleteMany({ where: { programId: id } });
+      return tx.beginnerCertProgram.delete({ where: { id } });
     });
   }
 
