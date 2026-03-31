@@ -22,6 +22,12 @@ export default function DistrictSecretaryDashboard() {
   useEffect(() => {
     const loadDashboard = async (retryCount = 0): Promise<void> => {
       try {
+        // Wait for auth token (race condition on first load after login)
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+        if (!token && retryCount < 3) {
+          await new Promise(r => setTimeout(r, 500));
+          return loadDashboard(retryCount + 1);
+        }
         const { data } = await dashboardService.getDashboardStats();
         if (data) {
           if (data.districtName) setDistrictName(data.districtName);
@@ -42,8 +48,8 @@ export default function DistrictSecretaryDashboard() {
           setClubs((data.recentActivity?.clubs || []).slice(0, 5).map((c: any) => ({ id: c.id, name: c.name, uid: c.uid, students: c._count?.students || 0, status: c.status })));
         }
       } catch (e) {
-        if (retryCount < 1) {
-          await new Promise(r => setTimeout(r, 1500));
+        if (retryCount < 3) {
+          await new Promise(r => setTimeout(r, 1000));
           return loadDashboard(retryCount + 1);
         }
         console.error(e);

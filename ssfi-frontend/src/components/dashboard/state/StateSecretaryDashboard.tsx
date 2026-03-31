@@ -39,6 +39,12 @@ export default function StateSecretaryDashboard() {
   useEffect(() => {
     const loadDashboard = async (retryCount = 0): Promise<void> => {
       try {
+        // Wait for auth token (race condition on first load after login)
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+        if (!token && retryCount < 3) {
+          await new Promise(r => setTimeout(r, 500));
+          return loadDashboard(retryCount + 1);
+        }
         const { data } = await dashboardService.getDashboardStats();
         if (data) {
           if (data.stateName) setStateName(data.stateName);
@@ -58,8 +64,8 @@ export default function StateSecretaryDashboard() {
           setUpcomingEvents((data.recentActivity?.events || []).slice(0, 4).map((e: any) => ({ id: e.id, name: e.name, date: e.eventDate, registrations: e._count?.registrations || 0 })));
         }
       } catch (e) {
-        if (retryCount < 1) {
-          await new Promise(r => setTimeout(r, 1500));
+        if (retryCount < 3) {
+          await new Promise(r => setTimeout(r, 1000));
           return loadDashboard(retryCount + 1);
         }
         console.error(e);

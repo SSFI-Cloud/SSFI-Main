@@ -14,6 +14,13 @@ export const useDashboard = () => {
         setError(null);
 
         try {
+            // Wait for auth token to be available (race condition on first load after login)
+            const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+            if (!token && retryCount < 3) {
+                await new Promise(r => setTimeout(r, 500));
+                return fetchDashboard(retryCount + 1);
+            }
+
             const response = await api.get('/dashboard');
             if (response.data?.success) {
                 setData(response.data.data);
@@ -21,9 +28,9 @@ export const useDashboard = () => {
                 throw new Error(response.data?.message || 'Failed to load dashboard');
             }
         } catch (err: any) {
-            // Auto-retry once after delay (handles auth race condition on first load)
-            if (retryCount < 1) {
-                await new Promise(r => setTimeout(r, 1500));
+            // Auto-retry after delay (handles auth race condition on first load)
+            if (retryCount < 3) {
+                await new Promise(r => setTimeout(r, 1000));
                 return fetchDashboard(retryCount + 1);
             }
             setError(err?.response?.data?.message || err?.message || 'Failed to load dashboard data');
