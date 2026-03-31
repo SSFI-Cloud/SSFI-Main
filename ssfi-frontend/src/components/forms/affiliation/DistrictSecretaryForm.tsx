@@ -27,6 +27,7 @@ const formSchema = z.object({
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
   stateId: z.string().min(1, 'Please select a state'),
   districtId: z.string().min(1, 'Please select a district'),
+  associationName: z.string().min(2, 'Association name is required').max(200),
   residentialAddress: z.string().min(10, 'Address must be at least 10 characters').max(500),
   profilePhoto: z.string().min(1, 'Profile photo is required'),
   logo: z.string().min(1, 'Association logo is required'),
@@ -287,6 +288,15 @@ export default function DistrictSecretaryRegistrationForm() {
                         {districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                       </select>
                       {errors.districtId && <p className="mt-1 text-xs text-red-500">{errors.districtId.message}</p>}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Association Name <span className="text-red-400">*</span></label>
+                      <div className="relative">
+                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input {...register('associationName')} placeholder="e.g., District Skating Association" className={`${inputCls(!!errors.associationName)} pl-9`} />
+                      </div>
+                      {errors.associationName && <p className="mt-1 text-xs text-red-500">{errors.associationName.message}</p>}
                     </div>
 
                     <div>

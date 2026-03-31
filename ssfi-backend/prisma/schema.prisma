@@ -1009,6 +1009,7 @@ model DistrictSecretary {
   districtId           Int
   district             District  @relation(fields: [districtId], references: [id], onDelete: Restrict)
   residentialAddress   String
+  associationName             String?
   identityProof               String?
   profilePhoto                String?
   logo                        String? @db.LongText

@@ -53,6 +53,7 @@ export default function NewDistrictPage() {
         secretaryName: '',
         secretaryGender: 'MALE',
         districtId: '',
+        associationName: '',
         secretaryEmail: '',
         secretaryPhone: '',
         residentialAddress: '',
@@ -134,6 +135,7 @@ export default function NewDistrictPage() {
                 secretaryEmail: formData.secretaryEmail.trim(),
                 secretaryPhone: formData.secretaryPhone.trim(),
                 secretaryAddress: formData.residentialAddress.trim(),
+                associationName: formData.associationName.trim() || undefined,
                 // Documents
                 profilePhoto: formData.profilePhoto,
                 logo: formData.associationLogo,
@@ -155,6 +157,7 @@ export default function NewDistrictPage() {
                     stateId: formData.stateId,
                     districtId: formData.districtId || undefined,
                     residentialAddress: formData.residentialAddress.trim(),
+                    associationName: formData.associationName.trim() || undefined,
                     profilePhoto: formData.profilePhoto,
                     logo: formData.associationLogo,
                     associationRegistrationCopy: formData.registrationCopy,
@@ -319,6 +322,13 @@ export default function NewDistrictPage() {
                                     onChange={e => updateField('secretaryName', e.target.value)}
                                     placeholder="Enter secretary's full name" className={inputClass('secretaryName')} />
                                 <FieldError field="secretaryName" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className={labelClass}>Association Name *</label>
+                                <input type="text" value={formData.associationName}
+                                    onChange={e => updateField('associationName', e.target.value)}
+                                    placeholder="e.g., District Skating Association" className={inputClass('associationName')} />
+                                <FieldError field="associationName" />
                             </div>
                             <div>
                                 <label className={labelClass}>Gender *</label>

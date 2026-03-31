@@ -123,6 +123,7 @@ export interface DistrictSecretaryFormData {
   phone: string;
   stateId: string;
   districtId: string;
+  associationName?: string;
   residentialAddress: string;
   profilePhoto: string;
   logo: string;

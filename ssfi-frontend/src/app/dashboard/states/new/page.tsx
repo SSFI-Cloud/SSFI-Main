@@ -57,6 +57,7 @@ export default function NewStatePage() {
         secretaryName: '',
         secretaryGender: 'MALE',
         stateId: '',
+        associationName: '',
         secretaryEmail: '',
         secretaryPhone: '',
         residentialAddress: '',
@@ -136,6 +137,7 @@ export default function NewStatePage() {
                 secretaryEmail: formData.secretaryEmail.trim(),
                 secretaryPhone: formData.secretaryPhone.trim(),
                 secretaryAddress: formData.residentialAddress.trim(),
+                associationName: formData.associationName.trim() || undefined,
                 // Documents
                 profilePhoto: formData.profilePhoto,
                 logo: formData.associationLogo,
@@ -158,6 +160,7 @@ export default function NewStatePage() {
                     phone: formData.secretaryPhone.trim(),
                     stateId: formData.stateId || undefined,
                     residentialAddress: formData.residentialAddress.trim(),
+                    associationName: formData.associationName.trim() || undefined,
                     profilePhoto: formData.profilePhoto,
                     logo: formData.associationLogo,
                     associationRegistrationCopy: formData.registrationCopy,
@@ -359,6 +362,13 @@ export default function NewStatePage() {
                                     className={`${inputClass('secretaryName')} ${formData.isSelfSecretary ? 'bg-gray-100 text-gray-500' : ''}`} />
                                 {formData.isSelfSecretary && <p className="mt-0.5 text-xs text-emerald-600">Auto-filled from president name</p>}
                                 <FieldError field="secretaryName" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className={labelClass}>Association Name *</label>
+                                <input type="text" value={formData.associationName}
+                                    onChange={e => updateField('associationName', e.target.value)}
+                                    placeholder="e.g., Tamil Nadu Skating Association" className={inputClass('associationName')} />
+                                <FieldError field="associationName" />
                             </div>
                             <div>
                                 <label className={labelClass}>Gender *</label>
