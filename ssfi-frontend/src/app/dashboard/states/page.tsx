@@ -493,9 +493,9 @@ export default function StatesPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white rounded-2xl max-w-lg w-full border border-gray-200"
+                        className="bg-white rounded-2xl max-w-lg w-full border border-gray-200 max-h-[90vh] flex flex-col"
                     >
-                        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                        <div className="p-6 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
                             <h2 className="text-xl font-bold text-gray-900">
                                 {editingState ? 'Edit State' : 'Add New State'}
                             </h2>
@@ -542,7 +542,7 @@ export default function StatesPage() {
                                     alert(err.response?.data?.message || 'Operation failed');
                                 }
                             }}
-                            className="p-6 space-y-4"
+                            className="p-6 space-y-4 overflow-y-auto flex-1"
                         >
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-2">State Name</label>
@@ -706,7 +706,7 @@ export default function StatesPage() {
                                 </div>
                             )}
 
-                            <div className="flex gap-3 pt-4">
+                            <div className="flex gap-3 pt-4 sticky bottom-0 bg-white pb-1">
                                 <button
                                     type="button"
                                     onClick={() => { setShowAddModal(false); setEditingState(null); }}
