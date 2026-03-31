@@ -210,6 +210,25 @@ export default function DistrictsPage() {
         // API call to delete
     };
 
+    const handleExport = () => {
+        const rows = selectedDistricts.length > 0 ? districts.filter(d => selectedDistricts.includes(d.id)) : districts;
+        if (rows.length === 0) return;
+        const headers = ['District Name','Code','State','State Code','Secretary','Secretary Phone','Registered On','Clubs','Skaters','Created At'];
+        const csvRows = [headers.join(',')];
+        for (const d of rows) {
+            csvRows.push([
+                d.district_name, d.code, d.state_name, d.state_code, d.secretaryName,
+                d.secretaryPhone, d.secretaryRegisteredAt ? new Date(d.secretaryRegisteredAt).toLocaleDateString() : '',
+                String(d.clubsCount), String(d.skatersCount), d.created_at
+            ].map(v => `"${v}"`).join(','));
+        }
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `districts_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click(); URL.revokeObjectURL(url);
+    };
+
     // Re-calculate local totals for display if needed, but we used api stats
     const totalClubs = districts.reduce((acc, d) => acc + d.clubsCount, 0); // View only
     const totalSkaters = districts.reduce((acc, d) => acc + d.skatersCount, 0);
@@ -225,9 +244,9 @@ export default function DistrictsPage() {
                     <p className="text-gray-500 mt-1">Manage active districts with secretaries</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
+                    <button onClick={handleExport} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
                         <Download className="w-4 h-4" />
-                        Export
+                        Export{selectedDistricts.length > 0 ? ` (${selectedDistricts.length})` : ''}
                     </button>
                     {user?.role === 'GLOBAL_ADMIN' && (
                         <Link

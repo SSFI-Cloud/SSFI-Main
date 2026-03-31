@@ -80,6 +80,9 @@ export default function StudentsPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ totalStudents: 0, verifiedStudents: 0, pendingStudents: 0, maleStudents: 0, femaleStudents: 0 });
 
+    // Selection
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
     // View modal
     const [showViewModal, setShowViewModal] = useState(false);
     const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
@@ -138,6 +141,37 @@ export default function StudentsPage() {
         else { setSortField(field); setSortOrder('asc'); }
     };
 
+    const toggleSelectAll = () => {
+        if (selectedIds.length === students.length) setSelectedIds([]);
+        else setSelectedIds(students.map(s => s.id));
+    };
+
+    const toggleSelect = (id: number) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const handleExport = () => {
+        const rows = selectedIds.length > 0
+            ? students.filter(s => selectedIds.includes(s.id))
+            : students;
+        if (rows.length === 0) return;
+        const headers = ['SSFI ID','Name','Father Name','Mobile','Email','DOB','Gender','Blood Group','Category','Club','District','State','Coach','School','Address','City','Pincode','Status','Created At'];
+        const csvRows = [headers.join(',')];
+        for (const s of rows) {
+            csvRows.push([
+                s.ssfi_id, s.name, s.father_name, s.mobile, s.email || '', s.dob, s.gender,
+                s.blood_group || '', s.category_name || '', s.club_name, s.district_name, s.state_name,
+                s.coach_name, s.school_name || '', (s.address || '').replace(/,/g, ' '), s.city || '',
+                s.pincode || '', s.approval_status, s.created_at
+            ].map(v => `"${v}"`).join(','));
+        }
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `students_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click(); URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -147,8 +181,8 @@ export default function StudentsPage() {
                     <p className="text-gray-500 mt-1">Manage all registered skaters</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
-                        <Download className="w-4 h-4" /> Export
+                    <button onClick={handleExport} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
+                        <Download className="w-4 h-4" /> Export{selectedIds.length > 0 ? ` (${selectedIds.length})` : ''}
                     </button>
                     {user?.role === 'GLOBAL_ADMIN' && (
                         <Link href="/dashboard/students/new" className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2">
@@ -217,7 +251,7 @@ export default function StudentsPage() {
                         <thead>
                             <tr className="border-b border-gray-100">
                                 <th className="px-4 py-3 text-left w-10">
-                                    <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
+                                    <input type="checkbox" checked={selectedIds.length === students.length && students.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
                                 </th>
                                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('uid')}>
                                     <div className="flex items-center gap-2">UID <ArrowUpDown className="w-4 h-4" /></div>
@@ -244,7 +278,7 @@ export default function StudentsPage() {
                                     transition={{ delay: index * 0.04 }}
                                     className="border-b border-gray-200/30 hover:bg-gray-50/60">
                                     <td className="px-4 py-3">
-                                        <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
+                                        <input type="checkbox" checked={selectedIds.includes(student.id)} onChange={() => toggleSelect(student.id)} className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
                                     </td>
                                     {/* UID column */}
                                     <td className="px-4 py-3">

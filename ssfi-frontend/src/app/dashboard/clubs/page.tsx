@@ -46,6 +46,9 @@ export default function ClubsPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [stats, setStats] = useState({ totalClubs: 0, verifiedClubs: 0, pendingClubs: 0, totalSkaters: 0 });
 
+    // Selection
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
     // View modal state
     const [showViewModal, setShowViewModal] = useState(false);
     const [viewingClub, setViewingClub] = useState<any | null>(null);
@@ -118,6 +121,34 @@ export default function ClubsPage() {
         else { setSortField(field); setSortOrder('asc'); }
     };
 
+    const toggleSelectAll = () => {
+        if (selectedIds.length === clubs.length) setSelectedIds([]);
+        else setSelectedIds(clubs.map(c => c.id));
+    };
+
+    const toggleSelect = (id: number) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const handleExport = () => {
+        const rows = selectedIds.length > 0 ? clubs.filter(c => selectedIds.includes(c.id)) : clubs;
+        if (rows.length === 0) return;
+        const headers = ['Membership ID','Club Name','Contact Person','Mobile','Email','District','State','Established Year','Skaters','Status','Created At'];
+        const csvRows = [headers.join(',')];
+        for (const c of rows) {
+            csvRows.push([
+                c.membership_id, c.club_name, c.contact_person, c.mobile_number, c.email_address,
+                c.district_name, c.state_name, c.established_year, String(c.skatersCount),
+                c.verified === 1 ? 'Verified' : 'Pending', c.created_at
+            ].map(v => `"${v}"`).join(','));
+        }
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `clubs_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click(); URL.revokeObjectURL(url);
+    };
+
     const getVerificationBadge = (verified: number) =>
         verified === 1 ? (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full">
@@ -138,8 +169,8 @@ export default function ClubsPage() {
                     <p className="text-gray-500 mt-1">Manage all affiliated skating clubs</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
-                        <Download className="w-4 h-4" /> Export
+                    <button onClick={handleExport} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
+                        <Download className="w-4 h-4" /> Export{selectedIds.length > 0 ? ` (${selectedIds.length})` : ''}
                     </button>
                     {user?.role === 'GLOBAL_ADMIN' && (
                         <Link href="/dashboard/clubs/new" className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2">
@@ -207,7 +238,7 @@ export default function ClubsPage() {
                         <thead>
                             <tr className="border-b border-gray-100">
                                 <th className="px-4 py-3 text-left">
-                                    <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
+                                    <input type="checkbox" checked={selectedIds.length === clubs.length && clubs.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
                                 </th>
                                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 cursor-pointer hover:text-gray-900" onClick={() => handleSort('membership_id')}>
                                     <div className="flex items-center gap-2">Club ID <ArrowUpDown className="w-4 h-4" /></div>
@@ -234,7 +265,7 @@ export default function ClubsPage() {
                                     transition={{ delay: index * 0.04 }}
                                     className="border-b border-gray-200/30 hover:bg-gray-50/60">
                                     <td className="px-4 py-3">
-                                        <input type="checkbox" className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
+                                        <input type="checkbox" checked={selectedIds.includes(club.id)} onChange={() => toggleSelect(club.id)} className="w-4 h-4 rounded border-gray-200 bg-gray-100 text-emerald-500" />
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className="font-mono text-sm text-emerald-600">{club.membership_id}</span>

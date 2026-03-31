@@ -184,6 +184,26 @@ export default function StatesPage() {
         // API call to delete
     };
 
+    const handleExport = () => {
+        const rows = selectedStates.length > 0 ? states.filter(s => selectedStates.includes(s.id)) : states;
+        if (rows.length === 0) return;
+        const headers = ['State Name','Code','Secretary','Districts','Clubs','Skaters','Registration Date','Created At'];
+        const csvRows = [headers.join(',')];
+        for (const s of rows) {
+            csvRows.push([
+                s.state_name, s.code, s.secretaryName || '', String(s.districtsCount),
+                String(s.clubsCount), String(s.skatersCount),
+                s.registrationDate ? new Date(s.registrationDate).toLocaleDateString() : '',
+                s.created_at
+            ].map(v => `"${v}"`).join(','));
+        }
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `states_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click(); URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -193,9 +213,9 @@ export default function StatesPage() {
                     <p className="text-gray-500 mt-1">Manage states and their associations</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
+                    <button onClick={handleExport} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
                         <Download className="w-4 h-4" />
-                        Export
+                        Export{selectedStates.length > 0 ? ` (${selectedStates.length})` : ''}
                     </button>
                     <Link
                         href="/dashboard/states/new"

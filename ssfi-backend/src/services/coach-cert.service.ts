@@ -2,6 +2,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 
 import prisma from '../config/prisma';
 import { paymentService } from './payment.service';
+import { emailService } from './email.service';
 import { razorpayConfig } from '../config/razorpay.config';
 class CoachCertService {
 
@@ -120,7 +121,7 @@ class CoachCertService {
         registrationNumber: regNum,
         amount: program.price,
         paymentStatus: 'PENDING',
-        status: 'REGISTERED',
+        status: 'PAYMENT_PENDING',
       },
       include: { program: { select: { title: true, level: true, price: true } } },
     });
@@ -226,9 +227,27 @@ class CoachCertService {
     if (regId) {
       const reg = await prisma.coachCertRegistration.update({
         where: { id: Number(regId) },
-        data: { paymentStatus: 'PAID' },
+        data: { paymentStatus: 'PAID', status: 'REGISTERED' },
+        include: { program: { select: { title: true, level: true, price: true, startDate: true, endDate: true } } },
       });
       registrationNumber = reg.registrationNumber;
+
+      // Send confirmation email now that payment is confirmed
+      if ((reg as any).email) {
+        emailService.sendBeginnerCertConfirmation((reg as any).email, {
+          studentName: (reg as any).fullName,
+          registrationNumber: reg.registrationNumber,
+          programTitle: reg.program.title,
+          programCategory: `COACH_LEVEL_${reg.program.level}`,
+          startDate: new Date(reg.program.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+          endDate: new Date(reg.program.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+          venue: '',
+          city: '',
+          state: '',
+          amount: reg.program.price.toString(),
+          paymentStatus: 'PAID',
+        }).catch(() => {}); // Non-blocking
+      }
     }
 
     return {

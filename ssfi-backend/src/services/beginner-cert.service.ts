@@ -190,27 +190,10 @@ class BeginnerCertService {
         registrationNumber: regNum,
         amount: program.price,
         paymentStatus: 'PENDING',
-        status: 'REGISTERED',
+        status: 'PAYMENT_PENDING',
       },
       include: { program: { select: { title: true, category: true, price: true, venue: true, city: true, state: true, startDate: true, endDate: true } } },
     });
-
-    // Send confirmation email if email is available
-    if (regData.email) {
-      emailService.sendBeginnerCertConfirmation(regData.email, {
-        studentName: regData.fullName,
-        registrationNumber: regNum,
-        programTitle: program.title,
-        programCategory: program.category,
-        startDate: new Date(program.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
-        endDate: new Date(program.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
-        venue: (program as any).venue || '',
-        city: (program as any).city || '',
-        state: (program as any).state || '',
-        amount: program.price.toString(),
-        paymentStatus: 'PENDING',
-      }).catch(() => {}); // Non-blocking
-    }
 
     return registration;
   }
@@ -324,9 +307,27 @@ class BeginnerCertService {
     if (regId) {
       const reg = await prisma.beginnerCertRegistration.update({
         where: { id: Number(regId) },
-        data: { paymentStatus: 'PAID' },
+        data: { paymentStatus: 'PAID', status: 'REGISTERED' },
+        include: { program: { select: { title: true, category: true, price: true, venue: true, city: true, state: true, startDate: true, endDate: true } } },
       });
       registrationNumber = reg.registrationNumber;
+
+      // Send confirmation email now that payment is confirmed
+      if ((reg as any).email) {
+        emailService.sendBeginnerCertConfirmation((reg as any).email, {
+          studentName: (reg as any).fullName,
+          registrationNumber: reg.registrationNumber,
+          programTitle: reg.program.title,
+          programCategory: reg.program.category,
+          startDate: new Date(reg.program.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+          endDate: new Date(reg.program.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+          venue: (reg.program as any).venue || '',
+          city: (reg.program as any).city || '',
+          state: (reg.program as any).state || '',
+          amount: reg.program.price.toString(),
+          paymentStatus: 'PAID',
+        }).catch(() => {}); // Non-blocking
+      }
     }
 
     return {
