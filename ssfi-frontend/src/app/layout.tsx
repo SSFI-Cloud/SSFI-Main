@@ -25,7 +25,6 @@ const barlowCondensed = Barlow_Condensed({
   display: 'optional',
 });
 
-import ScrollNavigation from '@/components/ui/ScrollNavigation';
 import { Toaster } from 'react-hot-toast';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ssfiskate.com';
@@ -153,7 +152,6 @@ export default function RootLayout({
           }}
         />
         {children}
-        <ScrollNavigation />
         {/* Developer signature — hidden */}
         <div aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap' }}>
           <span>Designed &amp; Developed by <a href="https://indefine.in" rel="noopener">Indefine Digital Solutions</a> | <a href="https://learncrew.org" rel="noopener">LearnCrew</a></span>
