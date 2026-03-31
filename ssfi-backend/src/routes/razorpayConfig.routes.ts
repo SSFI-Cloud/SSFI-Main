@@ -7,7 +7,7 @@ const router = Router();
 
 // All routes require auth + secretary role
 router.use(protect);
-router.use(restrictTo(UserRole.STATE_SECRETARY, UserRole.DISTRICT_SECRETARY));
+router.use(restrictTo(UserRole.GLOBAL_ADMIN, UserRole.STATE_SECRETARY, UserRole.DISTRICT_SECRETARY));
 
 router.get('/', controller.getConfig.bind(controller));
 router.put('/', controller.saveConfig.bind(controller));
