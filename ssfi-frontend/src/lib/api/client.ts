@@ -126,19 +126,25 @@ export interface PaginatedResponse<T = any> extends ApiResponse<T> {
 }
 
 // ── GET request deduplication + short-lived cache ──
-// Identical GET requests within the TTL window share one network call.
-// This eliminates duplicate /stats/public and /registration-windows calls.
+// Public (unauthenticated) endpoints: cached for 5 min to avoid repeated calls.
+// Authenticated endpoints: NO cache (data changes frequently), only deduplication.
 const _getCache = new Map<string, { data: any; ts: number }>();
 const _inflight = new Map<string, Promise<any>>();
-const GET_CACHE_TTL = 300_000; // 5 minutes – matches backend cacheMiddleware TTL
+const GET_CACHE_TTL = 300_000; // 5 minutes – for public endpoints only
+
+// Public endpoints that benefit from caching (no auth, rarely change)
+const PUBLIC_CACHE_PREFIXES = ['/stats/', '/locations', '/notifications/public', '/homepage', '/news', '/state-directory'];
 
 function cachedGet<T = any>(url: string, config?: AxiosRequestConfig) {
   const key = url + (config?.params ? JSON.stringify(config.params) : '');
+  const isPublicCacheable = PUBLIC_CACHE_PREFIXES.some(p => url.startsWith(p));
 
-  // Return cached response if still fresh
-  const cached = _getCache.get(key);
-  if (cached && Date.now() - cached.ts < GET_CACHE_TTL) {
-    return Promise.resolve(cached.data);
+  // Only use cache for public endpoints
+  if (isPublicCacheable) {
+    const cached = _getCache.get(key);
+    if (cached && Date.now() - cached.ts < GET_CACHE_TTL) {
+      return Promise.resolve(cached.data);
+    }
   }
 
   // Deduplicate: reuse in-flight request for the same URL
@@ -148,7 +154,9 @@ function cachedGet<T = any>(url: string, config?: AxiosRequestConfig) {
   const promise = apiClient
     .get<ApiResponse<T>>(url, config)
     .then((res) => {
-      _getCache.set(key, { data: res, ts: Date.now() });
+      if (isPublicCacheable) {
+        _getCache.set(key, { data: res, ts: Date.now() });
+      }
       _inflight.delete(key);
       return res;
     })
