@@ -430,11 +430,19 @@ export const getClubOwnerDashboard = async (clubId: number) => {
 
   const [
     totalStudents,
+    allStudents,
+    pendingStudents,
+    expiredMemberships,
     recentStudents,
     recentRegistrations,
     upcomingEvents,
+    totalEventRegistrations,
+    studentsByGender,
   ] = await Promise.all([
+    prisma.student.count({ where: { clubId } }),
     prisma.student.count({ where: { clubId, user: { isApproved: true } } }),
+    prisma.student.count({ where: { clubId, user: { isApproved: false } } }),
+    prisma.student.count({ where: { clubId, user: { expiryDate: { lt: new Date() } } } }),
     prisma.student.findMany({
       where: { clubId },
       take: 10,
@@ -473,7 +481,17 @@ export const getClubOwnerDashboard = async (clubId: number) => {
         city: true,
       },
     }),
+    prisma.eventRegistration.count({ where: { clubId } }),
+    prisma.student.groupBy({
+      by: ['gender'],
+      where: { clubId },
+      _count: true,
+    }),
   ]);
+
+  // Build gender map
+  const genderMap: Record<string, number> = {};
+  studentsByGender.forEach((g) => { genderMap[g.gender] = g._count; });
 
   return {
     club: {
@@ -483,13 +501,17 @@ export const getClubOwnerDashboard = async (clubId: number) => {
       code: club.code,
       state: club.state?.name,
       district: club.district?.name,
-      status: club.status,
+      status: club.isActive ? 'ACTIVE' : 'INACTIVE',
     },
     overview: {
-      totalStudents: await prisma.student.count({ where: { clubId } }),
-      approvedStudents: totalStudents, // Reusing the filtered count from line 342 which was isApproved: true
-      pendingStudents: await prisma.student.count({ where: { clubId, user: { isApproved: false } } }),
-      expiredMemberships: await prisma.student.count({ where: { clubId, user: { expiryDate: { lt: new Date() } } } }),
+      totalStudents,
+      approvedStudents: allStudents,
+      pendingStudents,
+      expiredMemberships,
+    },
+    statistics: {
+      studentsByGender: genderMap,
+      totalEventRegistrations,
     },
     recentActivity: {
       students: recentStudents,

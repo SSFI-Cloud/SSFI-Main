@@ -95,19 +95,16 @@ export default function MyEventsPage() {
                     });
                 }
 
-                // 2. Fetch Certificates/Medals
-                // We can import certificateService but since we need axios with token here (or reuse api client)
-                // Let's use the service if possible, or direct axios call if service is not imported.
-                // We haven't imported certificateService at the top. Let's do a direct call to be safe with imports or use api client if available.
-                // But wait, I should preferably use the service. 
-                // Let's assume I can add the import.
-                const certRes = await api.get('/certificates/my-certificates');
+            } catch (error) {
+                console.error('Error loading my events data:', error);
+            }
 
-                // @ts-ignore
+            // 2. Fetch Certificates/Medals (isolated so events still display on failure)
+            try {
+                const certRes = await api.get('/certificates/my');
                 const certs = certRes.data || [];
                 setCertificates(certs);
 
-                // certs is array of { position: 1, ... }
                 const counts = { gold: 0, silver: 0, bronze: 0 };
                 certs.forEach((c: any) => {
                     if (c.position === 1) counts.gold++;
@@ -115,9 +112,8 @@ export default function MyEventsPage() {
                     if (c.position === 3) counts.bronze++;
                 });
                 setMedalsCount(counts);
-
             } catch (error) {
-                console.error('Error loading my events data:', error);
+                console.error('Error loading certificates:', error);
             } finally {
                 setIsLoading(false);
             }

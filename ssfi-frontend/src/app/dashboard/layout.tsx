@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
   { label: 'Registration Windows', href: '/dashboard/registration-windows', icon: UserPlus, roles: ['GLOBAL_ADMIN'] },
   { label: 'Coach Certification', href: '/dashboard/coach-certification', icon: Award, roles: ['GLOBAL_ADMIN'] },
   { label: 'Beginner Certification', href: '/dashboard/beginner-certification', icon: Medal, roles: ['GLOBAL_ADMIN'] },
-  { label: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY', 'CLUB_OWNER'] },
+  { label: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'] },
   { label: 'Donations', href: '/dashboard/donations', icon: Heart, roles: ['GLOBAL_ADMIN'] },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'] },
   { label: 'Renewals', href: '/dashboard/renewals', icon: Clock, roles: ['GLOBAL_ADMIN'] },
