@@ -55,7 +55,7 @@ export default function ClubDashboard() {
         ]}
         actions={
           <div className="flex items-center gap-2">
-            <StatusBadge status={dashboard.club.status} size="md" />
+            <StatusBadge status={renewalInfo?.accountStatus === 'EXPIRED' ? 'EXPIRED' : dashboard.club.status} size="md" />
           </div>
         }
       />
@@ -168,9 +168,8 @@ export default function ClubDashboard() {
       {/* Quick Actions */}
       <div>
         <h2 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <QuickAction title="Add Student"       description="Register new student"          icon={UserPlus}  href="/dashboard/students/add"            color="green"  />
-          <QuickAction title="Event Registration" description="Register for events"           icon={Trophy}    href="/dashboard/event-registrations/new"  color="blue"   />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <QuickAction title="View Students"     description="Manage skaters"                icon={Users}     href="/dashboard/students"                 color="green"  />
           <QuickAction title="Reports"           description="Analytics & insights"          icon={BarChart3} href="/dashboard/reports"                   color="purple" />
           <QuickAction title="View Events"       description="Browse upcoming events"        icon={Calendar}  href="/events"                             color="teal"  />
         </div>

@@ -457,6 +457,7 @@ export default function StatesPage() {
                                                 >
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
+                                                {user?.role === 'GLOBAL_ADMIN' && (
                                                 <button
                                                     onClick={() => handleDelete(state.id)}
                                                     className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors"
@@ -464,6 +465,7 @@ export default function StatesPage() {
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
+                                                )}
                                             </div>
                                         </td>
                                     </motion.tr>

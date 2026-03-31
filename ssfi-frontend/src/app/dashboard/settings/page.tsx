@@ -163,7 +163,7 @@ export default function SettingsPage() {
     };
 
     // Razorpay config functions
-    const isSecretary = ['STATE_SECRETARY', 'DISTRICT_SECRETARY'].includes(fullUser?.role || authUser?.role || '');
+    const isSecretary = ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'].includes(fullUser?.role || authUser?.role || '');
 
     const fetchRpConfig = useCallback(async () => {
         try {

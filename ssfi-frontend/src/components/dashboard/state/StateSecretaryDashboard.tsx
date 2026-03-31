@@ -147,11 +147,10 @@ export default function StateSecretaryDashboard() {
       {/* Quick Actions */}
       <div>
         <h2 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <QuickAction title="Create Event" description="Set up a competition" icon={Trophy} href="/dashboard/events/new" color="teal" />
           <QuickAction title="View Students" description="Manage skaters" icon={Users} href="/dashboard/students" color="green" />
           <QuickAction title="Reports" description="Analytics & insights" icon={BarChart3} href="/dashboard/reports" color="blue" />
-          <QuickAction title="Reg. Windows" description="Manage open periods" icon={Calendar} href="/dashboard/registration-windows" color="purple" />
         </div>
       </div>
     </div>

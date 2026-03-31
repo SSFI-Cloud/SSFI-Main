@@ -355,9 +355,11 @@ export default function StudentsPage() {
                                                 className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-emerald-600 transition-colors" title="Edit">
                                                 <Edit2 className="w-4 h-4" />
                                             </Link>
+                                            {user?.role === 'GLOBAL_ADMIN' && (
                                             <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors" title="Delete">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
+                                            )}
                                         </div>
                                     </td>
                                 </motion.tr>

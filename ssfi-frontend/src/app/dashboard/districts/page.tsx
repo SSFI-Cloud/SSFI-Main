@@ -476,6 +476,7 @@ export default function DistrictsPage() {
                                                 >
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
+                                                {user?.role === 'GLOBAL_ADMIN' && (
                                                 <button
                                                     onClick={() => handleDelete(district.id)}
                                                     className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors"
@@ -483,6 +484,7 @@ export default function DistrictsPage() {
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
+                                                )}
                                             </div>
                                         </td>
                                     </motion.tr>
