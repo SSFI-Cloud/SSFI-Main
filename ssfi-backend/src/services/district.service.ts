@@ -34,6 +34,13 @@ export const getAllDistricts = async (query: any) => {
         });
     }
 
+    // Dashboard: only show districts with at least 1 skater (unless explicitly showing all)
+    if (!isPublic && query.showAll !== 'true') {
+        andConditions.push({
+            students: { some: {} },
+        });
+    }
+
     const where: Prisma.DistrictWhereInput = {
         isActive: true,
         ...(stateId && { stateId: Number(stateId) }),
