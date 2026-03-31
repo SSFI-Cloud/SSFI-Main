@@ -11,5 +11,6 @@ router.use(restrictTo(UserRole.GLOBAL_ADMIN));
 
 router.post('/bulk-expire-students', adminController.bulkExpireStudents);
 router.delete('/reset-payments', adminController.resetAllPayments);
+router.delete('/reset-donations', adminController.resetAllDonations);
 
 export default router;
