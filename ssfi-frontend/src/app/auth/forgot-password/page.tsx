@@ -396,7 +396,7 @@ export default function ForgotPasswordPage() {
 
             {/* Right Side */}
             <div className="hidden lg:block flex-1 relative bg-gradient-to-br from-primary-600 to-accent-600">
-                <div className="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-10" />
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:20px_20px]" />
                 <div className="absolute inset-0 flex items-center justify-center p-12">
                     <div className="text-center">
                         <h2 className="text-5xl font-display font-bold text-white mb-6">
