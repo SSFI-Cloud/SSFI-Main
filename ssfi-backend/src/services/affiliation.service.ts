@@ -403,6 +403,7 @@ export const initiateStateSecretaryRegistration = async (
       phone: data.phone,
       stateId: data.stateId,
       residentialAddress: data.residentialAddress,
+      associationName: data.associationName || null,
       identityProof: data.identityProof || null,
       profilePhoto: data.profilePhoto || null,
       logo: data.logo || null,

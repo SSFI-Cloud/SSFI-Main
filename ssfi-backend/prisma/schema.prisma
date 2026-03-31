@@ -965,6 +965,7 @@ model StateSecretary {
   email                String
   phone                String
   aadhaarNumber        String?   // Made optional — KYC removed for secretaries
+  associationName      String?
   stateId              Int
   state                State     @relation(fields: [stateId], references: [id], onDelete: Restrict)
   residentialAddress   String

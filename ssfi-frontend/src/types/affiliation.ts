@@ -106,6 +106,7 @@ export interface StateSecretaryFormData {
   phone: string;
   stateId: string;
   residentialAddress: string;
+  associationName?: string;
   profilePhoto: string;
   logo: string;
   associationRegistrationCopy: string;

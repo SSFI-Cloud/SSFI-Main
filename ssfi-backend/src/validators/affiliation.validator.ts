@@ -36,6 +36,7 @@ export const stateSecretaryRegistrationSchema = z.object({
     phone: phoneSchema,
     stateId: z.number().int().or(z.string().transform(val => parseInt(val, 10))),
     residentialAddress: z.string().min(5),
+    associationName: z.string().min(2).optional(),
     identityProof: z.string().optional().or(z.literal('')),
     profilePhoto: z.string().optional(),
     logo: z.string().optional(),

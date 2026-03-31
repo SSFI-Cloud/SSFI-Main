@@ -26,6 +26,7 @@ const formSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
   stateId: z.string().min(1, 'Please select a state'),
+  associationName: z.string().min(2, 'Association name is required').max(200),
   residentialAddress: z.string().min(10, 'Address must be at least 10 characters').max(500),
   profilePhoto: z.string().min(1, 'Secretary photo is required'),
   logo: z.string().min(1, 'Association logo is required'),
@@ -334,6 +335,12 @@ export default function StateSecretaryRegistrationForm() {
                         {states.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
                       {errors.stateId && <p className="mt-0.5 text-xs text-red-500">{errors.stateId.message}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">State Association Name <span className="text-red-400">*</span></label>
+                      <input {...register('associationName')} placeholder="e.g. Tamil Nadu Skating Association" className={inputCls(!!errors.associationName)} />
+                      {errors.associationName && <p className="mt-0.5 text-xs text-red-500">{errors.associationName.message}</p>}
                     </div>
 
                     <div>
