@@ -169,8 +169,12 @@ if (process.env.NODE_ENV === 'development') {
   }));
 }
 
-// Static Files — with long cache + ETag
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+// Static Files — with long cache + ETag + CORS headers
+app.use('/uploads', (req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, '../uploads'), {
   maxAge: '30d',
   etag: true,
   lastModified: true,
