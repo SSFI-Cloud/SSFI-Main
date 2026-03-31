@@ -33,7 +33,7 @@ const navItems: NavItem[] = [
   { label: 'My Certificates',  href: '/dashboard/certificates', icon: Award,    roles: ['STUDENT'] },
   {
     label: 'Approvals', href: '/dashboard/approvals', icon: ClipboardList,
-    roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'],
+    roles: ['GLOBAL_ADMIN'],
     children: [
       { label: 'State Secretaries', href: '/dashboard/approvals/state-secretaries' },
       { label: 'District Secretaries', href: '/dashboard/approvals/district-secretaries' },
@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
   { label: 'Registration Windows', href: '/dashboard/registration-windows', icon: UserPlus, roles: ['GLOBAL_ADMIN'] },
   { label: 'Coach Certification', href: '/dashboard/coach-certification', icon: Award, roles: ['GLOBAL_ADMIN'] },
   { label: 'Beginner Certification', href: '/dashboard/beginner-certification', icon: Medal, roles: ['GLOBAL_ADMIN'] },
-  { label: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'] },
+  { label: 'Payments', href: '/dashboard/payments', icon: CreditCard, roles: ['GLOBAL_ADMIN'] },
   { label: 'Donations', href: '/dashboard/donations', icon: Heart, roles: ['GLOBAL_ADMIN'] },
   { label: 'Reports', href: '/dashboard/reports', icon: FileText, roles: ['GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY'] },
   { label: 'Renewals', href: '/dashboard/renewals', icon: Clock, roles: ['GLOBAL_ADMIN'] },

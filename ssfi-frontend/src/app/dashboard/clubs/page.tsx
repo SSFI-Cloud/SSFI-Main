@@ -32,7 +32,7 @@ interface Club {
 interface StateOption { id: number; state_name: string; code: string; }
 
 export default function ClubsPage() {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [clubs, setClubs] = useState<Club[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [stateFilter, setStateFilter] = useState<number | 'all'>('all');
@@ -141,9 +141,11 @@ export default function ClubsPage() {
                     <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
                         <Download className="w-4 h-4" /> Export
                     </button>
-                    <Link href="/dashboard/clubs/new" className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2">
-                        <Plus className="w-4 h-4" /> Add Club
-                    </Link>
+                    {user?.role === 'GLOBAL_ADMIN' && (
+                        <Link href="/dashboard/clubs/new" className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2">
+                            <Plus className="w-4 h-4" /> Add Club
+                        </Link>
+                    )}
                 </div>
             </div>
 

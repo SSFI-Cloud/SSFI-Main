@@ -9,6 +9,7 @@ import {
     CheckCircle, Clock, User, AlertCircle, Trophy,
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
+import { useAuth } from '@/lib/hooks/useAuth';
 import StudentViewModal from '@/components/dashboard/StudentViewModal';
 
 /* Always use the backend base URL for serving uploaded images */
@@ -66,6 +67,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function StudentsPage() {
+    const { user } = useAuth();
     const [students, setStudents] = useState<Student[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -148,9 +150,11 @@ export default function StudentsPage() {
                     <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
                         <Download className="w-4 h-4" /> Export
                     </button>
-                    <Link href="/dashboard/students/new" className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2">
-                        <Plus className="w-4 h-4" /> Add Student
-                    </Link>
+                    {user?.role === 'GLOBAL_ADMIN' && (
+                        <Link href="/dashboard/students/new" className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2">
+                            <Plus className="w-4 h-4" /> Add Student
+                        </Link>
+                    )}
                 </div>
             </div>
 

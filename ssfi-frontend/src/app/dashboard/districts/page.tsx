@@ -228,13 +228,15 @@ export default function DistrictsPage() {
                         <Download className="w-4 h-4" />
                         Export
                     </button>
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Add District
-                    </button>
+                    {user?.role === 'GLOBAL_ADMIN' && (
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Add District
+                        </button>
+                    )}
                 </div>
             </div>
 

@@ -222,9 +222,9 @@ export default function EventsPage() {
                 }));
 
                 setEvents(mappedEvents);
-                setTotalPages(meta.totalPages);
+                setTotalPages(meta?.totalPages || 1);
                 setStats({
-                    totalEvents: meta.total,
+                    totalEvents: meta?.total || mappedEvents.length,
                     activeEvents: mappedEvents.filter((e: any) => e.status === 'active').length,
                     totalRegistrations: mappedEvents.reduce((acc: number, e: any) => acc + (e.currentEntries || 0), 0),
                     totalRevenue: 0
