@@ -56,6 +56,50 @@ const academicBoardOptions = ['STATE_BOARD', 'CBSE', 'ICSE', 'IB', 'OTHER'];
 const formatBloodGroup = (bg: string) => bg.replace('_POSITIVE', '+').replace('_NEGATIVE', '-').replace('_', ' ');
 const formatBoard = (b: string) => b.replace(/_/g, ' ');
 
+const InputField = ({ label, value, onChange, type = 'text', placeholder = '', required = false, disabled = false, icon: Icon }: any) => (
+    <div className="space-y-1.5">
+        <label className="text-sm font-medium text-gray-600">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />}
+            <input
+                type={type}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                required={required}
+                disabled={disabled}
+                className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-2.5 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder:text-gray-400 transition-all ${disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
+            />
+        </div>
+    </div>
+);
+
+const SelectField = ({ label, value, onChange, options, disabled = false }: any) => (
+    <div className="space-y-1.5">
+        <label className="text-sm font-medium text-gray-600">{label}</label>
+        <select
+            value={value}
+            onChange={onChange}
+            disabled={disabled}
+            className={`w-full px-4 py-2.5 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all ${disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
+        >
+            {options.map((opt: any) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+        </select>
+    </div>
+);
+
+const ReadOnlyField = ({ label, value, icon: Icon }: any) => (
+    <div className="space-y-1.5">
+        <label className="text-sm font-medium text-gray-500">{label} <span className="text-xs text-gray-400">(Read only)</span></label>
+        <div className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-500 flex items-center gap-2">
+            {Icon && <Icon className="w-4 h-4 text-gray-400" />}
+            {value || '—'}
+        </div>
+    </div>
+);
+
 export default function SettingsPage() {
     const { user: authUser } = useAuth();
     const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'payment'>('profile');
@@ -228,50 +272,6 @@ export default function SettingsPage() {
     };
 
     const setField = (key: string, value: any) => setFormData(prev => ({ ...prev, [key]: value }));
-
-    const InputField = ({ label, value, onChange, type = 'text', placeholder = '', required = false, disabled = false, icon: Icon }: any) => (
-        <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-600">{label}</label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />}
-                <input
-                    type={type}
-                    value={value}
-                    onChange={onChange}
-                    placeholder={placeholder}
-                    required={required}
-                    disabled={disabled}
-                    className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-2.5 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-transparent placeholder:text-gray-400 transition-all ${disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
-                />
-            </div>
-        </div>
-    );
-
-    const SelectField = ({ label, value, onChange, options, disabled = false }: any) => (
-        <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-600">{label}</label>
-            <select
-                value={value}
-                onChange={onChange}
-                disabled={disabled}
-                className={`w-full px-4 py-2.5 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all ${disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white'}`}
-            >
-                {options.map((opt: any) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-            </select>
-        </div>
-    );
-
-    const ReadOnlyField = ({ label, value, icon: Icon }: any) => (
-        <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-500">{label} <span className="text-xs text-gray-400">(Read only)</span></label>
-            <div className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-500 flex items-center gap-2">
-                {Icon && <Icon className="w-4 h-4 text-gray-400" />}
-                {value || '—'}
-            </div>
-        </div>
-    );
 
     const role = fullUser?.role || authUser?.role || '';
     const profile = fullUser?.profile;
