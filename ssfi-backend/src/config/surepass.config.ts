@@ -3,7 +3,7 @@
 // SUREPASS_BASE_URL - SurePass API base URL (default: https://kyc-api.surepass.io/api/v1)
 // SUREPASS_API_TOKEN - Your SurePass Bearer Token
 
-const baseUrl = process.env.SUREPASS_BASE_URL || 'https://kyc-api.surepass.io/api/v1';
+const baseUrl = process.env.SUREPASS_BASE_URL || 'https://kyc-api.surepass.app/api/v1';
 const apiToken = process.env.SUREPASS_API_TOKEN || '';
 
 if (!apiToken) {
