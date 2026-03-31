@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import {
     Building2,
     Plus,
@@ -229,13 +230,13 @@ export default function DistrictsPage() {
                         Export
                     </button>
                     {user?.role === 'GLOBAL_ADMIN' && (
-                        <button
-                            onClick={() => setShowAddModal(true)}
+                        <Link
+                            href="/dashboard/districts/new"
                             className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 flex items-center gap-2"
                         >
                             <Plus className="w-4 h-4" />
                             Add District
-                        </button>
+                        </Link>
                     )}
                 </div>
             </div>
