@@ -214,7 +214,7 @@ export default function EventsPage() {
 
             const resData = (response.data as any)?.data ?? response.data;
             if (resData?.events) {
-                const { events: data, meta } = resData;
+                const { events: data, meta, totalPages: tp, total: t } = resData;
                 const mappedEvents = data.map((e: any) => ({
                     ...e,
                     event_level_type_id: e.eventLevel === 'NATIONAL' ? 3 : e.eventLevel === 'STATE' ? 2 : 1,
@@ -222,9 +222,9 @@ export default function EventsPage() {
                 }));
 
                 setEvents(mappedEvents);
-                setTotalPages(meta?.totalPages || 1);
+                setTotalPages(meta?.totalPages || tp || 1);
                 setStats({
-                    totalEvents: meta?.total || mappedEvents.length,
+                    totalEvents: meta?.total || t || mappedEvents.length,
                     activeEvents: mappedEvents.filter((e: any) => e.status === 'active').length,
                     totalRegistrations: mappedEvents.reduce((acc: number, e: any) => acc + (e.currentEntries || 0), 0),
                     totalRevenue: 0
