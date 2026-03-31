@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
     Users, Plus, Search, Edit2, Trash2, Eye, Download,
     ChevronLeft, ChevronRight, ArrowUpDown, Loader2,
@@ -257,13 +256,12 @@ export default function StudentsPage() {
                                             <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 shadow-md ring-2 ring-white">
                                                 {student.profile_image ? (
                                                     <>
-                                                        <Image
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img
                                                             src={imgUrl(student.profile_image)}
                                                             alt={student.name}
-                                                            width={40}
-                                                            height={40}
                                                             className="object-cover w-full h-full"
-                                                            sizes="40px"
+                                                            loading="lazy"
                                                         />
                                                         {/* Subtle dark gradient overlay for professional look */}
                                                         <span className="absolute inset-0 rounded-full bg-gradient-to-b from-black/5 via-transparent to-black/25 pointer-events-none" />

@@ -1,7 +1,6 @@
 ﻿'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 import {
     X, User, Phone, Mail, MapPin, Calendar, Hash,
     Users, AlertCircle, CheckCircle2, Loader2,
@@ -93,7 +92,8 @@ export default function StudentViewModal({ student, isLoading, onClose }: Studen
                             <div className="relative w-9 h-9 rounded-full overflow-hidden shadow-md ring-2 ring-white flex-shrink-0">
                                 {student?.profile_image ? (
                                     <>
-                                        <Image src={imgUrl(student.profile_image)} alt={student.name} width={36} height={36} className="object-cover w-full h-full" sizes="36px" />
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={imgUrl(student.profile_image)} alt={student.name} className="object-cover w-full h-full" loading="lazy" />
                                         <span className="absolute inset-0 rounded-full bg-gradient-to-b from-black/5 via-transparent to-black/25 pointer-events-none" />
                                     </>
                                 ) : (
@@ -132,7 +132,8 @@ export default function StudentViewModal({ student, isLoading, onClose }: Studen
                                     <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 shadow-lg ring-2 ring-white">
                                         {student.profile_image ? (
                                             <>
-                                                <Image src={imgUrl(student.profile_image)} alt={student.name} width={64} height={64} className="object-cover w-full h-full" sizes="64px" />
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={imgUrl(student.profile_image)} alt={student.name} className="object-cover w-full h-full" loading="lazy" />
                                                 <span className="absolute inset-0 rounded-full bg-gradient-to-b from-black/5 via-transparent to-black/25 pointer-events-none" />
                                             </>
                                         ) : (
