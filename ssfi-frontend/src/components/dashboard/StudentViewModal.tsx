@@ -7,11 +7,8 @@ import {
     GraduationCap, Heart, Trophy, Shield
 } from 'lucide-react';
 
-/* Derive image‑serving base URL from the API URL (strip /api/v1 suffix) */
-const IMG_BASE = (() => {
-    const u = process.env.NEXT_PUBLIC_API_URL || '';
-    return u.replace(/\/api(\/v\d+)?\/?$/, '');
-})();
+/* Always use the backend base URL for serving uploaded images */
+const IMG_BASE = 'https://api.ssfiskate.com';
 const imgUrl = (path: string) => {
     if (path.startsWith('http') || path.startsWith('data:')) return path;
     const slash = path.startsWith('/') ? '' : '/';
