@@ -13,7 +13,11 @@ const IMG_BASE = (() => {
     const u = process.env.NEXT_PUBLIC_API_URL || '';
     return u.replace(/\/api(\/v\d+)?\/?$/, '');
 })();
-const imgUrl = (path: string) => (path.startsWith('http') ? path : `${IMG_BASE}${path}`);
+const imgUrl = (path: string) => {
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const slash = path.startsWith('/') ? '' : '/';
+    return `${IMG_BASE}${slash}${path}`;
+};
 
 interface StudentProfile {
     id: number;

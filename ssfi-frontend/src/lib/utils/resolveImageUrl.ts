@@ -12,6 +12,7 @@ export function resolveImageUrl(url: string | null | undefined): string {
   if (url.startsWith('http')) return url;
   if (url.startsWith('data:')) return url;  // Base64 data URIs
   if (url.startsWith('/images/')) return url; // Local public folder
-  if (url.startsWith('/uploads/')) return `${API_BASE}${url}`; // Backend uploads
+  if (url.startsWith('/uploads/')) return `${API_BASE}${url}`; // Backend uploads (with leading /)
+  if (url.startsWith('uploads/')) return `${API_BASE}/${url}`; // Backend uploads (without leading /)
   return url;
 }
