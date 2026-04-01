@@ -252,13 +252,43 @@ export const updateState = async (id: number, data: { name?: string; code?: stri
 export const deleteState = async (id: number) => {
     const state = await prisma.state.findUnique({
         where: { id },
-        include: { statePerson: true, stateSecretaries: { select: { id: true } } },
+        include: { statePerson: true },
     });
     if (!state) throw new AppError('State not found', 404);
 
-    // Delete state secretary registration records and associated user
     await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 0`);
     try {
+        // Unlink students from this state's clubs and districts
+        await prisma.$executeRawUnsafe(`UPDATE students SET clubId = NULL WHERE clubId IN (SELECT id FROM clubs WHERE stateId = ?)`, id);
+        await prisma.$executeRawUnsafe(`UPDATE students SET districtId = NULL WHERE districtId IN (SELECT id FROM districts WHERE stateId = ?)`, id);
+        await prisma.$executeRawUnsafe(`UPDATE students SET stateId = NULL WHERE stateId = ?`, id);
+
+        // Unlink event registrations
+        await prisma.$executeRawUnsafe(`UPDATE event_registrations SET clubId = NULL WHERE clubId IN (SELECT id FROM clubs WHERE stateId = ?)`, id);
+        await prisma.$executeRawUnsafe(`UPDATE event_registrations SET districtId = NULL WHERE districtId IN (SELECT id FROM districts WHERE stateId = ?)`, id);
+
+        // Delete club owners + their users
+        await prisma.$executeRawUnsafe(`DELETE p FROM payments p INNER JOIN users u ON p.userId = u.id INNER JOIN club_owners co ON co.userId = u.id INNER JOIN clubs c ON c.id = co.clubId WHERE c.stateId = ?`, id);
+        await prisma.$executeRawUnsafe(`DELETE rc FROM razorpay_configs rc INNER JOIN users u ON rc.userId = u.id INNER JOIN club_owners co ON co.userId = u.id INNER JOIN clubs c ON c.id = co.clubId WHERE c.stateId = ?`, id);
+        await prisma.$executeRawUnsafe(`DELETE u FROM users u INNER JOIN club_owners co ON co.userId = u.id INNER JOIN clubs c ON c.id = co.clubId WHERE c.stateId = ?`, id);
+        await prisma.$executeRawUnsafe(`DELETE co FROM club_owners co INNER JOIN clubs c ON c.id = co.clubId WHERE c.stateId = ?`, id);
+
+        // Delete clubs
+        await prisma.$executeRawUnsafe(`DELETE FROM clubs WHERE stateId = ?`, id);
+
+        // Delete district secretaries + their users
+        await prisma.$executeRawUnsafe(`DELETE FROM district_secretaries WHERE districtId IN (SELECT id FROM districts WHERE stateId = ?)`, id);
+        await prisma.$executeRawUnsafe(`DELETE p FROM payments p INNER JOIN users u ON p.userId = u.id INNER JOIN district_persons dp ON dp.userId = u.id INNER JOIN districts d ON d.id = dp.districtId WHERE d.stateId = ?`, id);
+        await prisma.$executeRawUnsafe(`DELETE rc FROM razorpay_configs rc INNER JOIN users u ON rc.userId = u.id INNER JOIN district_persons dp ON dp.userId = u.id INNER JOIN districts d ON d.id = dp.districtId WHERE d.stateId = ?`, id);
+        await prisma.$executeRawUnsafe(`DELETE u FROM users u INNER JOIN district_persons dp ON dp.userId = u.id INNER JOIN districts d ON d.id = dp.districtId WHERE d.stateId = ?`, id);
+        await prisma.$executeRawUnsafe(`DELETE dp FROM district_persons dp INNER JOIN districts d ON d.id = dp.districtId WHERE d.stateId = ?`, id);
+
+        // Delete districts
+        await prisma.$executeRawUnsafe(`DELETE FROM districts WHERE stateId = ?`, id);
+
+        // Delete events for this state
+        await prisma.$executeRawUnsafe(`DELETE FROM events WHERE stateId = ?`, id);
+
         // Delete state secretary applications
         await prisma.$executeRawUnsafe(`DELETE FROM state_secretaries WHERE stateId = ?`, id);
 
@@ -270,6 +300,9 @@ export const deleteState = async (id: number) => {
             await prisma.$executeRawUnsafe(`DELETE FROM state_persons WHERE userId = ?`, userId);
             await prisma.$executeRawUnsafe(`DELETE FROM users WHERE id = ?`, userId);
         }
+
+        // Delete the state record itself
+        await prisma.$executeRawUnsafe(`DELETE FROM states WHERE id = ?`, id);
 
         await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
     } catch (err) {
