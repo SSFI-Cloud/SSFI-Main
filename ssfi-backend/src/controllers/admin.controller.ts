@@ -33,16 +33,15 @@ export const resetAllPayments = async (req: Request, res: Response, next: NextFu
 export const resetDistrictsAndClubs = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Unlink students from clubs and districts
-      const unlinkedStudents = await tx.student.updateMany({
-        where: { OR: [{ clubId: { not: null } }, { districtId: { not: null } }] },
-        data: { clubId: null, districtId: null },
-      });
+      // 1. Unlink students from clubs and districts (raw SQL to bypass schema constraints)
+      await tx.$executeRawUnsafe(`UPDATE students SET clubId = NULL, districtId = NULL WHERE clubId IS NOT NULL OR districtId IS NOT NULL`);
 
       // 2. Delete payments linked to DISTRICT_SECRETARY or CLUB_OWNER users
       const dsUsers = await tx.user.findMany({ where: { role: { in: [UserRole.DISTRICT_SECRETARY, UserRole.CLUB_OWNER] } }, select: { id: true } });
       const dsUserIds = dsUsers.map(u => u.id);
-      const deletedPayments = await tx.payment.deleteMany({ where: { userId: { in: dsUserIds } } });
+      if (dsUserIds.length > 0) {
+        await tx.payment.deleteMany({ where: { userId: { in: dsUserIds } } });
+      }
 
       // 3. Delete ClubOwner records
       const deletedClubOwners = await tx.clubOwner.deleteMany({});
@@ -66,18 +65,13 @@ export const resetDistrictsAndClubs = async (req: Request, res: Response, next: 
         where: { role: { in: [UserRole.DISTRICT_SECRETARY, UserRole.CLUB_OWNER] } },
       });
 
-      // 9. Unlink event registrations from districts
-      await tx.eventRegistration.updateMany({
-        where: { districtId: { not: null } },
-        data: { districtId: null },
-      });
+      // 9. Unlink event registrations from districts (raw SQL)
+      await tx.$executeRawUnsafe(`UPDATE event_registrations SET districtId = NULL WHERE districtId IS NOT NULL`);
 
       // 10. Delete all District master records
       const deletedDistricts = await tx.district.deleteMany({});
 
       return {
-        unlinkedStudents: unlinkedStudents.count,
-        deletedPayments: deletedPayments.count,
         deletedClubOwners: deletedClubOwners.count,
         deletedClubs: deletedClubs.count,
         deletedDistrictSecretaries: deletedDistrictSecretaries.count,
