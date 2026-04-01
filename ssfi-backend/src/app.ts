@@ -272,7 +272,7 @@ app.get(`/api/${API_VERSION}/notifications/public/active`, cacheMiddleware(300),
 
     for (const w of windows) {
       const label = w.title || `${w.type.charAt(0).toUpperCase() + w.type.slice(1).toLowerCase()} Registration`;
-      const linkMap: Record<string, string> = { student: '/register/student', club: '/register/club', state: '/register/state', district: '/register/district' };
+      const linkMap: Record<string, string> = { student: '/register/student', club: '/register/club', state: '/register/state-secretary', district: '/register/district-secretary', state_secretary: '/register/state-secretary', district_secretary: '/register/district-secretary' };
       notifications.push({
         id: `rw-${w.id}`,
         message: `${label} is now open — Register before ${new Date(w.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}!`,
