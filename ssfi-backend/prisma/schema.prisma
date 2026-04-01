@@ -364,7 +364,7 @@ model Student {
   userId     Int @unique
   stateId    Int
   districtId Int
-  clubId     Int
+  clubId     Int?
 
   // Personal Details
   name          String
@@ -415,7 +415,7 @@ model Student {
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   state              State               @relation(fields: [stateId], references: [id])
   district           District            @relation(fields: [districtId], references: [id])
-  club               Club                @relation(fields: [clubId], references: [id])
+  club               Club?               @relation(fields: [clubId], references: [id])
   eventRegistrations EventRegistration[]
   certificates       Certificate[]
   raceResults        RaceResult[]

@@ -30,6 +30,62 @@ export const resetAllPayments = async (req: Request, res: Response, next: NextFu
   }
 };
 
+export const resetDistrictsAndClubs = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Unlink students from clubs (set clubId to null)
+      const unlinkedStudents = await tx.student.updateMany({
+        where: { clubId: { not: null } },
+        data: { clubId: null },
+      });
+
+      // 2. Delete payments linked to DISTRICT_SECRETARY or CLUB_OWNER users
+      const dsUsers = await tx.user.findMany({ where: { role: { in: [UserRole.DISTRICT_SECRETARY, UserRole.CLUB_OWNER] } }, select: { id: true } });
+      const dsUserIds = dsUsers.map(u => u.id);
+      const deletedPayments = await tx.payment.deleteMany({ where: { userId: { in: dsUserIds } } });
+
+      // 3. Delete ClubOwner records
+      const deletedClubOwners = await tx.clubOwner.deleteMany({});
+
+      // 4. Delete all Club records
+      const deletedClubs = await tx.club.deleteMany({});
+
+      // 5. Delete DistrictSecretary records (registration applications)
+      const deletedDistrictSecretaries = await tx.districtSecretary.deleteMany({});
+
+      // 6. Delete DistrictPerson records (approved secretary links)
+      const deletedDistrictPersons = await tx.districtPerson.deleteMany({});
+
+      // 7. Delete RazorpayConfig for these users
+      if (dsUserIds.length > 0) {
+        await tx.razorpayConfig.deleteMany({ where: { userId: { in: dsUserIds } } });
+      }
+
+      // 8. Delete User records with DISTRICT_SECRETARY or CLUB_OWNER roles
+      const deletedUsers = await tx.user.deleteMany({
+        where: { role: { in: [UserRole.DISTRICT_SECRETARY, UserRole.CLUB_OWNER] } },
+      });
+
+      return {
+        unlinkedStudents: unlinkedStudents.count,
+        deletedPayments: deletedPayments.count,
+        deletedClubOwners: deletedClubOwners.count,
+        deletedClubs: deletedClubs.count,
+        deletedDistrictSecretaries: deletedDistrictSecretaries.count,
+        deletedDistrictPersons: deletedDistrictPersons.count,
+        deletedUsers: deletedUsers.count,
+      };
+    }, { timeout: 60000 });
+
+    res.status(200).json({
+      status: 'success',
+      data: { ...result, message: 'District and club data cleared. Students unlinked from clubs.' },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const bulkExpireStudents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await prisma.user.updateMany({

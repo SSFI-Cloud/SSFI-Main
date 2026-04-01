@@ -10,6 +10,7 @@ router.use(protect);
 router.use(restrictTo(UserRole.GLOBAL_ADMIN));
 
 router.post('/bulk-expire-students', adminController.bulkExpireStudents);
+router.delete('/reset-districts-clubs', adminController.resetDistrictsAndClubs);
 router.delete('/reset-payments', adminController.resetAllPayments);
 router.delete('/reset-donations', adminController.resetAllDonations);
 
