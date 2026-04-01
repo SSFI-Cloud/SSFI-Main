@@ -89,8 +89,14 @@ export const resetDistrictsAndClubs = async (req: Request, res: Response, next: 
       status: 'success',
       data: { ...result, message: 'District and club data cleared. Students unlinked.' },
     });
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    // Return detailed error for debugging
+    res.status(500).json({
+      status: 'error',
+      message: error?.message || 'Unknown error',
+      code: error?.code,
+      meta: error?.meta,
+    });
   }
 };
 
