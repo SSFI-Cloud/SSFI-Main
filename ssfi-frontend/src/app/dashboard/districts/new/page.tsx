@@ -45,9 +45,7 @@ export default function NewDistrictPage() {
     const regCopyRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
-        // District master data
-        districtName: '',
-        districtCode: '',
+        // Location
         stateId: '',
         // Secretary personal details
         secretaryName: '',
@@ -102,9 +100,8 @@ export default function NewDistrictPage() {
 
     const validate = (): boolean => {
         const errs: Record<string, string> = {};
-        if (!formData.districtName.trim()) errs.districtName = 'District name is required';
-        if (!formData.districtCode.trim()) errs.districtCode = 'District code is required';
         if (!formData.stateId) errs.stateId = 'Please select a state';
+        if (!formData.districtId) errs.districtId = 'Please select a district';
         if (!formData.secretaryName.trim()) errs.secretaryName = 'Secretary name is required';
         if (!formData.secretaryEmail.trim()) errs.secretaryEmail = 'Email is required';
         if (!formData.secretaryPhone.trim()) errs.secretaryPhone = 'Phone is required';
@@ -125,10 +122,9 @@ export default function NewDistrictPage() {
 
         try {
             const payload: any = {
-                // District master data
-                name: formData.districtName.trim(),
-                code: formData.districtCode.trim().toUpperCase(),
+                // Location
                 stateId: Number(formData.stateId),
+                districtId: Number(formData.districtId),
                 // Secretary
                 secretaryName: formData.secretaryName.trim(),
                 secretaryGender: formData.secretaryGender,
@@ -155,15 +151,13 @@ export default function NewDistrictPage() {
                     email: formData.secretaryEmail.trim(),
                     phone: formData.secretaryPhone.trim(),
                     stateId: formData.stateId,
-                    districtId: formData.districtId || undefined,
+                    districtId: formData.districtId,
                     residentialAddress: formData.residentialAddress.trim(),
                     associationName: formData.associationName.trim() || undefined,
                     profilePhoto: formData.profilePhoto,
                     logo: formData.associationLogo,
                     associationRegistrationCopy: formData.registrationCopy,
                     termsAccepted: true,
-                    districtName: formData.districtName.trim(),
-                    districtCode: formData.districtCode.trim().toUpperCase(),
                 };
 
                 const res = await api.post('/affiliations/district-secretary/initiate', affiliationPayload);
@@ -277,38 +271,6 @@ export default function NewDistrictPage() {
             {/* Form */}
             {!success && (
                 <div className="space-y-4">
-                    {/* District Master Data */}
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-green-50">
-                            <Building2 className="w-5 h-5 text-emerald-600" />
-                            <h2 className="font-semibold text-gray-900">District Information</h2>
-                        </div>
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className={labelClass}>District Name *</label>
-                                <input type="text" value={formData.districtName} onChange={e => updateField('districtName', e.target.value)}
-                                    placeholder="e.g., Chennai" className={inputClass('districtName')} />
-                                <FieldError field="districtName" />
-                            </div>
-                            <div>
-                                <label className={labelClass}>District Code *</label>
-                                <input type="text" value={formData.districtCode}
-                                    onChange={e => updateField('districtCode', e.target.value.toUpperCase().slice(0, 5))}
-                                    placeholder="e.g., CHN" className={inputClass('districtCode')} />
-                                <FieldError field="districtCode" />
-                            </div>
-                            <div>
-                                <label className={labelClass}>State *</label>
-                                <select value={formData.stateId} onChange={e => { updateField('stateId', e.target.value); updateField('districtId', ''); }}
-                                    className={inputClass('stateId')}>
-                                    <option value="">Select State</option>
-                                    {states.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                </select>
-                                <FieldError field="stateId" />
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Secretary Details */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-green-50">
@@ -342,14 +304,23 @@ export default function NewDistrictPage() {
                                 </div>
                             </div>
                             <div>
-                                <label className={labelClass}>District (existing)</label>
+                                <label className={labelClass}>State *</label>
+                                <select value={formData.stateId} onChange={e => { updateField('stateId', e.target.value); updateField('districtId', ''); }}
+                                    className={inputClass('stateId')}>
+                                    <option value="">Select State</option>
+                                    {states.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                </select>
+                                <FieldError field="stateId" />
+                            </div>
+                            <div>
+                                <label className={labelClass}>District *</label>
                                 <select value={formData.districtId} onChange={e => updateField('districtId', e.target.value)}
                                     disabled={!formData.stateId}
                                     className={`${inputClass('districtId')} ${!formData.stateId ? 'opacity-50' : ''}`}>
-                                    <option value="">Creating new district</option>
+                                    <option value="">Select District</option>
                                     {districts.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
                                 </select>
-                                <p className="mt-0.5 text-xs text-gray-400">Leave empty if creating a new district</p>
+                                <FieldError field="districtId" />
                             </div>
                             <div>
                                 <label className={labelClass}>Email *</label>

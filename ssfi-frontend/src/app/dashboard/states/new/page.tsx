@@ -46,9 +46,6 @@ export default function NewStatePage() {
     const presidentPhotoRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
-        // State master data
-        stateName: '',
-        stateCode: '',
         // President
         presidentName: '',
         presidentPhoto: '',
@@ -102,8 +99,7 @@ export default function NewStatePage() {
 
     const validate = (): boolean => {
         const errs: Record<string, string> = {};
-        if (!formData.stateName.trim()) errs.stateName = 'State name is required';
-        if (!formData.stateCode.trim()) errs.stateCode = 'State code is required';
+        if (!formData.stateId) errs.stateId = 'Please select a state';
         if (!formData.presidentName.trim()) errs.presidentName = 'President name is required';
         if (!formData.secretaryName.trim()) errs.secretaryName = 'Secretary name is required';
         if (!formData.secretaryEmail.trim()) errs.secretaryEmail = 'Email is required';
@@ -125,9 +121,8 @@ export default function NewStatePage() {
 
         try {
             const payload: any = {
-                // State master data
-                name: formData.stateName.trim(),
-                code: formData.stateCode.trim().toUpperCase(),
+                // State selection
+                stateId: Number(formData.stateId),
                 // President
                 presidentName: formData.presidentName.trim(),
                 presidentPhoto: formData.presidentPhoto || undefined,
@@ -168,9 +163,6 @@ export default function NewStatePage() {
                     presidentPhoto: formData.presidentPhoto || undefined,
                     isSelfSecretary: formData.isSelfSecretary,
                     termsAccepted: true,
-                    // Also include state master data for creation
-                    stateName: formData.stateName.trim(),
-                    stateCode: formData.stateCode.trim().toUpperCase(),
                 };
 
                 const res = await api.post('/affiliations/state-secretary/initiate', affiliationPayload);
@@ -284,29 +276,6 @@ export default function NewStatePage() {
             {/* Form */}
             {!success && (
                 <div className="space-y-4">
-                    {/* State Master Data */}
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-green-50">
-                            <MapPin className="w-5 h-5 text-emerald-600" />
-                            <h2 className="font-semibold text-gray-900">State Information</h2>
-                        </div>
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className={labelClass}>State Name *</label>
-                                <input type="text" value={formData.stateName} onChange={e => updateField('stateName', e.target.value)}
-                                    placeholder="e.g., Tamil Nadu" className={inputClass('stateName')} />
-                                <FieldError field="stateName" />
-                            </div>
-                            <div>
-                                <label className={labelClass}>State Code *</label>
-                                <input type="text" value={formData.stateCode}
-                                    onChange={e => updateField('stateCode', e.target.value.toUpperCase().slice(0, 3))}
-                                    placeholder="e.g., TN" className={inputClass('stateCode')} />
-                                <FieldError field="stateCode" />
-                            </div>
-                        </div>
-                    </div>
-
                     {/* President Details */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-2 bg-gradient-to-r from-amber-50 to-yellow-50">
@@ -382,12 +351,13 @@ export default function NewStatePage() {
                                 </div>
                             </div>
                             <div>
-                                <label className={labelClass}>State (for secretary) </label>
+                                <label className={labelClass}>State *</label>
                                 <select value={formData.stateId} onChange={e => updateField('stateId', e.target.value)}
                                     className={inputClass('stateId')}>
                                     <option value="">Select state</option>
                                     {states.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                                 </select>
+                                <FieldError field="stateId" />
                             </div>
                             <div>
                                 <label className={labelClass}>Email *</label>
