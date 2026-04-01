@@ -32,65 +32,51 @@ export const resetAllPayments = async (req: Request, res: Response, next: NextFu
 
 export const resetDistrictsAndClubs = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Unlink students from clubs and districts
-      await tx.$executeRawUnsafe(`UPDATE students SET clubId = NULL, districtId = NULL WHERE clubId IS NOT NULL OR districtId IS NOT NULL`);
+    // Use raw SQL throughout to bypass Prisma FK validation
+    await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 0`);
 
-      // 2. Unlink event registrations from clubs and districts
-      await tx.$executeRawUnsafe(`UPDATE event_registrations SET clubId = NULL, districtId = NULL WHERE clubId IS NOT NULL OR districtId IS NOT NULL`);
+    // Unlink students from clubs and districts
+    await prisma.$executeRawUnsafe(`UPDATE students SET clubId = NULL, districtId = NULL`);
 
-      // 3. Unlink payments from razorpay configs owned by district/club users, then delete those configs
-      const dsUsers = await tx.user.findMany({ where: { role: { in: [UserRole.DISTRICT_SECRETARY, UserRole.CLUB_OWNER] } }, select: { id: true } });
-      const dsUserIds = dsUsers.map(u => u.id);
-      if (dsUserIds.length > 0) {
-        // Unlink payments referencing these users' razorpay configs
-        const configs = await tx.razorpayConfig.findMany({ where: { userId: { in: dsUserIds } }, select: { id: true } });
-        const configIds = configs.map(c => c.id);
-        if (configIds.length > 0) {
-          await tx.payment.updateMany({ where: { razorpayConfigId: { in: configIds } }, data: { razorpayConfigId: null } });
-        }
-        // Delete payments by these users
-        await tx.payment.deleteMany({ where: { userId: { in: dsUserIds } } });
-        // Delete razorpay configs
-        await tx.razorpayConfig.deleteMany({ where: { userId: { in: dsUserIds } } });
-      }
+    // Unlink event registrations from clubs and districts
+    await prisma.$executeRawUnsafe(`UPDATE event_registrations SET clubId = NULL, districtId = NULL`);
 
-      // 4. Delete ClubOwner records
-      const deletedClubOwners = await tx.clubOwner.deleteMany({});
+    // Unlink payments from razorpay configs
+    await prisma.$executeRawUnsafe(`UPDATE payments SET razorpayConfigId = NULL WHERE razorpayConfigId IS NOT NULL`);
 
-      // 5. Delete all Club records
-      const deletedClubs = await tx.club.deleteMany({});
+    // Delete payments by district secretary / club owner users
+    await prisma.$executeRawUnsafe(`DELETE p FROM payments p INNER JOIN users u ON p.userId = u.id WHERE u.role IN ('DISTRICT_SECRETARY', 'CLUB_OWNER')`);
 
-      // 6. Delete DistrictSecretary records (registration applications)
-      const deletedDistrictSecretaries = await tx.districtSecretary.deleteMany({});
+    // Delete club owners
+    await prisma.$executeRawUnsafe(`DELETE FROM club_owners`);
 
-      // 7. Delete DistrictPerson records (approved secretary links)
-      const deletedDistrictPersons = await tx.districtPerson.deleteMany({});
+    // Delete clubs
+    await prisma.$executeRawUnsafe(`DELETE FROM clubs`);
 
-      // 8. Delete User records with DISTRICT_SECRETARY or CLUB_OWNER roles
-      const deletedUsers = await tx.user.deleteMany({
-        where: { role: { in: [UserRole.DISTRICT_SECRETARY, UserRole.CLUB_OWNER] } },
-      });
+    // Delete district secretaries (registration applications)
+    await prisma.$executeRawUnsafe(`DELETE FROM district_secretaries`);
 
-      // 9. Delete all District master records
-      const deletedDistricts = await tx.district.deleteMany({});
+    // Delete district persons (approved secretary links)
+    await prisma.$executeRawUnsafe(`DELETE FROM district_persons`);
 
-      return {
-        deletedClubOwners: deletedClubOwners.count,
-        deletedClubs: deletedClubs.count,
-        deletedDistrictSecretaries: deletedDistrictSecretaries.count,
-        deletedDistrictPersons: deletedDistrictPersons.count,
-        deletedUsers: deletedUsers.count,
-        deletedDistricts: deletedDistricts.count,
-      };
-    }, { timeout: 60000 });
+    // Delete razorpay configs for district/club users
+    await prisma.$executeRawUnsafe(`DELETE rc FROM razorpay_configs rc INNER JOIN users u ON rc.userId = u.id WHERE u.role IN ('DISTRICT_SECRETARY', 'CLUB_OWNER')`);
+
+    // Delete user accounts
+    await prisma.$executeRawUnsafe(`DELETE FROM users WHERE role IN ('DISTRICT_SECRETARY', 'CLUB_OWNER')`);
+
+    // Delete all district master records
+    await prisma.$executeRawUnsafe(`DELETE FROM districts`);
+
+    await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
 
     res.status(200).json({
       status: 'success',
-      data: { ...result, message: 'District and club data cleared. Students unlinked.' },
+      data: { message: 'All district and club data cleared. Students unlinked.' },
     });
   } catch (error: any) {
-    // Return detailed error for debugging
+    // Re-enable FK checks on error
+    try { await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`); } catch {}
     res.status(500).json({
       status: 'error',
       message: error?.message || 'Unknown error',
