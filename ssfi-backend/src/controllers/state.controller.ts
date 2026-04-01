@@ -28,6 +28,16 @@ export const getState = async (req: Request, res: Response, next: NextFunction) 
 
 export const createState = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        // If stateId is provided, register secretary for existing state (admin offline mode)
+        if (req.body.stateId && req.body.secretaryName) {
+            const result = await stateService.registerSecretaryForState(req.body);
+            return res.status(201).json({
+                status: 'success',
+                data: result,
+            });
+        }
+
+        // Standard: create new state
         const state = await stateService.createState(req.body);
         res.status(201).json({
             status: 'success',

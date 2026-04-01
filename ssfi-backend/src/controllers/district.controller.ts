@@ -28,7 +28,30 @@ export const getDistrict = async (req: Request, res: Response, next: NextFunctio
 
 export const createDistrict = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { name, code, stateId } = req.body;
+        const { name, code, stateId, districtId, secretaryName, secretaryGender, secretaryEmail, secretaryPhone, secretaryAddress, associationName, profilePhoto, logo, associationRegistrationCopy } = req.body;
+
+        // If secretaryName is provided, this is an admin creating a district secretary (offline mode)
+        if (secretaryName && districtId) {
+            const result = await districtService.createDistrictWithSecretary({
+                stateId: Number(stateId || districtId),
+                districtId: Number(districtId),
+                secretaryName,
+                secretaryGender: secretaryGender || 'MALE',
+                secretaryEmail,
+                secretaryPhone,
+                secretaryAddress,
+                associationName,
+                profilePhoto,
+                logo,
+                associationRegistrationCopy,
+            });
+            return res.status(201).json({
+                status: 'success',
+                data: result,
+            });
+        }
+
+        // Standard district creation (just the master record)
         if (!name || !code || !stateId) {
             throw new AppError('Missing required fields: name, code, stateId', 400);
         }

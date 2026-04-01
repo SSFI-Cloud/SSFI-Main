@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma, UserRole } from '@prisma/client';
 import { AppError } from '../utils/errors';
 
 import prisma from '../config/prisma';
@@ -296,4 +296,93 @@ export const deleteDistrict = async (id: number) => {
     }
 
     return { deleted: true, districtName: district.name };
+};
+
+export const createDistrictWithSecretary = async (data: {
+    stateId: number;
+    districtId: number;
+    secretaryName: string;
+    secretaryGender: string;
+    secretaryEmail: string;
+    secretaryPhone: string;
+    secretaryAddress: string;
+    associationName?: string;
+    profilePhoto?: string;
+    logo?: string;
+    associationRegistrationCopy?: string;
+}) => {
+    const district = await prisma.district.findUnique({ where: { id: data.districtId }, include: { state: true } });
+    if (!district) throw new AppError('District not found', 404);
+
+    // Check if district already has a secretary
+    const existing = await prisma.districtPerson.findUnique({ where: { districtId: data.districtId } });
+    if (existing) throw new AppError('This district already has a secretary assigned', 400);
+
+    // Check duplicate phone/email
+    const existingUser = await prisma.user.findFirst({
+        where: { OR: [{ email: data.secretaryEmail }, { phone: data.secretaryPhone }] },
+    });
+    if (existingUser) throw new AppError('A user with this email or phone already exists', 400);
+
+    const stateCode = district.state?.code || 'XX';
+    const uid = `DS-${stateCode}-${district.code}-${Date.now().toString().slice(-4)}`;
+
+    return prisma.$transaction(async (tx) => {
+        // Create user
+        const user = await tx.user.create({
+            data: {
+                uid,
+                email: data.secretaryEmail,
+                phone: data.secretaryPhone,
+                password: data.secretaryPhone,
+                role: UserRole.DISTRICT_SECRETARY,
+                isActive: true,
+                isApproved: true,
+                approvalStatus: 'APPROVED',
+            },
+        });
+
+        // Create district person
+        await tx.districtPerson.create({
+            data: {
+                userId: user.id,
+                districtId: data.districtId,
+                name: data.secretaryName,
+                gender: data.secretaryGender,
+                aadhaarNumber: `ADMIN-${Date.now()}`,
+                addressLine1: data.secretaryAddress,
+                city: 'N/A',
+                pincode: '000000',
+                identityProof: 'admin-created',
+            },
+        });
+
+        // Create district secretary record (approved)
+        await tx.districtSecretary.create({
+            data: {
+                uid,
+                name: data.secretaryName,
+                gender: data.secretaryGender,
+                email: data.secretaryEmail,
+                phone: data.secretaryPhone,
+                stateId: district.stateId,
+                districtId: data.districtId,
+                residentialAddress: data.secretaryAddress,
+                associationName: data.associationName || null,
+                profilePhoto: data.profilePhoto || null,
+                logo: data.logo || null,
+                associationRegistrationCopy: data.associationRegistrationCopy || null,
+                registrationWindowId: 'admin-created',
+                status: 'APPROVED',
+                approvedAt: new Date(),
+                approvedBy: 'ADMIN',
+            },
+        });
+
+        return {
+            district: { id: district.id, name: district.name },
+            secretary: { uid, name: data.secretaryName, email: data.secretaryEmail, phone: data.secretaryPhone },
+            message: `District secretary created. Login: UID=${uid}, Password=${data.secretaryPhone}`,
+        };
+    });
 };

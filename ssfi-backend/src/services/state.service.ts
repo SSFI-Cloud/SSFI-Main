@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma, UserRole } from '@prisma/client';
+import { PrismaClient, Prisma, UserRole, AccountStatus } from '@prisma/client';
 import { AppError } from '../utils/errors';
 
 import prisma from '../config/prisma';
@@ -236,6 +236,90 @@ export const createState = async (data: any) => {
         }
 
         return state;
+    });
+};
+
+export const registerSecretaryForState = async (data: any) => {
+    const state = await prisma.state.findUnique({ where: { id: Number(data.stateId) } });
+    if (!state) throw new AppError('State not found', 404);
+
+    // Check if state already has a secretary
+    const existingPerson = await prisma.statePerson.findUnique({ where: { stateId: state.id } });
+    if (existingPerson) throw new AppError('This state already has a secretary assigned', 400);
+
+    // Check duplicate phone/email
+    const existingUser = await prisma.user.findFirst({
+        where: { OR: [{ email: data.secretaryEmail }, { phone: data.secretaryPhone }] },
+    });
+    if (existingUser) throw new AppError('A user with this email or phone already exists', 400);
+
+    const uid = `ST-${state.code}-${Date.now().toString().slice(-4)}`;
+
+    return prisma.$transaction(async (tx) => {
+        // Update president info if provided
+        if (data.presidentName) {
+            await tx.state.update({
+                where: { id: state.id },
+                data: {
+                    presidentName: data.presidentName,
+                    presidentPhoto: data.presidentPhoto || undefined,
+                },
+            });
+        }
+
+        // Create user
+        const user = await tx.user.create({
+            data: {
+                uid,
+                email: data.secretaryEmail,
+                phone: data.secretaryPhone,
+                password: data.secretaryPhone,
+                role: UserRole.STATE_SECRETARY,
+                isActive: true,
+                isApproved: true,
+                approvalStatus: 'APPROVED',
+            },
+        });
+
+        // Create state person
+        await tx.statePerson.create({
+            data: {
+                userId: user.id,
+                stateId: state.id,
+                name: data.secretaryName,
+                gender: data.secretaryGender || 'MALE',
+                aadhaarNumber: `ADMIN-${Date.now()}`,
+                addressLine1: data.secretaryAddress || 'N/A',
+                city: 'N/A',
+                pincode: '000000',
+                identityProof: 'admin-created',
+            },
+        });
+
+        // Create state secretary record (approved)
+        await tx.stateSecretary.create({
+            data: {
+                uid,
+                name: data.secretaryName,
+                gender: data.secretaryGender || 'MALE',
+                email: data.secretaryEmail,
+                phone: data.secretaryPhone,
+                stateId: state.id,
+                residentialAddress: data.secretaryAddress || 'N/A',
+                associationName: data.associationName || null,
+                profilePhoto: data.profilePhoto || null,
+                registrationWindowId: 'admin-created',
+                status: 'APPROVED',
+                approvedAt: new Date(),
+                approvedBy: 'ADMIN',
+            },
+        });
+
+        return {
+            state: { id: state.id, name: state.name },
+            secretary: { uid, name: data.secretaryName, email: data.secretaryEmail, phone: data.secretaryPhone },
+            message: `State secretary created. Login: UID=${uid}, Password=${data.secretaryPhone}`,
+        };
     });
 };
 
