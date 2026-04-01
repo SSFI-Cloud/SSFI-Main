@@ -16,6 +16,7 @@ import {
 import { useDistrictSecretaryRegistration } from '@/lib/hooks/useAffiliation';
 import { useStates, useDistricts } from '@/lib/hooks/useStudent';
 import { useRenewal, type MemberLookupResult } from '@/lib/hooks/useAffiliationLookup';
+import { api } from '@/lib/api/client';
 import AffiliationLookupStep from './AffiliationLookupStep';
 import type { DistrictSecretaryFormData } from '@/types/affiliation';
 import { GENDERS } from '@/types/affiliation';
@@ -63,6 +64,12 @@ export default function DistrictSecretaryRegistrationForm() {
 
   useEffect(() => { fetchStates(); }, [fetchStates]);
   useEffect(() => { if (selectedStateId) fetchDistricts(selectedStateId); }, [selectedStateId, fetchDistricts]);
+
+  useEffect(() => {
+    api.get('/registration-windows/check/renewal-status', { params: { type: 'district' } })
+      .then(res => { if (!res.data?.data?.renewalEnabled) setMode('new'); })
+      .catch(() => {});
+  }, []);
 
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,

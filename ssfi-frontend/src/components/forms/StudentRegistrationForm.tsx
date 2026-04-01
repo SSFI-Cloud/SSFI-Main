@@ -14,6 +14,7 @@ import { useRegistrationStore } from '@/lib/store/registrationStore';
 import { useRegisterStudent } from '@/lib/hooks/useStudent';
 import { registrationSchema } from '@/lib/validations/student';
 import { useRenewal, type MemberLookupResult } from '@/lib/hooks/useAffiliationLookup';
+import { api } from '@/lib/api/client';
 import AffiliationLookupStep from './affiliation/AffiliationLookupStep';
 import type { StudentRegistrationData } from '@/types/student';
 
@@ -48,6 +49,12 @@ export default function StudentRegistrationForm() {
 
   const { initiateStudentRegistration, verifyStudentPayment } = useRegisterStudent();
   const { initiateRenewal, verifyRenewal, isLoading: renewLoading } = useRenewal();
+
+  useEffect(() => {
+    api.get('/registration-windows/check/renewal-status', { params: { type: 'student' } })
+      .then(res => { if (!res.data?.data?.renewalEnabled) setMode('new'); })
+      .catch(() => {});
+  }, []);
 
   const handleStepComplete = (stepData: Partial<StudentRegistrationData>) => {
     updateFormData(stepData);

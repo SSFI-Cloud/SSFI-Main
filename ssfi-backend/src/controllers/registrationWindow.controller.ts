@@ -387,7 +387,10 @@ export async function toggleRenewal(req: AuthRequest, res: Response) {
  */
 export async function getRenewalStatus(req: Request, res: Response) {
     try {
-        const enabled = await registrationWindowService.isRenewalEnabled();
+        const { type } = req.query;
+        // Map frontend lowercase type to DB uppercase type if provided
+        const dbType = type ? (typeMap[type as string] || type) as RegistrationType : undefined;
+        const enabled = await registrationWindowService.isRenewalEnabled(dbType);
         return res.status(200).json({
             success: true,
             data: { renewalEnabled: enabled },

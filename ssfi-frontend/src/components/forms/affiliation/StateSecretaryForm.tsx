@@ -16,6 +16,7 @@ import {
 import { useStateSecretaryRegistration } from '@/lib/hooks/useAffiliation';
 import { useStates } from '@/lib/hooks/useStudent';
 import { useRenewal, type MemberLookupResult } from '@/lib/hooks/useAffiliationLookup';
+import { api } from '@/lib/api/client';
 import AffiliationLookupStep from './AffiliationLookupStep';
 import type { StateSecretaryFormData } from '@/types/affiliation';
 import { GENDERS } from '@/types/affiliation';
@@ -89,6 +90,12 @@ export default function StateSecretaryRegistrationForm() {
   const presidentName = watch('presidentName');
 
   useEffect(() => { fetchStates(); }, [fetchStates]);
+
+  useEffect(() => {
+    api.get('/registration-windows/check/renewal-status', { params: { type: 'state' } })
+      .then(res => { if (!res.data?.data?.renewalEnabled) setMode('new'); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (isSelfSecretary && presidentName) {

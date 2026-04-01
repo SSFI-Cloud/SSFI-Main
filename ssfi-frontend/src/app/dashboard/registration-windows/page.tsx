@@ -394,11 +394,9 @@ export default function RegistrationWindowsPage() {
                                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                                     {getTypeBadge(window.type)}
                                                     {getStatusBadge(status)}
-                                                    {(window.type === 'STUDENT' || window.type === 'student') && (
-                                                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${window.renewalEnabled ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${window.renewalEnabled ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
                                                             {window.renewalEnabled ? 'Renewal ON' : 'Renewal OFF'}
                                                         </span>
-                                                    )}
                                                 </div>
                                                 <h3 className="text-lg font-semibold text-gray-900">{window.title}</h3>
                                                 <p className="text-sm text-gray-500 mt-1">{window.description}</p>
@@ -445,7 +443,7 @@ export default function RegistrationWindowsPage() {
                                                     {window.isPaused ? 'Activate' : 'Pause'}
                                                 </button>
                                             )}
-                                            {(window.type === 'STUDENT' || window.type === 'student') && status !== 'closed' && (
+                                            {status !== 'closed' && (
                                                 <button
                                                     onClick={() => toggleRenewal(window)}
                                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${window.renewalEnabled

@@ -16,6 +16,7 @@ import {
 import { useClubRegistration } from '@/lib/hooks/useAffiliation';
 import { useStates, useDistricts } from '@/lib/hooks/useStudent';
 import { useRenewal, type MemberLookupResult } from '@/lib/hooks/useAffiliationLookup';
+import { api } from '@/lib/api/client';
 import AffiliationLookupStep from './AffiliationLookupStep';
 import type { ClubFormData } from '@/types/affiliation';
 
@@ -63,6 +64,12 @@ export default function ClubRegistrationForm() {
     if (selectedStateId) { fetchDistricts(selectedStateId); setValue('districtId', ''); }
     else clearDistricts();
   }, [selectedStateId, fetchDistricts, clearDistricts, setValue]);
+
+  useEffect(() => {
+    api.get('/registration-windows/check/renewal-status', { params: { type: 'club' } })
+      .then(res => { if (!res.data?.data?.renewalEnabled) setMode('new'); })
+      .catch(() => {});
+  }, []);
 
   const handleLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

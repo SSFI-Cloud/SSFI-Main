@@ -418,19 +418,23 @@ export async function canRegister(id: number): Promise<{ allowed: boolean; reaso
 }
 
 /**
- * Check if renewal is currently enabled via any active STUDENT registration window
+ * Check if renewal is currently enabled via any active registration window of the given type.
+ * If no type is provided, defaults to STUDENT for backward compatibility.
  */
-export async function isRenewalEnabled(): Promise<boolean> {
+export async function isRenewalEnabled(type?: RegistrationType): Promise<boolean> {
     const now = new Date();
-    const window = await prisma.registrationWindow.findFirst({
-        where: {
-            type: 'STUDENT',
-            startDate: { lte: now },
-            endDate: { gte: now },
-            isPaused: false,
-            renewalEnabled: true,
-        },
-    });
+    const where: any = {
+        startDate: { lte: now },
+        endDate: { gte: now },
+        isPaused: false,
+        renewalEnabled: true,
+    };
+    if (type) {
+        where.type = type;
+    } else {
+        where.type = 'STUDENT';
+    }
+    const window = await prisma.registrationWindow.findFirst({ where });
     return !!window;
 }
 
