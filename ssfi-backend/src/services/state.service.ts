@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma, UserRole, AccountStatus } from '@prisma/client';
+import { PrismaClient, Prisma, UserRole, AccountStatus, Gender } from '@prisma/client';
 import { AppError } from '../utils/errors';
 
 import prisma from '../config/prisma';
@@ -225,7 +225,7 @@ export const createState = async (data: any) => {
                     userId: user.id,
                     stateId: state.id,
                     name: data.secretaryName,
-                    gender: data.secretaryGender || 'MALE',
+                    gender: (data.secretaryGender || 'MALE') as Gender,
                     aadhaarNumber: data.secretaryAadhaar || `TEMP-${Date.now()}`,
                     addressLine1: data.secretaryAddress || 'N/A',
                     city: data.secretaryCity || 'N/A',
@@ -287,7 +287,7 @@ export const registerSecretaryForState = async (data: any) => {
                 userId: user.id,
                 stateId: state.id,
                 name: data.secretaryName,
-                gender: data.secretaryGender || 'MALE',
+                gender: (data.secretaryGender || 'MALE') as Gender,
                 aadhaarNumber: `ADMIN-${Date.now()}`,
                 addressLine1: data.secretaryAddress || 'N/A',
                 city: 'N/A',
@@ -301,7 +301,7 @@ export const registerSecretaryForState = async (data: any) => {
             data: {
                 uid,
                 name: data.secretaryName,
-                gender: data.secretaryGender || 'MALE',
+                gender: (data.secretaryGender || 'MALE') as Gender,
                 email: data.secretaryEmail,
                 phone: data.secretaryPhone,
                 stateId: state.id,

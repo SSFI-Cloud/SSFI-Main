@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma, UserRole } from '@prisma/client';
+import { PrismaClient, Prisma, UserRole, Gender } from '@prisma/client';
 import { AppError } from '../utils/errors';
 
 import prisma from '../config/prisma';
@@ -348,7 +348,7 @@ export const createDistrictWithSecretary = async (data: {
                 userId: user.id,
                 districtId: data.districtId,
                 name: data.secretaryName,
-                gender: data.secretaryGender,
+                gender: (data.secretaryGender || 'MALE') as Gender,
                 aadhaarNumber: `ADMIN-${Date.now()}`,
                 addressLine1: data.secretaryAddress,
                 city: 'N/A',
