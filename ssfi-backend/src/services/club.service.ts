@@ -181,10 +181,25 @@ export const getClubById = async (id: number) => {
 };
 
 export const createClub = async (data: any) => {
-    // Basic creation logic - usually Clubs are created via Registration flow, but Admin might create them too
-    // For now, simple create
+    // Admin offline club creation — extract only valid Club model fields
+    const clubData: any = {
+        name: data.name || data.clubName,
+        code: data.code || (data.registrationNumber || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10) || `CLB${Date.now().toString().slice(-6)}`,
+        districtId: Number(data.districtId),
+        stateId: data.stateId ? Number(data.stateId) : undefined,
+        registrationNumber: data.registrationNumber || undefined,
+        establishedYear: data.establishedYear ? Number(data.establishedYear) : undefined,
+        contactPerson: data.contactPerson || data.contactPersonName,
+        phone: data.phone,
+        email: data.email || undefined,
+        address: data.address,
+        logo: data.logo || data.clubLogo,
+        uid: `CLB-${Date.now().toString().slice(-6)}`,
+        status: 'APPROVED',
+    };
+
     return prisma.club.create({
-        data,
+        data: clubData,
     });
 };
 
