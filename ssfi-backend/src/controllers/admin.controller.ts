@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/prisma';
 import { AccountStatus, UserRole } from '@prisma/client';
+import { clearCache } from '../utils/cache.util';
 
 export const resetAllDonations = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -69,6 +70,8 @@ export const resetDistrictsAndClubs = async (req: Request, res: Response, next: 
     await prisma.$executeRawUnsafe(`DELETE FROM districts`);
 
     await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
+
+    clearCache();
 
     res.status(200).json({
       status: 'success',
@@ -142,9 +145,24 @@ export const seedDistricts = async (req: Request, res: Response, next: NextFunct
       }
     }
 
+    // Clear location cache so new districts appear immediately
+    clearCache();
+
     res.status(200).json({
       status: 'success',
       data: { totalDistricts, message: `${totalDistricts} districts seeded across all states` },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const flushCache = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    clearCache();
+    res.status(200).json({
+      status: 'success',
+      data: { message: 'All cache cleared' },
     });
   } catch (error) {
     next(error);

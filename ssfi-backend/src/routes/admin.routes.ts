@@ -14,5 +14,6 @@ router.delete('/reset-districts-clubs', adminController.resetDistrictsAndClubs);
 router.delete('/reset-payments', adminController.resetAllPayments);
 router.delete('/reset-donations', adminController.resetAllDonations);
 router.post('/seed-districts', adminController.seedDistricts);
+router.post('/flush-cache', adminController.flushCache);
 
 export default router;
