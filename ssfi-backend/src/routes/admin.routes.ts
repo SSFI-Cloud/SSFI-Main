@@ -13,5 +13,6 @@ router.post('/bulk-expire-students', adminController.bulkExpireStudents);
 router.delete('/reset-districts-clubs', adminController.resetDistrictsAndClubs);
 router.delete('/reset-payments', adminController.resetAllPayments);
 router.delete('/reset-donations', adminController.resetAllDonations);
+router.post('/seed-districts', adminController.seedDistricts);
 
 export default router;
