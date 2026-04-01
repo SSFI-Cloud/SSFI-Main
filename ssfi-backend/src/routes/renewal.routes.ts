@@ -86,6 +86,20 @@ router.post('/verify-kyc', authenticate, async (req, res, next) => {
 });
 
 /**
+ * PUT /api/renewal/update-profile-for-renewal
+ * Update phone, email, and photo during renewal (requires KYC within 24h)
+ */
+router.put('/update-profile-for-renewal', authenticate, async (req, res, next) => {
+    try {
+        if (!req.user) throw new AppError('User not authenticated', 401);
+        const result = await renewalService.updateProfileForRenewal(req.user.id, req.body);
+        res.json({ success: true, data: result });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
  * POST /api/renewal/self-renew
  * Self-service renewal after KYC + payment
  * Body: { paymentId: string, renewalMonths?: number }

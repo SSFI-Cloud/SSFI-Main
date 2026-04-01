@@ -571,6 +571,60 @@ export const selfRenew = async (
     return updatedUser;
 };
 
+/**
+ * Update profile during renewal — allows phone, email, and photo changes (after KYC)
+ */
+export const updateProfileForRenewal = async (
+    userId: number,
+    data: { phone?: string; email?: string; profilePhoto?: string; [key: string]: any }
+) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, phone: true, email: true, role: true, student: { select: { kycVerifiedAt: true } } },
+    });
+
+    if (!user) throw new AppError('User not found', 404);
+    if (user.role !== UserRole.STUDENT) throw new AppError('Only students can use this endpoint', 403);
+
+    // Guard: KYC must be verified within 24 hours
+    const kycVerifiedAt = user.student?.kycVerifiedAt;
+    if (!kycVerifiedAt || (Date.now() - kycVerifiedAt.getTime()) > 24 * 60 * 60 * 1000) {
+        throw new AppError('Please complete Digilocker verification first', 400);
+    }
+
+    const userUpdate: Record<string, any> = {};
+    const studentUpdate: Record<string, any> = {};
+
+    // Phone update with uniqueness check
+    if (data.phone && data.phone !== user.phone) {
+        const existing = await prisma.user.findFirst({ where: { phone: data.phone, id: { not: userId } } });
+        if (existing) throw new AppError('This phone number is already registered to another account', 400);
+        userUpdate.phone = data.phone;
+    }
+
+    // Email update with uniqueness check
+    if (data.email && data.email !== user.email) {
+        const existing = await prisma.user.findFirst({ where: { email: data.email, id: { not: userId } } });
+        if (existing) throw new AppError('This email is already registered to another account', 400);
+        userUpdate.email = data.email;
+    }
+
+    // Photo update
+    if (data.profilePhoto) {
+        studentUpdate.profilePhoto = data.profilePhoto;
+    }
+
+    // Apply updates
+    if (Object.keys(userUpdate).length > 0) {
+        await prisma.user.update({ where: { id: userId }, data: userUpdate });
+    }
+    if (Object.keys(studentUpdate).length > 0) {
+        await prisma.student.update({ where: { userId }, data: studentUpdate });
+    }
+
+    return { updated: true };
+};
+
 export default {
     calculateExpiryDate,
     checkAccountExpiry,
@@ -585,4 +639,5 @@ export default {
     getExpiredAccounts,
     verifyKycForRenewal,
     selfRenew,
+    updateProfileForRenewal,
 };

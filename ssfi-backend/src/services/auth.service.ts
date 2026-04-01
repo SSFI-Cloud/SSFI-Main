@@ -575,6 +575,7 @@ class AuthService {
             aadhaarNumber: true,
             fatherName: true,
             motherName: true,
+            fatherOccupation: true,
             schoolName: true,
             academicBoard: true,
             nomineeName: true,
@@ -632,7 +633,7 @@ class AuthService {
 
     // Allowed fields per role
     const commonFields = ['name', 'gender', 'addressLine1', 'addressLine2', 'city', 'pincode'];
-    const studentFields = [...commonFields, 'dateOfBirth', 'bloodGroup', 'fatherName', 'motherName', 'schoolName', 'academicBoard', 'nomineeName', 'nomineeAge', 'nomineeRelation', 'coachName', 'coachPhone'];
+    const studentFields = [...commonFields, 'dateOfBirth', 'bloodGroup', 'fatherName', 'motherName', 'fatherOccupation', 'schoolName', 'academicBoard', 'nomineeName', 'nomineeAge', 'nomineeRelation', 'coachName', 'coachPhone', 'stateId', 'districtId', 'clubId'];
 
     const allowedFields = user.role === 'STUDENT' ? studentFields : commonFields;
 
@@ -642,6 +643,8 @@ class AuthService {
         if (key === 'dateOfBirth' && data[key]) {
           updateData[key] = new Date(data[key]);
         } else if (key === 'nomineeAge' && data[key]) {
+          updateData[key] = Number(data[key]);
+        } else if (['stateId', 'districtId', 'clubId'].includes(key) && data[key]) {
           updateData[key] = Number(data[key]);
         } else {
           updateData[key] = data[key];
