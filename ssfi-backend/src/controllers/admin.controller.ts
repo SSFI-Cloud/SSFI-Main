@@ -33,10 +33,10 @@ export const resetAllPayments = async (req: Request, res: Response, next: NextFu
 export const resetDistrictsAndClubs = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Unlink students from clubs (set clubId to null)
+      // 1. Unlink students from clubs and districts
       const unlinkedStudents = await tx.student.updateMany({
-        where: { clubId: { not: null } },
-        data: { clubId: null },
+        where: { OR: [{ clubId: { not: null } }, { districtId: { not: null } }] },
+        data: { clubId: null, districtId: null },
       });
 
       // 2. Delete payments linked to DISTRICT_SECRETARY or CLUB_OWNER users
@@ -66,6 +66,15 @@ export const resetDistrictsAndClubs = async (req: Request, res: Response, next: 
         where: { role: { in: [UserRole.DISTRICT_SECRETARY, UserRole.CLUB_OWNER] } },
       });
 
+      // 9. Unlink event registrations from districts
+      await tx.eventRegistration.updateMany({
+        where: { districtId: { not: null } },
+        data: { districtId: null },
+      });
+
+      // 10. Delete all District master records
+      const deletedDistricts = await tx.district.deleteMany({});
+
       return {
         unlinkedStudents: unlinkedStudents.count,
         deletedPayments: deletedPayments.count,
@@ -74,6 +83,7 @@ export const resetDistrictsAndClubs = async (req: Request, res: Response, next: 
         deletedDistrictSecretaries: deletedDistrictSecretaries.count,
         deletedDistrictPersons: deletedDistrictPersons.count,
         deletedUsers: deletedUsers.count,
+        deletedDistricts: deletedDistricts.count,
       };
     }, { timeout: 60000 });
 
