@@ -171,18 +171,24 @@ export const flushCache = async (req: Request, res: Response, next: NextFunction
 
 export const cleanupOrphans = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Delete district secretary records referencing non-existent districts
-    const ds = await prisma.$executeRawUnsafe(`DELETE ds FROM district_secretaries ds LEFT JOIN districts d ON ds.districtId = d.id WHERE d.id IS NULL`);
+    // Delete district secretary records referencing non-existent districts OR states
+    const dsDist = await prisma.$executeRawUnsafe(`DELETE ds FROM district_secretaries ds LEFT JOIN districts d ON ds.districtId = d.id WHERE d.id IS NULL`);
+    const dsState = await prisma.$executeRawUnsafe(`DELETE ds FROM district_secretaries ds LEFT JOIN states s ON ds.stateId = s.id WHERE s.id IS NULL`);
+    const ds = dsDist + dsState;
     // Delete state secretary records referencing non-existent states
     const ss = await prisma.$executeRawUnsafe(`DELETE ss FROM state_secretaries ss LEFT JOIN states s ON ss.stateId = s.id WHERE s.id IS NULL`);
     // Delete club owner records referencing non-existent clubs
     const co = await prisma.$executeRawUnsafe(`DELETE co FROM club_owners co LEFT JOIN clubs c ON co.clubId = c.id WHERE c.id IS NULL`);
+    // Delete district person records referencing non-existent districts
+    const dp = await prisma.$executeRawUnsafe(`DELETE dp FROM district_persons dp LEFT JOIN districts d ON dp.districtId = d.id WHERE d.id IS NULL`);
+    // Delete state person records referencing non-existent states
+    const sp = await prisma.$executeRawUnsafe(`DELETE sp FROM state_persons sp LEFT JOIN states s ON sp.stateId = s.id WHERE s.id IS NULL`);
 
     clearCache();
 
     res.status(200).json({
       status: 'success',
-      data: { message: `Cleaned up orphaned records: ${ds} district secretaries, ${ss} state secretaries, ${co} club owners` },
+      data: { message: `Cleaned up orphaned records: ${ds} district secretaries, ${ss} state secretaries, ${co} club owners, ${dp} district persons, ${sp} state persons` },
     });
   } catch (error) {
     next(error);
