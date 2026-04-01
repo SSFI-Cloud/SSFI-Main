@@ -195,6 +195,62 @@ export const cleanupOrphans = async (req: Request, res: Response, next: NextFunc
   }
 };
 
+export const syncSchema = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const results: string[] = [];
+
+    // Helper to add column if it doesn't exist
+    const addColumnIfMissing = async (table: string, column: string, type: string) => {
+      try {
+        await prisma.$executeRawUnsafe(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${type}`);
+        results.push(`Added ${table}.${column}`);
+      } catch (e: any) {
+        if (e.message?.includes('Duplicate column')) {
+          results.push(`${table}.${column} already exists`);
+        } else {
+          results.push(`Error on ${table}.${column}: ${e.message}`);
+        }
+      }
+    };
+
+    // district_secretaries missing columns
+    await addColumnIfMissing('district_secretaries', 'associationName', 'VARCHAR(191) NULL');
+    await addColumnIfMissing('district_secretaries', 'logo', 'LONGTEXT NULL');
+    await addColumnIfMissing('district_secretaries', 'associationRegistrationCopy', 'LONGTEXT NULL');
+    await addColumnIfMissing('district_secretaries', 'kycVerified', 'BOOLEAN NOT NULL DEFAULT false');
+    await addColumnIfMissing('district_secretaries', 'kycVerifiedAt', 'DATETIME(3) NULL');
+    await addColumnIfMissing('district_secretaries', 'kycVerifiedName', 'VARCHAR(191) NULL');
+    await addColumnIfMissing('district_secretaries', 'kycVerifiedDob', 'VARCHAR(191) NULL');
+    await addColumnIfMissing('district_secretaries', 'kycProfileImage', 'TEXT NULL');
+
+    // Make aadhaarNumber optional (was NOT NULL in migration)
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE \`district_secretaries\` MODIFY COLUMN \`aadhaarNumber\` VARCHAR(191) NULL`);
+      results.push('Made district_secretaries.aadhaarNumber nullable');
+    } catch (e: any) {
+      results.push(`aadhaarNumber modify: ${e.message}`);
+    }
+
+    // Make identityProof optional
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE \`district_secretaries\` MODIFY COLUMN \`identityProof\` VARCHAR(191) NULL`);
+      results.push('Made district_secretaries.identityProof nullable');
+    } catch (e: any) {
+      results.push(`identityProof modify: ${e.message}`);
+    }
+
+    // state_secretaries missing columns
+    await addColumnIfMissing('state_secretaries', 'associationName', 'VARCHAR(191) NULL');
+
+    res.status(200).json({
+      status: 'success',
+      data: { results },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const bulkExpireStudents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await prisma.user.updateMany({
