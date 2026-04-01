@@ -8,7 +8,8 @@ export const getDistrictSecretaries = async (req: Request, res: Response, next: 
             status: 'success',
             data: result
         });
-    } catch (error) {
+    } catch (error: any) {
+        console.error('District Secretary List Error:', error?.code, error?.message, error?.meta);
         next(error);
     }
 };
