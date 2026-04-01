@@ -130,6 +130,16 @@ export default function ClubsPage() {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
     };
 
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this club? This will remove the club owner and all associated data.')) return;
+        try {
+            await api.delete(`/clubs/${id}`);
+            fetchClubs();
+        } catch (e: any) {
+            alert(e?.response?.data?.message || 'Failed to delete club');
+        }
+    };
+
     const handleExport = () => {
         const rows = selectedIds.length > 0 ? clubs.filter(c => selectedIds.includes(c.id)) : clubs;
         if (rows.length === 0) return;
@@ -313,7 +323,7 @@ export default function ClubsPage() {
                                                 <Edit2 className="w-4 h-4" />
                                             </Link>
                                             {user?.role === 'GLOBAL_ADMIN' && (
-                                            <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors" title="Delete">
+                                            <button onClick={() => handleDelete(club.id)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors" title="Delete">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                             )}

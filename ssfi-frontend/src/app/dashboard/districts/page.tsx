@@ -205,9 +205,14 @@ export default function DistrictsPage() {
         );
     };
 
-    const handleDelete = (id: number) => {
-        if (!confirm('Are you sure?')) return;
-        // API call to delete
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this district? This will remove the secretary, clubs, and all associated data.')) return;
+        try {
+            await api.delete(`/districts/${id}`);
+            fetchDistricts();
+        } catch (e: any) {
+            alert(e?.response?.data?.message || 'Failed to delete district');
+        }
     };
 
     const handleExport = () => {

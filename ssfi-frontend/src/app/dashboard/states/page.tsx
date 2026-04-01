@@ -179,9 +179,14 @@ export default function StatesPage() {
         );
     };
 
-    const handleDelete = (id: number) => {
-        if (!confirm('Are you sure?')) return;
-        // API call to delete
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this state? This will remove all associated districts, clubs, secretaries, and their data.')) return;
+        try {
+            await api.delete(`/states/${id}`);
+            fetchStates();
+        } catch (e: any) {
+            alert(e?.response?.data?.message || 'Failed to delete state');
+        }
     };
 
     const handleExport = () => {
