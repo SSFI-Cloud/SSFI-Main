@@ -942,6 +942,7 @@ model RegistrationWindow {
   lateFeeAmount      Int       @default(0)
   baseFee            Int
   isPaused           Boolean   @default(false)
+  renewalEnabled     Boolean   @default(false)
   isActive           Boolean   @default(true)
   deletedAt          DateTime?
   deletedBy          String? // Added to match service usage

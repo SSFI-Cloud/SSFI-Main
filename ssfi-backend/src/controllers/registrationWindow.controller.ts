@@ -360,6 +360,47 @@ export async function togglePause(req: AuthRequest, res: Response) {
 }
 
 /**
+ * Toggle renewal enabled/disabled on a registration window (admin only)
+ * POST /api/registration-windows/:id/toggle-renewal
+ */
+export async function toggleRenewal(req: AuthRequest, res: Response) {
+    try {
+        const { id } = req.params;
+        const window = await registrationWindowService.toggleRenewal(parseInt(id));
+        return res.status(200).json({
+            success: true,
+            message: `Renewal ${(window as any).renewalEnabled ? 'enabled' : 'disabled'} successfully`,
+            data: window,
+        });
+    } catch (error: any) {
+        console.error('Toggle renewal error:', error);
+        return res.status(400).json({
+            success: false,
+            message: error.message || 'Failed to toggle renewal status',
+        });
+    }
+}
+
+/**
+ * Check if renewal is currently enabled (public, authenticated)
+ * GET /api/registration-windows/renewal-status
+ */
+export async function getRenewalStatus(req: Request, res: Response) {
+    try {
+        const enabled = await registrationWindowService.isRenewalEnabled();
+        return res.status(200).json({
+            success: true,
+            data: { renewalEnabled: enabled },
+        });
+    } catch (error: any) {
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to check renewal status',
+        });
+    }
+}
+
+/**
  * Delete a registration window (admin only)
  * DELETE /api/registration-windows/:id
  */

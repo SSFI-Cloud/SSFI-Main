@@ -540,6 +540,21 @@ export const selfRenew = async (
     paymentId: string,
     renewalMonths?: number,
 ) => {
+    // Check if renewal is enabled via registration window
+    const now = new Date();
+    const renewalWindow = await prisma.registrationWindow.findFirst({
+        where: {
+            type: 'STUDENT',
+            startDate: { lte: now },
+            endDate: { gte: now },
+            isPaused: false,
+            renewalEnabled: true,
+        },
+    });
+    if (!renewalWindow) {
+        throw new AppError('Renewal is currently not available. Please check back when a renewal window is open.', 400);
+    }
+
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { id: true, role: true, accountStatus: true, student: { select: { kycVerifiedAt: true } } },

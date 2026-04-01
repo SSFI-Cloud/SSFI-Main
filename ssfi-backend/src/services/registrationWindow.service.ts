@@ -49,6 +49,7 @@ export interface UpdateWindowInput {
     lateFeeAmount?: number;
     baseFee?: number;
     isPaused?: boolean;
+    renewalEnabled?: boolean;
     maxRegistrations?: number;
 }
 
@@ -414,6 +415,43 @@ export async function canRegister(id: number): Promise<{ allowed: boolean; reaso
     }
 
     return { allowed: true, fee };
+}
+
+/**
+ * Check if renewal is currently enabled via any active STUDENT registration window
+ */
+export async function isRenewalEnabled(): Promise<boolean> {
+    const now = new Date();
+    const window = await prisma.registrationWindow.findFirst({
+        where: {
+            type: 'STUDENT',
+            startDate: { lte: now },
+            endDate: { gte: now },
+            isPaused: false,
+            renewalEnabled: true,
+        },
+    });
+    return !!window;
+}
+
+/**
+ * Toggle renewal enabled on a registration window
+ */
+export async function toggleRenewal(id: number): Promise<RegistrationWindowData> {
+    const window = await prisma.registrationWindow.findUnique({ where: { id } });
+    if (!window) throw new Error('Registration window not found');
+
+    const updated = await prisma.registrationWindow.update({
+        where: { id },
+        data: { renewalEnabled: !window.renewalEnabled },
+    });
+
+    return {
+        ...updated,
+        title: (updated as any).title || (updated as any).name,
+        type: updated.type as RegistrationType,
+        isActive: isWindowActive(updated),
+    } as RegistrationWindowData;
 }
 
 /**

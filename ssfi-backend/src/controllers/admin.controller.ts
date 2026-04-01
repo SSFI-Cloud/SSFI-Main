@@ -242,6 +242,9 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
     // state_secretaries missing columns
     await addColumnIfMissing('state_secretaries', 'associationName', 'VARCHAR(191) NULL');
 
+    // registration_windows missing columns
+    await addColumnIfMissing('registration_windows', 'renewalEnabled', 'BOOLEAN NOT NULL DEFAULT false');
+
     res.status(200).json({
       status: 'success',
       data: { results },

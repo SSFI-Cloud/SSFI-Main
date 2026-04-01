@@ -19,6 +19,9 @@ router.get('/active/:type', cacheMiddleware(300), registrationWindowController.g
 // Check if registration is allowed for a window
 router.get('/:id/can-register', registrationWindowController.canRegister);
 
+// Check if renewal is enabled (authenticated users)
+router.get('/check/renewal-status', registrationWindowController.getRenewalStatus);
+
 // ============================================
 // PROTECTED ROUTES (auth required)
 // ============================================
@@ -43,6 +46,9 @@ router.put('/:id', restrictTo(UserRole.GLOBAL_ADMIN), registrationWindowControll
 
 // Toggle pause/resume
 router.post('/:id/toggle-pause', restrictTo(UserRole.GLOBAL_ADMIN), registrationWindowController.togglePause);
+
+// Toggle renewal enabled/disabled
+router.post('/:id/toggle-renewal', restrictTo(UserRole.GLOBAL_ADMIN), registrationWindowController.toggleRenewal);
 
 // Delete registration window
 router.delete('/:id', restrictTo(UserRole.GLOBAL_ADMIN), registrationWindowController.deleteWindow);

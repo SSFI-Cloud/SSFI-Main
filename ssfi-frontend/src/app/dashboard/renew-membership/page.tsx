@@ -48,12 +48,21 @@ export default function RenewMembershipPage() {
   const { fetchDistricts, clearDistricts, data: districts } = useDistricts();
   const { fetchClubs, clearClubs, data: clubs } = useClubs();
 
-  // Check if already active
+  const [renewalDisabled, setRenewalDisabled] = useState(false);
+
+  // Check if already active and if renewal is enabled
   useEffect(() => {
     api.get('/renewal/status').then(res => {
       const data = res.data?.data;
       if (data && !data.needsRenewal && data.accountStatus === 'ACTIVE') {
         router.push('/dashboard');
+      }
+    }).catch(() => {});
+
+    api.get('/registration-windows/check/renewal-status').then(res => {
+      const data = res.data?.data;
+      if (data && !data.renewalEnabled) {
+        setRenewalDisabled(true);
       }
     }).catch(() => {});
   }, [router]);
@@ -275,6 +284,30 @@ export default function RenewMembershipPage() {
 
   const FieldError = ({ field }: { field: string }) =>
     profileErrors[field] ? <p className="text-xs text-red-500 mt-1">{profileErrors[field]}</p> : null;
+
+  if (renewalDisabled) {
+    return (
+      <div className="max-w-3xl mx-auto py-8 px-4">
+        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 text-sm">
+          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+        </button>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-500 to-gray-600 px-6 py-5 text-white">
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <Shield className="w-6 h-6" /> Renewal Not Available
+            </h1>
+          </div>
+          <div className="p-8 text-center">
+            <AlertTriangle className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Membership Renewal is Currently Closed</h2>
+            <p className="text-gray-500 max-w-md mx-auto">
+              The renewal window is not open at this time. Please check back later or contact your administrator for more information.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">

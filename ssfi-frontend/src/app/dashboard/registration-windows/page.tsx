@@ -38,6 +38,7 @@ interface RegistrationWindow {
     instructions?: string;
     isActive: boolean;
     isPaused: boolean;
+    renewalEnabled: boolean;
     registrationsCount: number;
     maxRegistrations: number | null;
     createdAt: string;
@@ -249,6 +250,15 @@ export default function RegistrationWindowsPage() {
         }
     };
 
+    const toggleRenewal = async (window: RegistrationWindow) => {
+        try {
+            await api.post(`/registration-windows/${window.id}/toggle-renewal`, {});
+            fetchWindows();
+        } catch (err) {
+            console.error('Failed to toggle renewal', err);
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -384,6 +394,11 @@ export default function RegistrationWindowsPage() {
                                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                                     {getTypeBadge(window.type)}
                                                     {getStatusBadge(status)}
+                                                    {(window.type === 'STUDENT' || window.type === 'student') && (
+                                                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${window.renewalEnabled ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                            {window.renewalEnabled ? 'Renewal ON' : 'Renewal OFF'}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <h3 className="text-lg font-semibold text-gray-900">{window.title}</h3>
                                                 <p className="text-sm text-gray-500 mt-1">{window.description}</p>
@@ -417,7 +432,7 @@ export default function RegistrationWindowsPage() {
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             {status !== 'closed' && (
                                                 <button
                                                     onClick={() => toggleStatus(window)}
@@ -428,6 +443,17 @@ export default function RegistrationWindowsPage() {
                                                 >
                                                     {window.isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                                                     {window.isPaused ? 'Activate' : 'Pause'}
+                                                </button>
+                                            )}
+                                            {(window.type === 'STUDENT' || window.type === 'student') && status !== 'closed' && (
+                                                <button
+                                                    onClick={() => toggleRenewal(window)}
+                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${window.renewalEnabled
+                                                        ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                                                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                                        }`}
+                                                >
+                                                    {window.renewalEnabled ? 'Disable Renewal' : 'Enable Renewal'}
                                                 </button>
                                             )}
                                             <button
