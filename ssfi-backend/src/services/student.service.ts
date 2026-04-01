@@ -234,4 +234,33 @@ export const createStudent = async (data: any) => {
   });
 };
 
+export const deleteStudent = async (id: number) => {
+  const student = await prisma.student.findUnique({
+    where: { id },
+    select: { id: true, userId: true, name: true },
+  });
+  if (!student) throw new AppError('Student not found', 404);
 
+  await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 0`);
+  try {
+    // Delete event registrations + their payments
+    await prisma.$executeRawUnsafe(`DELETE p FROM payments p INNER JOIN event_registrations er ON p.eventRegistrationId = er.id WHERE er.studentId = ?`, id);
+    await prisma.$executeRawUnsafe(`DELETE FROM event_registrations WHERE studentId = ?`, id);
+
+    // Delete payments by the user
+    await prisma.$executeRawUnsafe(`DELETE FROM payments WHERE userId = ?`, student.userId);
+
+    // Delete the student record
+    await prisma.$executeRawUnsafe(`DELETE FROM students WHERE id = ?`, id);
+
+    // Delete the user account
+    await prisma.$executeRawUnsafe(`DELETE FROM users WHERE id = ?`, student.userId);
+
+    await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
+  } catch (err) {
+    await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
+    throw err;
+  }
+
+  return { deleted: true, studentName: student.name };
+};

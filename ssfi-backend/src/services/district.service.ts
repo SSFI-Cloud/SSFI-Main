@@ -261,12 +261,39 @@ export const updateDistrict = async (id: number, data: { name?: string; code?: s
 };
 
 export const deleteDistrict = async (id: number) => {
-    const district = await prisma.district.findUnique({ where: { id } });
+    const district = await prisma.district.findUnique({
+        where: { id },
+        include: { districtPerson: true, districtSecretaries: { select: { id: true } } },
+    });
     if (!district) throw new AppError('District not found', 404);
 
-    // Soft delete ideally, but schema has isActive
-    return prisma.district.update({
-        where: { id },
-        data: { isActive: false },
-    });
+    await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 0`);
+    try {
+        // Delete district secretary applications
+        await prisma.$executeRawUnsafe(`DELETE FROM district_secretaries WHERE districtId = ?`, id);
+
+        // Delete district person + user if exists
+        if (district.districtPerson) {
+            const userId = district.districtPerson.userId;
+            await prisma.$executeRawUnsafe(`DELETE FROM payments WHERE userId = ?`, userId);
+            await prisma.$executeRawUnsafe(`DELETE FROM razorpay_configs WHERE userId = ?`, userId);
+            await prisma.$executeRawUnsafe(`DELETE FROM district_persons WHERE userId = ?`, userId);
+            await prisma.$executeRawUnsafe(`DELETE FROM users WHERE id = ?`, userId);
+        }
+
+        // Unlink students/clubs/event registrations from this district
+        await prisma.$executeRawUnsafe(`UPDATE students SET districtId = NULL WHERE districtId = ?`, id);
+        await prisma.$executeRawUnsafe(`UPDATE clubs SET districtId = NULL WHERE districtId = ?`, id);
+        await prisma.$executeRawUnsafe(`UPDATE event_registrations SET districtId = NULL WHERE districtId = ?`, id);
+
+        // Delete the district record
+        await prisma.$executeRawUnsafe(`DELETE FROM districts WHERE id = ?`, id);
+
+        await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
+    } catch (err) {
+        await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
+        throw err;
+    }
+
+    return { deleted: true, districtName: district.name };
 };

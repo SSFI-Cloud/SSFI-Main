@@ -21,6 +21,8 @@ router.put(
     studentController.updateStudentStatus
 );
 
+router.delete('/:id', restrictTo(UserRole.GLOBAL_ADMIN), studentController.deleteStudent);
+
 export default router;
 
 

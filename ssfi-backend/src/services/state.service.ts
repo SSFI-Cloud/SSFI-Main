@@ -250,11 +250,32 @@ export const updateState = async (id: number, data: { name?: string; code?: stri
 };
 
 export const deleteState = async (id: number) => {
-    const state = await prisma.state.findUnique({ where: { id } });
+    const state = await prisma.state.findUnique({
+        where: { id },
+        include: { statePerson: true, stateSecretaries: { select: { id: true } } },
+    });
     if (!state) throw new AppError('State not found', 404);
 
-    return prisma.state.update({
-        where: { id },
-        data: { isActive: false },
-    });
+    // Delete state secretary registration records and associated user
+    await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 0`);
+    try {
+        // Delete state secretary applications
+        await prisma.$executeRawUnsafe(`DELETE FROM state_secretaries WHERE stateId = ?`, id);
+
+        // Delete state person + user if exists
+        if (state.statePerson) {
+            const userId = state.statePerson.userId;
+            await prisma.$executeRawUnsafe(`DELETE FROM payments WHERE userId = ?`, userId);
+            await prisma.$executeRawUnsafe(`DELETE FROM razorpay_configs WHERE userId = ?`, userId);
+            await prisma.$executeRawUnsafe(`DELETE FROM state_persons WHERE userId = ?`, userId);
+            await prisma.$executeRawUnsafe(`DELETE FROM users WHERE id = ?`, userId);
+        }
+
+        await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
+    } catch (err) {
+        await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
+        throw err;
+    }
+
+    return { deleted: true, stateName: state.name };
 };

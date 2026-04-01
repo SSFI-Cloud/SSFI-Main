@@ -53,3 +53,12 @@ export const createStudent = async (req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
+
+export const deleteStudent = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await studentService.deleteStudent(Number(req.params.id));
+    res.status(200).json({ status: 'success', data: result });
+  } catch (error) {
+    next(error);
+  }
+}

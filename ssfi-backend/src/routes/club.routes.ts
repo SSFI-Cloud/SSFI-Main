@@ -26,6 +26,7 @@ router.get('/:id', clubController.getClub);
 
 router.put('/:id', restrictTo(UserRole.GLOBAL_ADMIN), clubController.updateClub);
 router.put('/:id/status', restrictTo(UserRole.GLOBAL_ADMIN), clubController.updateClubStatus);
+router.delete('/:id', restrictTo(UserRole.GLOBAL_ADMIN), clubController.deleteClub);
 
 export default router;
 

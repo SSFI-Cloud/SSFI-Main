@@ -108,3 +108,12 @@ export const verifyPayment = async (req: Request, res: Response, next: NextFunct
         next(error);
     }
 };
+
+export const deleteClub = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const result = await clubService.deleteClub(Number(req.params.id));
+        res.status(200).json({ status: 'success', data: result });
+    } catch (error) {
+        next(error);
+    }
+};

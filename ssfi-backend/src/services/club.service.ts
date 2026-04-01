@@ -229,13 +229,44 @@ export const updateClub = async (id: number, data: {
 };
 
 export const updateClubStatus = async (id: number, status: string, remarks?: string) => {
-    // Validate status if needed (APPROVED, REJECTED)
     const club = await prisma.club.update({
         where: { id },
         data: { status: status as any },
     });
-
-    // Log remarks if needed
-
     return club;
+};
+
+export const deleteClub = async (id: number) => {
+    const club = await prisma.club.findUnique({
+        where: { id },
+        include: { clubOwner: true },
+    });
+    if (!club) throw new AppError('Club not found', 404);
+
+    await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 0`);
+    try {
+        // Unlink students from this club
+        await prisma.$executeRawUnsafe(`UPDATE students SET clubId = NULL WHERE clubId = ?`, id);
+        // Unlink event registrations
+        await prisma.$executeRawUnsafe(`UPDATE event_registrations SET clubId = NULL WHERE clubId = ?`, id);
+
+        // Delete club owner + user if exists
+        if (club.clubOwner) {
+            const userId = club.clubOwner.userId;
+            await prisma.$executeRawUnsafe(`DELETE FROM payments WHERE userId = ?`, userId);
+            await prisma.$executeRawUnsafe(`DELETE FROM razorpay_configs WHERE userId = ?`, userId);
+            await prisma.$executeRawUnsafe(`DELETE FROM club_owners WHERE userId = ?`, userId);
+            await prisma.$executeRawUnsafe(`DELETE FROM users WHERE id = ?`, userId);
+        }
+
+        // Delete the club
+        await prisma.$executeRawUnsafe(`DELETE FROM clubs WHERE id = ?`, id);
+
+        await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
+    } catch (err) {
+        await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1`);
+        throw err;
+    }
+
+    return { deleted: true, clubName: club.name };
 };
