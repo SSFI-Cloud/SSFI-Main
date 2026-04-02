@@ -20,8 +20,11 @@ export const getAllClubs = async (query: any) => {
     };
 
     // Filter by status if provided (e.g. PENDING, APPROVED)
+    // By default, exclude PAYMENT_PENDING clubs (incomplete registrations)
     if (status) {
         where.status = status;
+    } else {
+        where.status = { not: 'PAYMENT_PENDING' };
     }
 
     // Dynamic sorting
