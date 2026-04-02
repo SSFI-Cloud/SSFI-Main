@@ -34,10 +34,13 @@ export const getAllDistricts = async (query: any) => {
         });
     }
 
-    // Dashboard: only show districts with at least 1 skater (unless explicitly showing all)
+    // Dashboard: show districts with approved secretaries OR students (unless explicitly showing all)
     if (!isPublic && query.showAll !== 'true') {
         andConditions.push({
-            students: { some: {} },
+            OR: [
+                { districtSecretaries: { some: { status: 'APPROVED' } } },
+                { students: { some: {} } },
+            ],
         });
     }
 
