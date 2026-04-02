@@ -274,6 +274,7 @@ export const registerSecretaryForState = async (data: any) => {
                     role: UserRole.STATE_SECRETARY,
                     isActive: true,
                     isApproved: true,
+                    otpVerified: true,
                     approvalStatus: 'APPROVED',
                 },
             })
@@ -286,6 +287,7 @@ export const registerSecretaryForState = async (data: any) => {
                     role: UserRole.STATE_SECRETARY,
                     isActive: true,
                     isApproved: true,
+                    otpVerified: true,
                     approvalStatus: 'APPROVED',
                 },
             });

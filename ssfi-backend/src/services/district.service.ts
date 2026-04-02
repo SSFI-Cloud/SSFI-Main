@@ -338,6 +338,7 @@ export const createDistrictWithSecretary = async (data: {
                     role: UserRole.DISTRICT_SECRETARY,
                     isActive: true,
                     isApproved: true,
+                    otpVerified: true,
                     approvalStatus: 'APPROVED',
                 },
             })
@@ -350,6 +351,7 @@ export const createDistrictWithSecretary = async (data: {
                     role: UserRole.DISTRICT_SECRETARY,
                     isActive: true,
                     isApproved: true,
+                    otpVerified: true,
                     approvalStatus: 'APPROVED',
                 },
             });

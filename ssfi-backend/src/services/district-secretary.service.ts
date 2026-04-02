@@ -103,6 +103,7 @@ const createUserAccount = async (data: any) => {
             uid: `USER-${Date.now()}`,
             isActive: true,
             isApproved: true,
+            otpVerified: true,
             approvalStatus: 'APPROVED'
         }
     });
