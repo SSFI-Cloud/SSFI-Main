@@ -229,10 +229,8 @@ class AuthService {
       throw new AppError('Account is deactivated', 403);
     }
 
-    // Check if phone is verified (skip for approved admin-created accounts)
-    if (!user.otpVerified && !user.isApproved) {
-      throw new AppError('Please verify your phone number first', 403);
-    }
+    // OTP verification check removed — no phone OTP flow exists in the system
+    // All user accounts are created through admin approval or registration flows
 
     // Verify password
     const isPasswordValid = await this.comparePassword(password, user.password);
