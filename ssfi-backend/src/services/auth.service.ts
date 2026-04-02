@@ -190,9 +190,10 @@ class AuthService {
     // Detect if identifier is a phone number or UID
     const isPhone = /^[6-9]\d{9}$/.test(identifier);
 
-    // Find user with role-specific associations
+    // Find user with role-specific associations (prefer approved users)
     const user = await prisma.user.findFirst({
       where: isPhone ? { phone: identifier } : { uid: identifier },
+      orderBy: [{ isApproved: 'desc' }, { isActive: 'desc' }, { createdAt: 'desc' }],
       select: {
         id: true,
         uid: true,
