@@ -6,10 +6,11 @@ import Link from 'next/link';
 import {
     Shield, Plus, Search, Edit2, Trash2, Eye, Download,
     ChevronLeft, ChevronRight, ArrowUpDown, MapPin, Users,
-    Loader2, CheckCircle, Clock, Phone, AlertCircle,
+    Loader2, CheckCircle, Clock, Phone, AlertCircle, Send,
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { toast } from 'react-hot-toast';
 import ClubViewModal from '@/components/dashboard/ClubViewModal';
 
 interface Club {
@@ -53,6 +54,7 @@ export default function ClubsPage() {
     const [showViewModal, setShowViewModal] = useState(false);
     const [viewingClub, setViewingClub] = useState<any | null>(null);
     const [viewLoading, setViewLoading] = useState(false);
+    const [resendLoading, setResendLoading] = useState<number | null>(null);
 
     const itemsPerPage = 10;
 
@@ -137,6 +139,18 @@ export default function ClubsPage() {
             fetchClubs();
         } catch (e: any) {
             alert(e?.response?.data?.message || 'Failed to delete club');
+        }
+    };
+
+    const handleResendCredentials = async (club: Club) => {
+        setResendLoading(club.id);
+        try {
+            await api.post('/admin/resend-credentials', { email: club.email_address });
+            toast.success(`Credentials sent to ${club.email_address}`);
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message ?? 'Failed to send credentials');
+        } finally {
+            setResendLoading(null);
         }
     };
 
@@ -323,9 +337,19 @@ export default function ClubsPage() {
                                                 <Edit2 className="w-4 h-4" />
                                             </Link>
                                             {user?.role === 'GLOBAL_ADMIN' && (
+                                            <>
+                                            <button
+                                                onClick={() => handleResendCredentials(club)}
+                                                disabled={resendLoading === club.id}
+                                                className="p-2 hover:bg-blue-50 rounded-lg text-gray-500 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                                title="Resend Credentials"
+                                            >
+                                                {resendLoading === club.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                            </button>
                                             <button onClick={() => handleDelete(club.id)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors" title="Delete">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
+                                            </>
                                             )}
                                         </div>
                                     </td>

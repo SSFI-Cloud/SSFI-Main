@@ -16,6 +16,7 @@ import {
     RefreshCw,
     X,
     AlertTriangle,
+    Send,
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
 import { toast } from 'react-hot-toast';
@@ -42,6 +43,7 @@ export default function StateSecretariesApprovalPage() {
     const [loading, setLoading]                   = useState(true);
     const [error, setError]                       = useState<string | null>(null);
     const [actionLoading, setActionLoading]       = useState<string | null>(null);
+    const [resendLoading, setResendLoading]       = useState<string | null>(null);
     const [filter, setFilter]                     = useState<string>('PENDING');
     const [searchInput, setSearchInput]           = useState('');
     const [searchQuery, setSearchQuery]           = useState('');
@@ -120,6 +122,18 @@ export default function StateSecretariesApprovalPage() {
             toast.error(err.response?.data?.message ?? 'Failed to reject');
         } finally {
             setActionLoading(null);
+        }
+    };
+
+    const handleResendCredentials = async (sec: StateSecretary) => {
+        setResendLoading(sec.id);
+        try {
+            await api.post('/admin/resend-credentials', { email: sec.email });
+            toast.success(`Credentials sent to ${sec.email}`);
+        } catch (err: any) {
+            toast.error(err.response?.data?.message ?? 'Failed to send credentials');
+        } finally {
+            setResendLoading(null);
         }
     };
 
@@ -251,6 +265,19 @@ export default function StateSecretariesApprovalPage() {
                                     >
                                         {actionLoading === sec.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                                         Reject
+                                    </button>
+                                </div>
+                            )}
+
+                            {sec.status === 'APPROVED' && (
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <button
+                                        onClick={() => handleResendCredentials(sec)}
+                                        disabled={resendLoading === sec.id}
+                                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg border border-blue-500/30 transition-colors disabled:opacity-50 text-sm"
+                                    >
+                                        {resendLoading === sec.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                        Resend Credentials
                                     </button>
                                 </div>
                             )}

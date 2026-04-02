@@ -6,10 +6,11 @@ import Link from 'next/link';
 import {
     Users, Plus, Search, Edit2, Trash2, Eye, Download,
     ChevronLeft, ChevronRight, ArrowUpDown, Loader2,
-    CheckCircle, Clock, User, AlertCircle, Trophy,
+    CheckCircle, Clock, User, AlertCircle, Trophy, Send,
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { toast } from 'react-hot-toast';
 import StudentViewModal from '@/components/dashboard/StudentViewModal';
 
 /* Always use the backend base URL for serving uploaded images */
@@ -86,6 +87,7 @@ export default function StudentsPage() {
     // View modal
     const [showViewModal, setShowViewModal] = useState(false);
     const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
+    const [resendLoading, setResendLoading] = useState<number | null>(null);
 
     const itemsPerPage = 10;
 
@@ -148,6 +150,19 @@ export default function StudentsPage() {
 
     const toggleSelect = (id: number) => {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const handleResendCredentials = async (student: Student) => {
+        if (!student.email) { toast.error('Student has no email on file'); return; }
+        setResendLoading(student.id);
+        try {
+            await api.post('/admin/resend-credentials', { email: student.email });
+            toast.success(`Credentials sent to ${student.email}`);
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message ?? 'Failed to send credentials');
+        } finally {
+            setResendLoading(null);
+        }
     };
 
     const handleExport = () => {
@@ -356,9 +371,19 @@ export default function StudentsPage() {
                                                 <Edit2 className="w-4 h-4" />
                                             </Link>
                                             {user?.role === 'GLOBAL_ADMIN' && (
+                                            <>
+                                            <button
+                                                onClick={() => handleResendCredentials(student)}
+                                                disabled={resendLoading === student.id}
+                                                className="p-2 hover:bg-blue-50 rounded-lg text-gray-500 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                                title="Resend Credentials"
+                                            >
+                                                {resendLoading === student.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                            </button>
                                             <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors" title="Delete">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
+                                            </>
                                             )}
                                         </div>
                                     </td>
