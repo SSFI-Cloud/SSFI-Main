@@ -689,9 +689,60 @@ export const initiateDistrictSecretaryRegistration = async (
 
   if (existingSecretary) {
     if (existingSecretary.status === 'PAYMENT_PENDING') {
-      // Allow retry if payment pending?
-      // For now just error, or we could return existing payment
-      // Let's error to be safe
+      // Allow retry — update details and create new payment order
+      const window = await prisma.registrationWindow.findUnique({ where: { id: windowId } });
+      if (!window) throw new AppError('Registration window not found', 404);
+
+      const updatedSecretary = await prisma.districtSecretary.update({
+        where: { id: existingSecretary.id },
+        data: {
+          name: data.name,
+          gender: data.gender,
+          email: data.email,
+          phone: data.phone,
+          residentialAddress: data.residentialAddress,
+          associationName: data.associationName || null,
+          identityProof: data.identityProof,
+          profilePhoto: data.profilePhoto,
+          logo: data.logo || null,
+          associationRegistrationCopy: data.associationRegistrationCopy || null,
+          registrationWindowId: String(windowId),
+        },
+      });
+
+      let userId = 1;
+      const existingUser = await prisma.user.findFirst({
+        where: { OR: [{ phone: data.phone }, { email: data.email }] },
+      });
+      if (existingUser) userId = existingUser.id;
+
+      const { order, keyId } = await paymentService.createOrder({
+        amount: window.baseFee * 100,
+        currency: 'INR',
+        payment_type: 'AFFILIATION_FEE',
+        entity_id: updatedSecretary.id,
+        entity_type: 'DISTRICT_SECRETARY',
+        user_id: userId,
+        notes: {
+          secretary_uid: updatedSecretary.uid,
+          name: data.name,
+          district_id: String(data.districtId),
+        },
+      });
+
+      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+
+      return {
+        razorpayOrderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        key: useMockPayment ? 'rzp_test_mock' : keyId,
+        userDetails: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+        },
+      };
     }
     throw new AppError('This district already has a secretary application pending or approved', 409);
   }
@@ -1109,12 +1160,12 @@ export const initiateClubRegistration = async (
     throw new AppError(message, 400);
   }
 
-  // Check for duplicate registration number
+  // Check for duplicate registration number (but allow retry if payment was pending)
   const existingRegNumber = await prisma.club.findFirst({
     where: { registrationNumber: data.registrationNumber },
   });
 
-  if (existingRegNumber) {
+  if (existingRegNumber && existingRegNumber.status !== 'PAYMENT_PENDING') {
     throw new AppError('A club with this registration number already exists', 409);
   }
 
