@@ -276,6 +276,76 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       results.push(`Secretary user approval fix: ${e.message}`);
     }
 
+    // Fix: Create missing districtPerson records for approved district secretaries
+    try {
+      const missingDP = await prisma.$queryRawUnsafe(`
+        SELECT ds.districtId, ds.name, ds.gender, ds.residentialAddress, ds.email, ds.phone, u.id as userId
+        FROM district_secretaries ds
+        INNER JOIN users u ON (u.phone = ds.phone OR u.email = ds.email)
+        WHERE ds.status = 'APPROVED'
+        AND u.role = 'DISTRICT_SECRETARY'
+        AND ds.districtId NOT IN (SELECT districtId FROM district_persons)
+        GROUP BY ds.districtId
+      `) as any[];
+      let dpCreated = 0;
+      for (const row of missingDP) {
+        try {
+          await prisma.districtPerson.create({
+            data: {
+              userId: row.userId,
+              districtId: row.districtId,
+              name: row.name,
+              gender: row.gender || 'MALE',
+              aadhaarNumber: `SYNC-${Date.now()}-${row.districtId}`,
+              addressLine1: row.residentialAddress || 'N/A',
+              city: 'N/A',
+              pincode: '000000',
+              identityProof: 'sync-created',
+            },
+          });
+          dpCreated++;
+        } catch (e: any) {
+          // Skip duplicates
+        }
+      }
+      if (dpCreated) results.push(`Created ${dpCreated} missing districtPerson records`);
+
+      // Same for state persons
+      const missingSP = await prisma.$queryRawUnsafe(`
+        SELECT ss.stateId, ss.name, ss.gender, ss.residentialAddress, ss.email, ss.phone, u.id as userId
+        FROM state_secretaries ss
+        INNER JOIN users u ON (u.phone = ss.phone OR u.email = ss.email)
+        WHERE ss.status = 'APPROVED'
+        AND u.role = 'STATE_SECRETARY'
+        AND ss.stateId NOT IN (SELECT stateId FROM state_persons)
+        GROUP BY ss.stateId
+      `) as any[];
+      let spCreated = 0;
+      for (const row of missingSP) {
+        try {
+          await prisma.statePerson.create({
+            data: {
+              userId: row.userId,
+              stateId: row.stateId,
+              name: row.name,
+              gender: row.gender || 'MALE',
+              aadhaarNumber: `SYNC-${Date.now()}-${row.stateId}`,
+              addressLine1: row.residentialAddress || 'N/A',
+              city: 'N/A',
+              pincode: '000000',
+              identityProof: 'sync-created',
+            },
+          });
+          spCreated++;
+        } catch (e: any) {
+          // Skip duplicates
+        }
+      }
+      if (spCreated) results.push(`Created ${spCreated} missing statePerson records`);
+    } catch (e: any) {
+      results.push(`Person record fix: ${e.message}`);
+    }
+
     res.status(200).json({
       status: 'success',
       data: { results },

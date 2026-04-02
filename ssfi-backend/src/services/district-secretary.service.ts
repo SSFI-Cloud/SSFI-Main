@@ -70,7 +70,7 @@ export const updateDistrictSecretaryStatus = async (
     });
 
     if (status === 'APPROVED') {
-        await createUserAccount({
+        const user = await createUserAccount({
             name: updated.name,
             email: updated.email,
             phone: updated.phone,
@@ -79,6 +79,28 @@ export const updateDistrictSecretaryStatus = async (
             districtId: updated.districtId,
             referenceId: updated.id
         });
+
+        // Create districtPerson record to link user to district (needed for scope filtering)
+        if (user && updated.districtId) {
+            const existingPerson = await prisma.districtPerson.findUnique({
+                where: { districtId: updated.districtId }
+            });
+            if (!existingPerson) {
+                await prisma.districtPerson.create({
+                    data: {
+                        userId: user.id,
+                        districtId: updated.districtId,
+                        name: updated.name,
+                        gender: (updated.gender || 'MALE') as any,
+                        aadhaarNumber: `APPROVED-${Date.now()}`,
+                        addressLine1: updated.residentialAddress || 'N/A',
+                        city: 'N/A',
+                        pincode: '000000',
+                        identityProof: 'approval-created',
+                    },
+                });
+            }
+        }
     }
 
     return updated;
