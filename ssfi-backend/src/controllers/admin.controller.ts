@@ -245,6 +245,16 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
     // registration_windows missing columns
     await addColumnIfMissing('registration_windows', 'renewalEnabled', 'BOOLEAN NOT NULL DEFAULT false');
 
+    // Fix: set otpVerified=true for all approved users (they were created without it)
+    try {
+      const fixed = await prisma.$executeRawUnsafe(
+        `UPDATE users SET otpVerified = true WHERE isApproved = true AND otpVerified = false`
+      );
+      if (fixed) results.push(`Fixed otpVerified for ${fixed} approved users`);
+    } catch (e: any) {
+      results.push(`otpVerified fix: ${e.message}`);
+    }
+
     res.status(200).json({
       status: 'success',
       data: { results },
