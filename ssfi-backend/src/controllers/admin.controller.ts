@@ -255,6 +255,27 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       results.push(`otpVerified fix: ${e.message}`);
     }
 
+    // Fix: approve users who have approved secretary records but unapproved user accounts
+    try {
+      const fixedDS = await prisma.$executeRawUnsafe(
+        `UPDATE users u
+         INNER JOIN district_secretaries ds ON (u.phone = ds.phone OR u.email = ds.email)
+         SET u.isApproved = true, u.isActive = true, u.otpVerified = true, u.approvalStatus = 'APPROVED'
+         WHERE ds.status = 'APPROVED' AND (u.isApproved = false OR u.isActive = false)`
+      );
+      if (fixedDS) results.push(`Fixed ${fixedDS} users with approved district secretary records`);
+
+      const fixedSS = await prisma.$executeRawUnsafe(
+        `UPDATE users u
+         INNER JOIN state_secretaries ss ON (u.phone = ss.phone OR u.email = ss.email)
+         SET u.isApproved = true, u.isActive = true, u.otpVerified = true, u.approvalStatus = 'APPROVED'
+         WHERE ss.status = 'APPROVED' AND (u.isApproved = false OR u.isActive = false)`
+      );
+      if (fixedSS) results.push(`Fixed ${fixedSS} users with approved state secretary records`);
+    } catch (e: any) {
+      results.push(`Secretary user approval fix: ${e.message}`);
+    }
+
     res.status(200).json({
       status: 'success',
       data: { results },

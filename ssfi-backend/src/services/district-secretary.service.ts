@@ -90,8 +90,17 @@ const createUserAccount = async (data: any) => {
     });
 
     if (existingUser) {
-        logger.warn(`User already exists for Approved Secretary: ${data.email}`);
-        return existingUser;
+        logger.warn(`User already exists for Approved Secretary: ${data.email} — updating role and approval status`);
+        return prisma.user.update({
+            where: { id: existingUser.id },
+            data: {
+                role: data.role,
+                isActive: true,
+                isApproved: true,
+                otpVerified: true,
+                approvalStatus: 'APPROVED',
+            },
+        });
     }
 
     return prisma.user.create({
