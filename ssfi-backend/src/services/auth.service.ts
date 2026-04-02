@@ -190,34 +190,41 @@ class AuthService {
     // Detect if identifier is a phone number or UID
     const isPhone = /^[6-9]\d{9}$/.test(identifier);
 
-    // Find user with role-specific associations (prefer approved users)
-    const user = await prisma.user.findFirst({
-      where: isPhone ? { phone: identifier } : { uid: identifier },
-      orderBy: [{ isApproved: 'desc' }, { isActive: 'desc' }, { createdAt: 'desc' }],
-      select: {
-        id: true,
-        uid: true,
-        phone: true,
-        email: true,
-        password: true,
-        role: true,
-        isActive: true,
-        isApproved: true,
-        otpVerified: true,
-        expiryDate: true,
-        statePerson: {
-          select: { stateId: true }
-        },
-        districtPerson: {
-          select: { districtId: true }
-        },
-        clubOwner: {
-          select: { clubId: true }
-        },
-        student: {
-          select: { id: true, clubId: true }
-        }
+    // Find user — prefer approved+active user, fall back to any match
+    const baseWhere = isPhone ? { phone: identifier } : { uid: identifier };
+    const userSelect = {
+      id: true,
+      uid: true,
+      phone: true,
+      email: true,
+      password: true,
+      role: true,
+      isActive: true,
+      isApproved: true,
+      otpVerified: true,
+      expiryDate: true,
+      statePerson: {
+        select: { stateId: true }
+      },
+      districtPerson: {
+        select: { districtId: true }
+      },
+      clubOwner: {
+        select: { clubId: true }
+      },
+      student: {
+        select: { id: true, clubId: true }
       }
+    };
+
+    // Try approved user first, then any user
+    const user = await prisma.user.findFirst({
+      where: { ...baseWhere, isApproved: true, isActive: true },
+      select: userSelect,
+    }) || await prisma.user.findFirst({
+      where: baseWhere,
+      orderBy: { createdAt: 'desc' },
+      select: userSelect,
     });
 
     if (!user) {
