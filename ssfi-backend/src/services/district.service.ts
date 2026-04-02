@@ -321,29 +321,38 @@ export const createDistrictWithSecretary = async (data: {
     const existing = await prisma.districtPerson.findUnique({ where: { districtId: data.districtId } });
     if (existing) throw new AppError('This district already has a secretary assigned', 400);
 
-    // Check duplicate phone/email
-    const existingUser = await prisma.user.findFirst({
-        where: { OR: [{ email: data.secretaryEmail }, { phone: data.secretaryPhone }] },
-    });
-    if (existingUser) throw new AppError('A user with this email or phone already exists', 400);
-
     const stateCode = district.state?.code || 'XX';
     const uid = `DS-${stateCode}-${district.code}-${Date.now().toString().slice(-4)}`;
 
+    // Check if user already exists with this email/phone — reuse if so
+    const existingUser = await prisma.user.findFirst({
+        where: { OR: [{ email: data.secretaryEmail }, { phone: data.secretaryPhone }] },
+    });
+
     return prisma.$transaction(async (tx) => {
-        // Create user
-        const user = await tx.user.create({
-            data: {
-                uid,
-                email: data.secretaryEmail,
-                phone: data.secretaryPhone,
-                password: data.secretaryPhone,
-                role: UserRole.DISTRICT_SECRETARY,
-                isActive: true,
-                isApproved: true,
-                approvalStatus: 'APPROVED',
-            },
-        });
+        // Reuse existing user or create new one
+        const user = existingUser
+            ? await tx.user.update({
+                where: { id: existingUser.id },
+                data: {
+                    role: UserRole.DISTRICT_SECRETARY,
+                    isActive: true,
+                    isApproved: true,
+                    approvalStatus: 'APPROVED',
+                },
+            })
+            : await tx.user.create({
+                data: {
+                    uid,
+                    email: data.secretaryEmail,
+                    phone: data.secretaryPhone,
+                    password: data.secretaryPhone,
+                    role: UserRole.DISTRICT_SECRETARY,
+                    isActive: true,
+                    isApproved: true,
+                    approvalStatus: 'APPROVED',
+                },
+            });
 
         // Create district person
         await tx.districtPerson.create({

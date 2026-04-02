@@ -247,13 +247,12 @@ export const registerSecretaryForState = async (data: any) => {
     const existingPerson = await prisma.statePerson.findUnique({ where: { stateId: state.id } });
     if (existingPerson) throw new AppError('This state already has a secretary assigned', 400);
 
-    // Check duplicate phone/email
+    const uid = `ST-${state.code}-${Date.now().toString().slice(-4)}`;
+
+    // Check if user already exists with this email/phone — reuse if so
     const existingUser = await prisma.user.findFirst({
         where: { OR: [{ email: data.secretaryEmail }, { phone: data.secretaryPhone }] },
     });
-    if (existingUser) throw new AppError('A user with this email or phone already exists', 400);
-
-    const uid = `ST-${state.code}-${Date.now().toString().slice(-4)}`;
 
     return prisma.$transaction(async (tx) => {
         // Update president info if provided
@@ -267,19 +266,29 @@ export const registerSecretaryForState = async (data: any) => {
             });
         }
 
-        // Create user
-        const user = await tx.user.create({
-            data: {
-                uid,
-                email: data.secretaryEmail,
-                phone: data.secretaryPhone,
-                password: data.secretaryPhone,
-                role: UserRole.STATE_SECRETARY,
-                isActive: true,
-                isApproved: true,
-                approvalStatus: 'APPROVED',
-            },
-        });
+        // Reuse existing user or create new one
+        const user = existingUser
+            ? await tx.user.update({
+                where: { id: existingUser.id },
+                data: {
+                    role: UserRole.STATE_SECRETARY,
+                    isActive: true,
+                    isApproved: true,
+                    approvalStatus: 'APPROVED',
+                },
+            })
+            : await tx.user.create({
+                data: {
+                    uid,
+                    email: data.secretaryEmail,
+                    phone: data.secretaryPhone,
+                    password: data.secretaryPhone,
+                    role: UserRole.STATE_SECRETARY,
+                    isActive: true,
+                    isApproved: true,
+                    approvalStatus: 'APPROVED',
+                },
+            });
 
         // Create state person
         await tx.statePerson.create({

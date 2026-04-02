@@ -773,9 +773,7 @@ export const initiateDistrictSecretaryRegistration = async (
       // Re-use UID if possible or generate new one?
       // existingUser.uid should be used if it matches naming convention for the role.
       // But let's check role.
-      if (existingUser.role !== 'DISTRICT_SECRETARY') {
-        throw new AppError('User exists with different role. Please login.', 409);
-      }
+      // Allow role upgrade — user may have registered for a different role before
 
       const uid = existingUser.uid;
 
