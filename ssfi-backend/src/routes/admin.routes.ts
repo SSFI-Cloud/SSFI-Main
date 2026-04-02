@@ -17,5 +17,6 @@ router.post('/seed-districts', adminController.seedDistricts);
 router.post('/flush-cache', adminController.flushCache);
 router.post('/cleanup-orphans', adminController.cleanupOrphans);
 router.post('/sync-schema', adminController.syncSchema);
+router.post('/cleanup-test-data', adminController.cleanupTestData);
 
 export default router;

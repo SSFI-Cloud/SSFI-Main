@@ -254,6 +254,51 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
   }
 };
 
+export const cleanupTestData = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const deleted: string[] = [];
+
+    // Delete state secretaries with placeholder emails
+    const ss = await prisma.$executeRawUnsafe(
+      `DELETE FROM state_secretaries WHERE email LIKE '%@ssfi.placeholder'`
+    );
+    if (ss) deleted.push(`${ss} placeholder state secretaries`);
+
+    // Delete state persons linked to placeholder users
+    const sp = await prisma.$executeRawUnsafe(
+      `DELETE sp FROM state_persons sp INNER JOIN users u ON sp.userId = u.id WHERE u.email LIKE '%@ssfi.placeholder'`
+    );
+    if (sp) deleted.push(`${sp} placeholder state persons`);
+
+    // Delete district secretaries with placeholder emails
+    const ds = await prisma.$executeRawUnsafe(
+      `DELETE FROM district_secretaries WHERE email LIKE '%@ssfi.placeholder'`
+    );
+    if (ds) deleted.push(`${ds} placeholder district secretaries`);
+
+    // Delete district persons linked to placeholder users
+    const dp = await prisma.$executeRawUnsafe(
+      `DELETE dp FROM district_persons dp INNER JOIN users u ON dp.userId = u.id WHERE u.email LIKE '%@ssfi.placeholder'`
+    );
+    if (dp) deleted.push(`${dp} placeholder district persons`);
+
+    // Delete placeholder users themselves
+    const u = await prisma.$executeRawUnsafe(
+      `DELETE FROM users WHERE email LIKE '%@ssfi.placeholder'`
+    );
+    if (u) deleted.push(`${u} placeholder users`);
+
+    clearCache();
+
+    res.status(200).json({
+      status: 'success',
+      data: { message: deleted.length > 0 ? `Cleaned: ${deleted.join(', ')}` : 'No placeholder data found' },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const bulkExpireStudents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await prisma.user.updateMany({
