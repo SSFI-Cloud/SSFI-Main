@@ -25,6 +25,8 @@ interface LoginResponse {
   user: {
     id: number;
     uid: string;
+    name?: string;
+    profile_photo?: string;
     phone: string;
     email?: string;
     role: UserRole;

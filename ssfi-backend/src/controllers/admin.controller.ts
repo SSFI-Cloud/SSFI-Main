@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/prisma';
 import { AccountStatus, UserRole } from '@prisma/client';
 import { clearCache } from '../utils/cache.util';
+import { emailService } from '../services/email.service';
 
 export const resetAllDonations = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -463,6 +464,76 @@ export const extendMembership = async (req: Request, res: Response, next: NextFu
         accountStatus: updated.accountStatus,
         expiryDate: updated.expiryDate,
         message: `Membership extended to ${newExpiry.toLocaleDateString('en-IN')}`,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Resend login credentials to a user via email
+ * POST /admin/resend-credentials
+ * Body: { userId?: number, uid?: string, email?: string, phone?: string }
+ * Finds user by any of these identifiers and resends their login credentials
+ */
+export const resendCredentials = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, uid, email, phone } = req.body;
+
+    if (!userId && !uid && !email && !phone) {
+      return res.status(400).json({ status: 'error', message: 'Provide userId, uid, email, or phone to identify the user' });
+    }
+
+    // Find the user
+    const user = await prisma.user.findFirst({
+      where: {
+        ...(userId && { id: Number(userId) }),
+        ...(uid && { uid }),
+        ...(email && { email }),
+        ...(phone && { phone }),
+      },
+      include: {
+        statePerson: { select: { name: true, stateId: true } },
+        districtPerson: { select: { name: true, districtId: true } },
+        clubOwner: { select: { name: true, clubId: true } },
+        student: { select: { name: true } },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+    }
+
+    // Get the user's display name from the appropriate person record
+    const name = user.statePerson?.name
+      || user.districtPerson?.name
+      || user.clubOwner?.name
+      || user.student?.name
+      || 'User';
+
+    // Default password is their phone number
+    const defaultPassword = user.phone;
+
+    const recipientEmail = user.email;
+    if (!recipientEmail) {
+      return res.status(400).json({ status: 'error', message: 'User does not have an email address on file' });
+    }
+
+    // Send credentials email
+    await emailService.sendCredentials(recipientEmail, name, {
+      uid: user.uid,
+      password: defaultPassword,
+      role: user.role,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        message: `Login credentials sent to ${recipientEmail}`,
+        uid: user.uid,
+        email: recipientEmail,
+        role: user.role,
       },
     });
   } catch (error) {
