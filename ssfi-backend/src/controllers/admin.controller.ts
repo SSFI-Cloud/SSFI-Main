@@ -320,3 +320,51 @@ export const bulkExpireStudents = async (req: Request, res: Response, next: Next
     next(error);
   }
 };
+
+/**
+ * Extend/activate a user's membership by UID or user ID
+ * POST /api/v1/admin/extend-membership
+ * Body: { uid: string, months?: number }  (defaults to 12 months)
+ */
+export const extendMembership = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { uid, userId, months = 12 } = req.body;
+
+    if (!uid && !userId) {
+      return res.status(400).json({ success: false, message: 'Provide uid or userId' });
+    }
+
+    const where = uid ? { uid: uid as string } : { id: Number(userId) };
+    const user = await prisma.user.findFirst({ where });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const newExpiry = new Date();
+    newExpiry.setMonth(newExpiry.getMonth() + Number(months));
+
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        accountStatus: AccountStatus.ACTIVE,
+        expiryDate: newExpiry,
+        isActive: true,
+      },
+    });
+
+    clearCache();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        uid: updated.uid,
+        role: updated.role,
+        accountStatus: updated.accountStatus,
+        expiryDate: updated.expiryDate,
+        message: `Membership extended to ${newExpiry.toLocaleDateString('en-IN')}`,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

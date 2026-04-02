@@ -49,8 +49,10 @@ export const getAllClubs = async (query: any) => {
     }
 
     // Stats filter (ignore search and status for overall stats, but keep scope)
+    // Exclude PAYMENT_PENDING from stats — they haven't completed registration
     const statsWhere: Prisma.ClubWhereInput = {
         isActive: true,
+        status: { not: 'PAYMENT_PENDING' },
         ...(stateId && { stateId: Number(stateId) }),
         ...(districtId && { districtId: Number(districtId) }),
     };
