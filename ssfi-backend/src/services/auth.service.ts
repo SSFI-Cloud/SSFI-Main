@@ -204,16 +204,16 @@ class AuthService {
       otpVerified: true,
       expiryDate: true,
       statePerson: {
-        select: { stateId: true }
+        select: { stateId: true, name: true, profilePhoto: true }
       },
       districtPerson: {
-        select: { districtId: true }
+        select: { districtId: true, name: true, profilePhoto: true }
       },
       clubOwner: {
-        select: { clubId: true }
+        select: { clubId: true, name: true, profilePhoto: true }
       },
       student: {
-        select: { id: true, clubId: true }
+        select: { id: true, clubId: true, name: true, profilePhoto: true }
       }
     };
 
@@ -255,11 +255,23 @@ class AuthService {
     //   throw new AppError('Your membership has expired. Please renew to continue.', 403);
     // }
 
-    // Extract role-specific IDs
+    // Extract role-specific IDs and name
     const stateId = user.statePerson?.stateId;
     const districtId = user.districtPerson?.districtId;
     const clubId = user.role === 'CLUB_OWNER' ? user.clubOwner?.clubId : user.student?.clubId;
     const studentId = user.student?.id;
+
+    // Get name from the appropriate person record
+    const userName = user.statePerson?.name
+      || user.districtPerson?.name
+      || user.clubOwner?.name
+      || user.student?.name
+      || undefined;
+    const profilePhoto = user.statePerson?.profilePhoto
+      || user.districtPerson?.profilePhoto
+      || user.clubOwner?.profilePhoto
+      || user.student?.profilePhoto
+      || undefined;
 
     // Generate tokens
     const accessToken = this.generateAccessToken(
@@ -288,6 +300,8 @@ class AuthService {
       user: {
         id: user.id,
         uid: user.uid,
+        name: userName,
+        profile_photo: profilePhoto,
         phone: user.phone,
         email: user.email || undefined,
         role: user.role,
