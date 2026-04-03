@@ -369,8 +369,24 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
           await prisma.user.update({ where: { id: u.id }, data: { uid: newUid } });
           // Also update the districtSecretary record if it exists
           const ds = await prisma.districtSecretary.findFirst({ where: { districtId: dp.districtId, status: 'APPROVED' }, orderBy: { createdAt: 'desc' } });
-          if (ds && !ds.uid.startsWith('SSFI/')) {
-            await prisma.districtSecretary.update({ where: { id: ds.id }, data: { uid: newUid } });
+          if (ds) {
+            if (!ds.uid.startsWith('SSFI/')) {
+              await prisma.districtSecretary.update({ where: { id: ds.id }, data: { uid: newUid } });
+            }
+            // Also set proper expiry (1 year from approval date) for this approved secretary
+            const newExpiry = new Date(ds.approvedAt || ds.createdAt);
+            newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+            await prisma.user.update({
+              where: { id: u.id },
+              data: {
+                expiryDate: newExpiry,
+                registrationDate: ds.approvedAt || ds.createdAt,
+                lastRenewalDate: ds.approvedAt || ds.createdAt,
+                accountStatus: newExpiry > new Date() ? 'ACTIVE' : 'EXPIRED',
+                isApproved: true,
+                isActive: true,
+              },
+            });
           }
           dsUidFixed++;
         }
@@ -393,8 +409,23 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
           const newUid = await generateUID('STATE_SECRETARY', { stateId: sp.stateId });
           await prisma.user.update({ where: { id: u.id }, data: { uid: newUid } });
           const ss = await prisma.stateSecretary.findFirst({ where: { stateId: sp.stateId, status: 'APPROVED' }, orderBy: { createdAt: 'desc' } });
-          if (ss && !ss.uid.startsWith('SSFI/')) {
-            await prisma.stateSecretary.update({ where: { id: ss.id }, data: { uid: newUid } });
+          if (ss) {
+            if (!ss.uid.startsWith('SSFI/')) {
+              await prisma.stateSecretary.update({ where: { id: ss.id }, data: { uid: newUid } });
+            }
+            const newExpiry = new Date(ss.approvedAt || ss.createdAt);
+            newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+            await prisma.user.update({
+              where: { id: u.id },
+              data: {
+                expiryDate: newExpiry,
+                registrationDate: ss.approvedAt || ss.createdAt,
+                lastRenewalDate: ss.approvedAt || ss.createdAt,
+                accountStatus: newExpiry > new Date() ? 'ACTIVE' : 'EXPIRED',
+                isApproved: true,
+                isActive: true,
+              },
+            });
           }
           ssUidFixed++;
         }
@@ -418,36 +449,6 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       if (clubUidFixed) results.push(`Fixed ${clubUidFixed} club UIDs to SSFI format`);
     } catch (e: any) {
       results.push(`UID fix: ${e.message}`);
-    }
-
-    // Fix: Renew expired secretary accounts (extend by 1 year from today)
-    try {
-      const expiredSecretaries = await prisma.user.findMany({
-        where: {
-          role: { in: ['STATE_SECRETARY', 'DISTRICT_SECRETARY'] },
-          isApproved: true,
-          expiryDate: { lte: new Date() },
-        },
-        select: { id: true, uid: true, phone: true, expiryDate: true, role: true },
-      });
-      let renewed = 0;
-      for (const u of expiredSecretaries) {
-        const newExpiry = new Date();
-        newExpiry.setFullYear(newExpiry.getFullYear() + 1);
-        await prisma.user.update({
-          where: { id: u.id },
-          data: {
-            expiryDate: newExpiry,
-            lastRenewalDate: new Date(),
-            accountStatus: 'ACTIVE',
-            renewalNotificationSent: false,
-          },
-        });
-        renewed++;
-      }
-      if (renewed) results.push(`Renewed ${renewed} expired secretary accounts (extended 1 year)`);
-    } catch (e: any) {
-      results.push(`Secretary renewal fix: ${e.message}`);
     }
 
     // Fix: Hash plain-text passwords (created by old approval flow)
