@@ -532,8 +532,10 @@ export const resendCredentials = async (req: Request, res: Response, next: NextF
       || user.student?.name
       || 'User';
 
-    // Default password is their phone number
+    // Reset password to phone number (hashed) and send credentials
     const defaultPassword = user.phone;
+    const hashedPassword = await bcrypt.hash(defaultPassword, 12);
+    await prisma.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
 
     const recipientEmail = user.email;
     if (!recipientEmail) {
