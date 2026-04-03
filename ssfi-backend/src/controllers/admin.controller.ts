@@ -420,6 +420,36 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       results.push(`UID fix: ${e.message}`);
     }
 
+    // Fix: Renew expired secretary accounts (extend by 1 year from today)
+    try {
+      const expiredSecretaries = await prisma.user.findMany({
+        where: {
+          role: { in: ['STATE_SECRETARY', 'DISTRICT_SECRETARY'] },
+          isApproved: true,
+          expiryDate: { lte: new Date() },
+        },
+        select: { id: true, uid: true, phone: true, expiryDate: true, role: true },
+      });
+      let renewed = 0;
+      for (const u of expiredSecretaries) {
+        const newExpiry = new Date();
+        newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+        await prisma.user.update({
+          where: { id: u.id },
+          data: {
+            expiryDate: newExpiry,
+            lastRenewalDate: new Date(),
+            accountStatus: 'ACTIVE',
+            renewalNotificationSent: false,
+          },
+        });
+        renewed++;
+      }
+      if (renewed) results.push(`Renewed ${renewed} expired secretary accounts (extended 1 year)`);
+    } catch (e: any) {
+      results.push(`Secretary renewal fix: ${e.message}`);
+    }
+
     // Fix: Hash plain-text passwords (created by old approval flow)
     try {
       const usersWithBadPw = await prisma.user.findMany({
