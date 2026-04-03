@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcryptjs';
 import prisma from '../config/prisma';
 import { AccountStatus, UserRole } from '@prisma/client';
 import { clearCache } from '../utils/cache.util';
@@ -345,6 +346,25 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       if (spCreated) results.push(`Created ${spCreated} missing statePerson records`);
     } catch (e: any) {
       results.push(`Person record fix: ${e.message}`);
+    }
+
+    // Fix: Hash plain-text passwords (created by old approval flow)
+    try {
+      const usersWithBadPw = await prisma.user.findMany({
+        where: {
+          NOT: { password: { startsWith: '$2' } },
+        },
+        select: { id: true, phone: true, password: true },
+      });
+      let pwFixed = 0;
+      for (const u of usersWithBadPw) {
+        const hashed = await bcrypt.hash(u.phone, 12);
+        await prisma.user.update({ where: { id: u.id }, data: { password: hashed } });
+        pwFixed++;
+      }
+      if (pwFixed) results.push(`Fixed ${pwFixed} users with unhashed passwords`);
+    } catch (e: any) {
+      results.push(`Password hash fix: ${e.message}`);
     }
 
     res.status(200).json({

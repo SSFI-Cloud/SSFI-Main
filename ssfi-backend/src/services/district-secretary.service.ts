@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { AppError } from '../utils/errors';
 import logger from '../utils/logger.util';
 
@@ -129,7 +130,7 @@ const createUserAccount = async (data: any) => {
         data: {
             email: data.email,
             phone: data.phone,
-            password: Math.random().toString(36).slice(-8),
+            password: await bcrypt.hash(data.phone, 12), // Default password = phone, hashed
             role: data.role,
             uid: `USER-${Date.now()}`,
             isActive: true,
