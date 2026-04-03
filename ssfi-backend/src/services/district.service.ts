@@ -1,5 +1,7 @@
 import { PrismaClient, Prisma, UserRole, Gender } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { AppError } from '../utils/errors';
+import { generateUID } from './uid.service';
 
 import prisma from '../config/prisma';
 export const getAllDistricts = async (query: any) => {
@@ -321,8 +323,7 @@ export const createDistrictWithSecretary = async (data: {
     const existing = await prisma.districtPerson.findUnique({ where: { districtId: data.districtId } });
     if (existing) throw new AppError('This district already has a secretary assigned', 400);
 
-    const stateCode = district.state?.code || 'XX';
-    const uid = `DS-${stateCode}-${district.code}-${Date.now().toString().slice(-4)}`;
+    const uid = await generateUID('DISTRICT_SECRETARY', { stateId: district.stateId, districtId: data.districtId });
 
     // Check if user already exists with this email/phone — reuse if so
     const existingUser = await prisma.user.findFirst({
@@ -347,7 +348,7 @@ export const createDistrictWithSecretary = async (data: {
                     uid,
                     email: data.secretaryEmail,
                     phone: data.secretaryPhone,
-                    password: data.secretaryPhone,
+                    password: await bcrypt.hash(data.secretaryPhone, 12),
                     role: UserRole.DISTRICT_SECRETARY,
                     isActive: true,
                     isApproved: true,

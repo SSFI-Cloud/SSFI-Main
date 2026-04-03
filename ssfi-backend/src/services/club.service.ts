@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { AppError } from '../utils/errors';
+import { generateUID } from './uid.service';
 
 import prisma from '../config/prisma';
 export const getAllClubs = async (query: any) => {
@@ -187,11 +188,24 @@ export const getClubById = async (id: number) => {
 
 export const createClub = async (data: any) => {
     // Admin offline club creation — extract only valid Club model fields
+    const districtId = Number(data.districtId);
+    let stateId = data.stateId ? Number(data.stateId) : undefined;
+
+    // Look up stateId from district if not provided
+    if (!stateId) {
+        const district = await prisma.district.findUnique({ where: { id: districtId }, select: { stateId: true } });
+        if (district) stateId = district.stateId;
+    }
+
+    const clubUid = stateId && districtId
+        ? await generateUID('CLUB', { stateId, districtId })
+        : `CLB-${Date.now().toString().slice(-6)}`;
+
     const clubData: any = {
         name: data.name || data.clubName,
         code: data.code || (data.registrationNumber || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10) || `CLB${Date.now().toString().slice(-6)}`,
-        districtId: Number(data.districtId),
-        stateId: data.stateId ? Number(data.stateId) : undefined,
+        districtId,
+        stateId,
         registrationNumber: data.registrationNumber || undefined,
         establishedYear: data.establishedYear ? Number(data.establishedYear) : undefined,
         contactPerson: data.contactPerson || data.contactPersonName,
@@ -199,7 +213,7 @@ export const createClub = async (data: any) => {
         email: data.email || undefined,
         address: data.address,
         logo: data.logo || data.clubLogo,
-        uid: `CLB-${Date.now().toString().slice(-6)}`,
+        uid: clubUid,
         status: 'APPROVED',
     };
 

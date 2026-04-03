@@ -4,6 +4,7 @@ import prisma from '../config/prisma';
 import { AccountStatus, UserRole } from '@prisma/client';
 import { clearCache } from '../utils/cache.util';
 import { emailService } from '../services/email.service';
+import { generateUID } from '../services/uid.service';
 
 export const resetAllDonations = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -346,6 +347,77 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       if (spCreated) results.push(`Created ${spCreated} missing statePerson records`);
     } catch (e: any) {
       results.push(`Person record fix: ${e.message}`);
+    }
+
+    // Fix: Regenerate UIDs that don't follow SSFI format
+    try {
+      // Fix district secretary UIDs (User table) — should be SSFI/{StateCode}/{DistrictCode}/D####
+      const dsBadUids = await prisma.user.findMany({
+        where: {
+          role: 'DISTRICT_SECRETARY',
+          NOT: { uid: { startsWith: 'SSFI/' } },
+        },
+        select: { id: true, uid: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      let dsUidFixed = 0;
+      for (const u of dsBadUids) {
+        // Find districtPerson to get districtId and stateId
+        const dp = await prisma.districtPerson.findFirst({ where: { userId: u.id }, include: { district: true } });
+        if (dp?.districtId && dp.district?.stateId) {
+          const newUid = await generateUID('DISTRICT_SECRETARY', { stateId: dp.district.stateId, districtId: dp.districtId });
+          await prisma.user.update({ where: { id: u.id }, data: { uid: newUid } });
+          // Also update the districtSecretary record if it exists
+          const ds = await prisma.districtSecretary.findFirst({ where: { districtId: dp.districtId, status: 'APPROVED' }, orderBy: { createdAt: 'desc' } });
+          if (ds && !ds.uid.startsWith('SSFI/')) {
+            await prisma.districtSecretary.update({ where: { id: ds.id }, data: { uid: newUid } });
+          }
+          dsUidFixed++;
+        }
+      }
+      if (dsUidFixed) results.push(`Fixed ${dsUidFixed} district secretary UIDs to SSFI format`);
+
+      // Fix state secretary UIDs
+      const ssBadUids = await prisma.user.findMany({
+        where: {
+          role: 'STATE_SECRETARY',
+          NOT: { uid: { startsWith: 'SSFI/' } },
+        },
+        select: { id: true, uid: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      let ssUidFixed = 0;
+      for (const u of ssBadUids) {
+        const sp = await prisma.statePerson.findFirst({ where: { userId: u.id } });
+        if (sp?.stateId) {
+          const newUid = await generateUID('STATE_SECRETARY', { stateId: sp.stateId });
+          await prisma.user.update({ where: { id: u.id }, data: { uid: newUid } });
+          const ss = await prisma.stateSecretary.findFirst({ where: { stateId: sp.stateId, status: 'APPROVED' }, orderBy: { createdAt: 'desc' } });
+          if (ss && !ss.uid.startsWith('SSFI/')) {
+            await prisma.stateSecretary.update({ where: { id: ss.id }, data: { uid: newUid } });
+          }
+          ssUidFixed++;
+        }
+      }
+      if (ssUidFixed) results.push(`Fixed ${ssUidFixed} state secretary UIDs to SSFI format`);
+
+      // Fix club UIDs
+      const clubsBadUids = await prisma.club.findMany({
+        where: { NOT: { uid: { startsWith: 'SSFI/' } } },
+        select: { id: true, uid: true, districtId: true, stateId: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      let clubUidFixed = 0;
+      for (const c of clubsBadUids) {
+        if (c.districtId && c.stateId) {
+          const newUid = await generateUID('CLUB', { stateId: c.stateId, districtId: c.districtId });
+          await prisma.club.update({ where: { id: c.id }, data: { uid: newUid } });
+          clubUidFixed++;
+        }
+      }
+      if (clubUidFixed) results.push(`Fixed ${clubUidFixed} club UIDs to SSFI format`);
+    } catch (e: any) {
+      results.push(`UID fix: ${e.message}`);
     }
 
     // Fix: Hash plain-text passwords (created by old approval flow)

@@ -1,5 +1,7 @@
 import { PrismaClient, Prisma, UserRole, AccountStatus, Gender } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { AppError } from '../utils/errors';
+import { generateUID } from './uid.service';
 
 import prisma from '../config/prisma';
 export const getAllStates = async (query: any) => {
@@ -208,12 +210,14 @@ export const createState = async (data: any) => {
 
         // Create Secretary User and Profile if details provided
         if (data.secretaryName && data.secretaryPhone) {
+            const secUid = await generateUID('STATE_SECRETARY', { stateId: state.id });
+            const hashedPassword = await bcrypt.hash(data.secretaryPhone, 12);
             const user = await tx.user.create({
                 data: {
-                    uid: `ST-${data.code}-${Date.now().toString().slice(-4)}`,
+                    uid: secUid,
                     email: data.secretaryEmail,
                     phone: data.secretaryPhone,
-                    password: data.secretaryPhone, // Default password
+                    password: hashedPassword,
                     role: 'STATE_SECRETARY' as any,
                     approvalStatus: 'APPROVED',
                     isActive: true
@@ -247,7 +251,7 @@ export const registerSecretaryForState = async (data: any) => {
     const existingPerson = await prisma.statePerson.findUnique({ where: { stateId: state.id } });
     if (existingPerson) throw new AppError('This state already has a secretary assigned', 400);
 
-    const uid = `ST-${state.code}-${Date.now().toString().slice(-4)}`;
+    const uid = await generateUID('STATE_SECRETARY', { stateId: state.id });
 
     // Check if user already exists with this email/phone — reuse if so
     const existingUser = await prisma.user.findFirst({
@@ -283,7 +287,7 @@ export const registerSecretaryForState = async (data: any) => {
                     uid,
                     email: data.secretaryEmail,
                     phone: data.secretaryPhone,
-                    password: data.secretaryPhone,
+                    password: await bcrypt.hash(data.secretaryPhone, 12),
                     role: UserRole.STATE_SECRETARY,
                     isActive: true,
                     isApproved: true,

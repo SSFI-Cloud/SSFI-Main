@@ -2,6 +2,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { AppError } from '../utils/errors';
 import logger from '../utils/logger.util';
+import { generateUID } from './uid.service';
 
 import prisma from '../config/prisma';
 export const listStateSecretaries = async (query: any) => {
@@ -122,13 +123,17 @@ const createUserAccount = async (data: any) => {
         });
     }
 
+    const uid = data.stateId
+        ? await generateUID('STATE_SECRETARY', { stateId: data.stateId })
+        : `USER-${Date.now()}`;
+
     return prisma.user.create({
         data: {
             email: data.email,
             phone: data.phone,
             password: await bcrypt.hash(data.phone, 12), // Default password = phone, hashed
             role: data.role,
-            uid: `USER-${Date.now()}`,
+            uid,
             isActive: true,
             isApproved: true,
             otpVerified: true,
