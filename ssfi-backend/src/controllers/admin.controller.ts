@@ -451,12 +451,15 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       results.push(`UID fix: ${e.message}`);
     }
 
-    // Fix: Sync secretary user accounts with their secretary records (phone, email, password)
+    // Fix: Sync secretary user accounts — if statePerson user has stale data,
+    // re-link to the real user that matches the secretary's phone/email
     try {
-      // State secretaries: match user via statePerson → stateSecretary
+      let secSynced = 0;
+
+      // State secretaries
       const statePersons = await prisma.statePerson.findMany({
         include: {
-          user: { select: { id: true, phone: true, email: true } },
+          user: { select: { id: true, phone: true, email: true, role: true } },
           state: {
             include: {
               stateSecretaries: {
@@ -468,25 +471,55 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
           },
         },
       });
-      let secSynced = 0;
+
       for (const sp of statePersons) {
         const ss = sp.state?.stateSecretaries?.[0];
-        if (ss && sp.user) {
-          const updates: any = {};
-          if (sp.user.phone !== ss.phone) updates.phone = ss.phone;
-          if (sp.user.email !== ss.email) updates.email = ss.email;
-          if (Object.keys(updates).length > 0) {
-            updates.password = await bcrypt.hash(ss.phone, 12);
-            await prisma.user.update({ where: { id: sp.user.id }, data: updates });
-            secSynced++;
+        if (!ss || !sp.user) continue;
+
+        // If user phone/email already matches, skip
+        if (sp.user.phone === ss.phone && sp.user.email === ss.email) continue;
+
+        // Check if there's already a user with the secretary's phone
+        const realUser = await prisma.user.findFirst({
+          where: { OR: [{ phone: ss.phone }, { email: ss.email }] },
+        });
+
+        if (realUser && realUser.id !== sp.user.id) {
+          // Re-link statePerson to the real user, delete orphan test user
+          const orphanId = sp.user.id;
+          await prisma.statePerson.update({
+            where: { stateId: sp.stateId },
+            data: { userId: realUser.id },
+          });
+          // Update the real user's role to STATE_SECRETARY
+          await prisma.user.update({
+            where: { id: realUser.id },
+            data: { role: 'STATE_SECRETARY', isApproved: true, isActive: true, approvalStatus: 'APPROVED' },
+          });
+          // Delete the orphan test user (if not linked to anything else)
+          const orphanLinks = await prisma.districtPerson.findFirst({ where: { userId: orphanId } });
+          if (!orphanLinks) {
+            await prisma.user.delete({ where: { id: orphanId } }).catch(() => {});
           }
+          secSynced++;
+        } else if (!realUser) {
+          // No other user has this phone — safe to update directly
+          await prisma.user.update({
+            where: { id: sp.user.id },
+            data: {
+              phone: ss.phone,
+              email: ss.email,
+              password: await bcrypt.hash(ss.phone, 12),
+            },
+          });
+          secSynced++;
         }
       }
 
-      // District secretaries: match user via districtPerson → districtSecretary
+      // District secretaries
       const districtPersons = await prisma.districtPerson.findMany({
         include: {
-          user: { select: { id: true, phone: true, email: true } },
+          user: { select: { id: true, phone: true, email: true, role: true } },
           district: {
             include: {
               districtSecretaries: {
@@ -498,20 +531,45 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
           },
         },
       });
+
       for (const dp of districtPersons) {
         const ds = dp.district?.districtSecretaries?.[0];
-        if (ds && dp.user) {
-          const updates: any = {};
-          if (dp.user.phone !== ds.phone) updates.phone = ds.phone;
-          if (dp.user.email !== ds.email) updates.email = ds.email;
-          if (Object.keys(updates).length > 0) {
-            updates.password = await bcrypt.hash(ds.phone, 12);
-            await prisma.user.update({ where: { id: dp.user.id }, data: updates });
-            secSynced++;
+        if (!ds || !dp.user) continue;
+        if (dp.user.phone === ds.phone && dp.user.email === ds.email) continue;
+
+        const realUser = await prisma.user.findFirst({
+          where: { OR: [{ phone: ds.phone }, { email: ds.email }] },
+        });
+
+        if (realUser && realUser.id !== dp.user.id) {
+          const orphanId = dp.user.id;
+          await prisma.districtPerson.update({
+            where: { districtId: dp.districtId },
+            data: { userId: realUser.id },
+          });
+          await prisma.user.update({
+            where: { id: realUser.id },
+            data: { role: 'DISTRICT_SECRETARY', isApproved: true, isActive: true, approvalStatus: 'APPROVED' },
+          });
+          const orphanLinks = await prisma.statePerson.findFirst({ where: { userId: orphanId } });
+          if (!orphanLinks) {
+            await prisma.user.delete({ where: { id: orphanId } }).catch(() => {});
           }
+          secSynced++;
+        } else if (!realUser) {
+          await prisma.user.update({
+            where: { id: dp.user.id },
+            data: {
+              phone: ds.phone,
+              email: ds.email,
+              password: await bcrypt.hash(ds.phone, 12),
+            },
+          });
+          secSynced++;
         }
       }
-      if (secSynced) results.push(`Synced ${secSynced} secretary user accounts (phone/email/password)`);
+
+      if (secSynced) results.push(`Synced ${secSynced} secretary user accounts`);
     } catch (e: any) {
       results.push(`Secretary sync fix: ${e.message}`);
     }
