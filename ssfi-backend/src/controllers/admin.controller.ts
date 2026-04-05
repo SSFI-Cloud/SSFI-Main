@@ -451,6 +451,58 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       results.push(`UID fix: ${e.message}`);
     }
 
+    // Fix: Gowtham dual-role — separate state and district secretary accounts
+    try {
+      const gowthamDS = await prisma.user.findFirst({ where: { phone: '9600635806' } });
+      const gowthamDSByPhone2 = await prisma.user.findFirst({ where: { phone: '9894487268' } });
+
+      if (gowthamDS && !gowthamDSByPhone2) {
+        // User id:2 exists with phone 9600635806 — this should become the state secretary
+        // Create a NEW user for district secretary with phone 9894487268
+        const dsUid = await generateUID('DISTRICT_SECRETARY', { stateId: 23, districtId: 2513 });
+        const newDSUser = await prisma.user.create({
+          data: {
+            uid: dsUid,
+            phone: '9894487268',
+            email: 'tnssa.in@gmail.com',
+            password: await bcrypt.hash('9894487268', 12),
+            role: 'DISTRICT_SECRETARY',
+            isApproved: true,
+            isActive: true,
+            otpVerified: true,
+            approvalStatus: 'APPROVED',
+            expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+          },
+        });
+        // Re-link districtPerson to new user
+        await prisma.districtPerson.updateMany({
+          where: { userId: gowthamDS.id, districtId: 2513 },
+          data: { userId: newDSUser.id },
+        });
+        // Update the original user to be state secretary with correct details
+        await prisma.user.update({
+          where: { id: gowthamDS.id },
+          data: {
+            uid: 'SSFI/TN/A0001',
+            email: 'outliersgowtham91@gmail.com',
+            role: 'STATE_SECRETARY',
+            isApproved: true,
+            isActive: true,
+            password: await bcrypt.hash('9600635806', 12),
+            expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+          },
+        });
+        // Update statePerson name
+        await prisma.statePerson.updateMany({
+          where: { userId: gowthamDS.id },
+          data: { name: 'GOWTHAM M' },
+        });
+        results.push(`Split Gowtham into 2 accounts: SS(9600635806/outliersgowtham91@gmail.com) + DS(9894487268/tnssa.in@gmail.com)`);
+      }
+    } catch (e: any) {
+      results.push(`Gowtham split fix: ${e.message}`);
+    }
+
     // Fix: Sync secretary user accounts — if statePerson user has stale data,
     // re-link to the real user that matches the secretary's phone/email
     try {
