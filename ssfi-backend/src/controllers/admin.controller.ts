@@ -451,6 +451,71 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       results.push(`UID fix: ${e.message}`);
     }
 
+    // Fix: Sync secretary user accounts with their secretary records (phone, email, password)
+    try {
+      // State secretaries: match user via statePerson → stateSecretary
+      const statePersons = await prisma.statePerson.findMany({
+        include: {
+          user: { select: { id: true, phone: true, email: true } },
+          state: {
+            include: {
+              stateSecretaries: {
+                where: { status: 'APPROVED' },
+                orderBy: { createdAt: 'desc' },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+      let secSynced = 0;
+      for (const sp of statePersons) {
+        const ss = sp.state?.stateSecretaries?.[0];
+        if (ss && sp.user) {
+          const updates: any = {};
+          if (sp.user.phone !== ss.phone) updates.phone = ss.phone;
+          if (sp.user.email !== ss.email) updates.email = ss.email;
+          if (Object.keys(updates).length > 0) {
+            updates.password = await bcrypt.hash(ss.phone, 12);
+            await prisma.user.update({ where: { id: sp.user.id }, data: updates });
+            secSynced++;
+          }
+        }
+      }
+
+      // District secretaries: match user via districtPerson → districtSecretary
+      const districtPersons = await prisma.districtPerson.findMany({
+        include: {
+          user: { select: { id: true, phone: true, email: true } },
+          district: {
+            include: {
+              districtSecretaries: {
+                where: { status: 'APPROVED' },
+                orderBy: { createdAt: 'desc' },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
+      for (const dp of districtPersons) {
+        const ds = dp.district?.districtSecretaries?.[0];
+        if (ds && dp.user) {
+          const updates: any = {};
+          if (dp.user.phone !== ds.phone) updates.phone = ds.phone;
+          if (dp.user.email !== ds.email) updates.email = ds.email;
+          if (Object.keys(updates).length > 0) {
+            updates.password = await bcrypt.hash(ds.phone, 12);
+            await prisma.user.update({ where: { id: dp.user.id }, data: updates });
+            secSynced++;
+          }
+        }
+      }
+      if (secSynced) results.push(`Synced ${secSynced} secretary user accounts (phone/email/password)`);
+    } catch (e: any) {
+      results.push(`Secretary sync fix: ${e.message}`);
+    }
+
     // Fix: Hash plain-text passwords (created by old approval flow)
     try {
       const usersWithBadPw = await prisma.user.findMany({
