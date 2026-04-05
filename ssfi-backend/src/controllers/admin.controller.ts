@@ -457,8 +457,21 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       const gowthamDSByPhone2 = await prisma.user.findFirst({ where: { phone: '9894487268' } });
 
       if (gowthamDS && !gowthamDSByPhone2) {
-        // User id:2 exists with phone 9600635806 — this should become the state secretary
-        // Create a NEW user for district secretary with phone 9894487268
+        // Step 1: Update original user email FIRST to free up tnssa.in@gmail.com
+        await prisma.user.update({
+          where: { id: gowthamDS.id },
+          data: {
+            uid: 'SSFI/TN/A0001',
+            email: 'outliersgowtham91@gmail.com',
+            role: 'STATE_SECRETARY',
+            isApproved: true,
+            isActive: true,
+            password: await bcrypt.hash('9600635806', 12),
+            expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+          },
+        });
+
+        // Step 2: Now create NEW district secretary user with freed email
         const dsUid = await generateUID('DISTRICT_SECRETARY', { stateId: 23, districtId: 2513 });
         const newDSUser = await prisma.user.create({
           data: {
@@ -474,25 +487,14 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
             expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
           },
         });
-        // Re-link districtPerson to new user
+
+        // Step 3: Re-link districtPerson to new user
         await prisma.districtPerson.updateMany({
           where: { userId: gowthamDS.id, districtId: 2513 },
           data: { userId: newDSUser.id },
         });
-        // Update the original user to be state secretary with correct details
-        await prisma.user.update({
-          where: { id: gowthamDS.id },
-          data: {
-            uid: 'SSFI/TN/A0001',
-            email: 'outliersgowtham91@gmail.com',
-            role: 'STATE_SECRETARY',
-            isApproved: true,
-            isActive: true,
-            password: await bcrypt.hash('9600635806', 12),
-            expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
-          },
-        });
-        // Update statePerson name
+
+        // Step 4: Update statePerson name
         await prisma.statePerson.updateMany({
           where: { userId: gowthamDS.id },
           data: { name: 'GOWTHAM M' },
