@@ -331,8 +331,8 @@ class PaymentController {
                             email: true,
                             phone: true,
                             role: true,
-                            student: { select: { name: true } },
-                            clubOwner: { select: { name: true } },
+                            student: { select: { name: true, membershipId: true } },
+                            clubOwner: { select: { name: true, club: { select: { uid: true } } } },
                             statePerson: { select: { name: true } },
                             districtPerson: { select: { name: true } },
                         },
@@ -361,6 +361,13 @@ class PaymentController {
                 payment.user?.districtPerson?.name ||
                 'N/A';
 
+            // Use the most relevant UID: student membershipId > club uid > user uid
+            const displayUid =
+                payment.user?.student?.membershipId ||
+                payment.user?.clubOwner?.club?.uid ||
+                payment.user?.uid ||
+                'N/A';
+
             return res.status(200).json({
                 status: 'success',
                 data: {
@@ -376,7 +383,7 @@ class PaymentController {
                     updatedAt: payment.updatedAt,
                     user: {
                         name: userName,
-                        uid: payment.user?.uid,
+                        uid: displayUid,
                         email: payment.user?.email,
                         phone: payment.user?.phone,
                         role: payment.user?.role,
