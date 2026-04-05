@@ -54,7 +54,7 @@ export type DistrictSecretaryRegistration = z.infer<typeof districtSecretaryRegi
 
 export const clubRegistrationSchema = z.object({
     clubName: z.string().min(2),
-    registrationNumber: z.string(),
+    registrationNumber: z.string().optional().or(z.literal('')),
     establishedYear: z.number().int().or(z.string().transform(val => parseInt(val, 10))).pipe(z.number().int().min(1900).max(new Date().getFullYear())),
     contactPersonName: z.string().min(2),
     phone: phoneSchema,

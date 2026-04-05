@@ -1161,12 +1161,14 @@ export const initiateClubRegistration = async (
   }
 
   // Check for duplicate registration number (but allow retry if payment was pending)
-  const existingRegNumber = await prisma.club.findFirst({
-    where: { registrationNumber: data.registrationNumber },
-  });
+  if (data.registrationNumber) {
+    const existingRegNumber = await prisma.club.findFirst({
+      where: { registrationNumber: data.registrationNumber },
+    });
 
-  if (existingRegNumber && existingRegNumber.status !== 'PAYMENT_PENDING') {
-    throw new AppError('A club with this registration number already exists', 409);
+    if (existingRegNumber && existingRegNumber.status !== 'PAYMENT_PENDING') {
+      throw new AppError('A club with this registration number already exists', 409);
+    }
   }
 
   // Check for duplicate name in same district

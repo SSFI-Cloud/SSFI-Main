@@ -85,7 +85,7 @@ export default function NewClubPage() {
     const validate = (): boolean => {
         const errs: Record<string, string> = {};
         if (!formData.clubName.trim()) errs.clubName = 'Club name is required';
-        if (!formData.registrationNumber.trim()) errs.registrationNumber = 'Registration number is required';
+        // registrationNumber is optional
         if (!formData.stateId) errs.stateId = 'Please select a state';
         if (!formData.districtId) errs.districtId = 'Please select a district';
         if (!formData.address.trim() || formData.address.trim().length < 10) errs.address = 'Address must be at least 10 characters';
@@ -107,7 +107,7 @@ export default function NewClubPage() {
             const payload = {
                 name: formData.clubName.trim(),
                 clubName: formData.clubName.trim(),
-                registrationNumber: formData.registrationNumber.trim(),
+                registrationNumber: formData.registrationNumber.trim() || undefined,
                 establishedYear: Number(formData.establishedYear),
                 stateId: Number(formData.stateId),
                 districtId: Number(formData.districtId),
@@ -237,7 +237,7 @@ export default function NewClubPage() {
                                 <FieldError field="clubName" />
                             </div>
                             <div>
-                                <label className={labelClass}>Registration Number *</label>
+                                <label className={labelClass}>Registration Number</label>
                                 <div className="relative">
                                     <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <input type="text" value={formData.registrationNumber}

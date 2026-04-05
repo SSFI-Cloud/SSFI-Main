@@ -22,7 +22,7 @@ import type { ClubFormData } from '@/types/affiliation';
 
 const formSchema = z.object({
   clubName: z.string().min(3, 'Club name must be at least 3 characters').max(200),
-  registrationNumber: z.string().min(1, 'Registration number is required').max(50),
+  registrationNumber: z.string().max(50).optional().or(z.literal('')),
   establishedYear: z.coerce.number().min(1900).max(new Date().getFullYear(), 'Year cannot be in the future'),
   contactPersonName: z.string().min(2, 'Contact person name is required').max(100),
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
@@ -241,7 +241,7 @@ export default function ClubRegistrationForm() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Registration Number <span className="text-red-400">*</span></label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Registration Number</label>
                       <div className="relative">
                         <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input {...register('registrationNumber')} placeholder="Club registration number" className={`${inputCls(!!errors.registrationNumber)} pl-9`} />
