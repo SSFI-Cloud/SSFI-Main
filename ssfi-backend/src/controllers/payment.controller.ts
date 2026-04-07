@@ -354,19 +354,45 @@ class PaymentController {
                 return res.status(403).json({ status: 'error', message: 'Not authorized to view this receipt' });
             }
 
-            const userName =
-                payment.user?.student?.name ||
-                payment.user?.clubOwner?.name ||
-                payment.user?.statePerson?.name ||
-                payment.user?.districtPerson?.name ||
-                'N/A';
+            // Determine display info based on payment description, not user role
+            // Description format: "AFFILIATION_FEE - CLUB #123" or "AFFILIATION_FEE - STUDENT #456"
+            const isClubPayment = payment.description?.includes('CLUB');
 
-            // Use the most relevant UID: student membershipId > club uid > user uid
-            const displayUid =
-                payment.user?.student?.membershipId ||
-                payment.user?.clubOwner?.club?.uid ||
-                payment.user?.uid ||
-                'N/A';
+            let userName: string;
+            let displayUid: string;
+            let displayRole: string;
+
+            if (isClubPayment) {
+                // For club payments, show club info even if user is also a student
+                userName = payment.user?.clubOwner?.name || payment.user?.student?.name || 'N/A';
+                displayUid = payment.user?.clubOwner?.club?.uid || payment.user?.uid || 'N/A';
+                displayRole = 'CLUB_OWNER';
+
+                // If clubOwner record is missing, fetch club directly from description
+                if (!payment.user?.clubOwner?.club?.uid && payment.description) {
+                    const clubIdMatch = payment.description.match(/CLUB #(\d+)/);
+                    if (clubIdMatch) {
+                        const club = await prisma.club.findUnique({ where: { id: parseInt(clubIdMatch[1]) }, select: { uid: true, contactPerson: true } });
+                        if (club) {
+                            displayUid = club.uid;
+                            if (userName === 'N/A') userName = club.contactPerson || 'N/A';
+                        }
+                    }
+                }
+            } else {
+                userName =
+                    payment.user?.student?.name ||
+                    payment.user?.clubOwner?.name ||
+                    payment.user?.statePerson?.name ||
+                    payment.user?.districtPerson?.name ||
+                    'N/A';
+                displayUid =
+                    payment.user?.student?.membershipId ||
+                    payment.user?.clubOwner?.club?.uid ||
+                    payment.user?.uid ||
+                    'N/A';
+                displayRole = payment.user?.role || 'N/A';
+            }
 
             return res.status(200).json({
                 status: 'success',
@@ -386,7 +412,7 @@ class PaymentController {
                         uid: displayUid,
                         email: payment.user?.email,
                         phone: payment.user?.phone,
-                        role: payment.user?.role,
+                        role: displayRole,
                     },
                 },
             });
