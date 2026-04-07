@@ -617,10 +617,8 @@ export const updateProfileForRenewal = async (
         userUpdate.phone = data.phone;
     }
 
-    // Email update with uniqueness check
+    // Email update (no uniqueness check — same email allowed across users)
     if (data.email && data.email !== user.email) {
-        const existing = await prisma.user.findFirst({ where: { email: data.email, id: { not: userId } } });
-        if (existing) throw new AppError('This email is already registered to another account', 400);
         userUpdate.email = data.email;
     }
 

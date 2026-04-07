@@ -110,17 +110,6 @@ class AuthService {
       throw new AppError('Phone number already registered', 400);
     }
 
-    // Check if email already exists (if provided)
-    if (email) {
-      const existingEmail = await prisma.user.findUnique({
-        where: { email }
-      });
-
-      if (existingEmail) {
-        throw new AppError('Email already registered', 400);
-      }
-    }
-
     // Generate UID
     let uidRole: 'STUDENT' | 'STATE_SECRETARY' | 'DISTRICT_SECRETARY' | 'CLUB' | null = null;
     let uidContext: { stateId?: number; districtId?: number; clubId?: number } = {};

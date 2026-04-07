@@ -325,9 +325,9 @@ export const createDistrictWithSecretary = async (data: {
 
     const uid = await generateUID('DISTRICT_SECRETARY', { stateId: district.stateId, districtId: data.districtId });
 
-    // Check if user already exists with this email/phone — reuse if so
+    // Check if user already exists with this phone (email is not unique)
     const existingUser = await prisma.user.findFirst({
-        where: { OR: [{ email: data.secretaryEmail }, { phone: data.secretaryPhone }] },
+        where: { phone: data.secretaryPhone },
     });
 
     return prisma.$transaction(async (tx) => {

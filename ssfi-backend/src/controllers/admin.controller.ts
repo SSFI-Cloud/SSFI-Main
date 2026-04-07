@@ -216,6 +216,18 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       }
     };
 
+    // Remove unique constraint on email — same email can be shared by multiple users (clubs/coaches reuse email for students)
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE \`users\` DROP INDEX \`users_email_key\``);
+      results.push('Dropped unique index on users.email');
+    } catch (e: any) {
+      if (e.message?.includes("check that it exists") || e.message?.includes("Can't DROP")) {
+        results.push('users.email unique index already removed');
+      } else {
+        results.push(`Drop email unique: ${e.message}`);
+      }
+    }
+
     // district_secretaries missing columns
     await addColumnIfMissing('district_secretaries', 'associationName', 'VARCHAR(191) NULL');
     await addColumnIfMissing('district_secretaries', 'logo', 'LONGTEXT NULL');
@@ -533,9 +545,9 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
         // If user phone/email already matches, skip
         if (sp.user.phone === ss.phone && sp.user.email === ss.email) continue;
 
-        // Check if there's already a user with the secretary's phone
+        // Check if there's already a user with the secretary's phone (email is not unique)
         const realUser = await prisma.user.findFirst({
-          where: { OR: [{ phone: ss.phone }, { email: ss.email }] },
+          where: { phone: ss.phone },
         });
 
         if (realUser && realUser.id !== sp.user.id) {
@@ -592,7 +604,7 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
         if (dp.user.phone === ds.phone && dp.user.email === ds.email) continue;
 
         const realUser = await prisma.user.findFirst({
-          where: { OR: [{ phone: ds.phone }, { email: ds.email }] },
+          where: { phone: ds.phone },
         });
 
         if (realUser && realUser.id !== dp.user.id) {

@@ -110,7 +110,7 @@ export const updateDistrictSecretaryStatus = async (
 
 const createUserAccount = async (data: any) => {
     const existingUser = await prisma.user.findFirst({
-        where: { OR: [{ email: data.email }, { phone: data.phone }] }
+        where: { phone: data.phone }
     });
 
     if (existingUser) {

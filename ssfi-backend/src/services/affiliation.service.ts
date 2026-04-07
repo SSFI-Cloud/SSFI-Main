@@ -306,10 +306,10 @@ export const initiateStateSecretaryRegistration = async (
         });
       }
 
-      // Search for existing user to link payment
+      // Search for existing user to link payment (match by phone only — email is not unique)
       let userId = 1; // Default fallback
       const existingUser = await prisma.user.findFirst({
-        where: { OR: [{ phone: data.phone }, { email: data.email }] }
+        where: { phone: data.phone }
       });
       if (existingUser) userId = existingUser.id;
 
@@ -348,14 +348,9 @@ export const initiateStateSecretaryRegistration = async (
     throw new AppError('This state already has a secretary application pending or approved', 409);
   }
 
-  // Check for existing user with same phone/email
+  // Check for existing user with same phone (email is not unique)
   const existingUser = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { phone: data.phone },
-        { email: data.email },
-      ],
-    },
+    where: { phone: data.phone },
   });
 
   if (existingUser) {
@@ -712,7 +707,7 @@ export const initiateDistrictSecretaryRegistration = async (
 
       let userId = 1;
       const existingUser = await prisma.user.findFirst({
-        where: { OR: [{ phone: data.phone }, { email: data.email }] },
+        where: { phone: data.phone },
       });
       if (existingUser) userId = existingUser.id;
 
@@ -747,25 +742,15 @@ export const initiateDistrictSecretaryRegistration = async (
     throw new AppError('This district already has a secretary application pending or approved', 409);
   }
 
-  // Check for existing user with same phone/email
+  // Check for existing user with same phone (email is not unique)
   const existingUser = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { phone: data.phone },
-        { email: data.email },
-      ],
-    },
+    where: { phone: data.phone },
   });
 
   if (existingUser) {
     // Check if they have a pending district secretary application
     const existingApplication = await prisma.districtSecretary.findFirst({
-      where: {
-        OR: [
-          { phone: data.phone },
-          { email: data.email },
-        ],
-      },
+      where: { phone: data.phone },
     });
 
     if (existingApplication && existingApplication.status === 'PAYMENT_PENDING') {
@@ -878,7 +863,7 @@ export const initiateDistrictSecretaryRegistration = async (
       };
 
     } else {
-      throw new AppError('A user with this phone number or email already exists. Please use renewal instead.', 409);
+      throw new AppError('A user with this phone number already exists. Please use renewal instead.', 409);
     }
   }
 
@@ -1199,10 +1184,10 @@ export const initiateClubRegistration = async (
         }
       });
 
-      // Get User for Payment
+      // Get User for Payment (match by phone only — email is not unique)
       let userId = 1;
       const existingUser = await prisma.user.findFirst({
-        where: { OR: [{ phone: data.phone }, ...(data.email ? [{ email: data.email }] : [])] }
+        where: { phone: data.phone }
       });
       if (existingUser) userId = existingUser.id;
 
@@ -1238,18 +1223,13 @@ export const initiateClubRegistration = async (
     throw new AppError('A club with this name already exists in this district', 409);
   }
 
-  // Check for existing user with same phone/email
+  // Check for existing user with same phone (email is not unique — multiple users can share email)
   const existingUser = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { phone: data.phone },
-        ...(data.email ? [{ email: data.email }] : []),
-      ],
-    },
+    where: { phone: data.phone },
   });
 
   if (existingUser && existingUser.role === 'CLUB_OWNER') {
-    throw new AppError('A club owner account already exists with this phone number or email. Please use renewal instead of creating a new account.', 409);
+    throw new AppError('A club owner account already exists with this phone number. Please use renewal instead of creating a new account.', 409);
   }
 
   // Get district and state info
@@ -1304,10 +1284,7 @@ export const initiateClubRegistration = async (
     const hashedPassword = await bcrypt.hash(defaultPassword, 12);
     const newUser = await prisma.user.create({
       data: {
-        uid: uid, // Use Club UID for user? Or generated?
-        // Club Owner UID might ideally be different from Club UID, but let's use Club UID for now or generate new?
-        // `createUserCredentials` uses `uid` passed to it.
-        // Let's use `uid` (Club UID) for now.
+        uid: uid,
         phone: data.phone,
         email: data.email || `${data.phone}@ssfi.club`,
         password: hashedPassword,
@@ -1317,11 +1294,16 @@ export const initiateClubRegistration = async (
       }
     });
     userIdForPayment = newUser.id;
+  }
 
-    // Create Club Owner Record (Required for Dashboard Access)
+  // Create Club Owner Record if not already linked (Required for Dashboard Access)
+  const existingClubOwner = await prisma.clubOwner.findFirst({
+    where: { userId: userIdForPayment, clubId: club.id },
+  });
+  if (!existingClubOwner) {
     await prisma.clubOwner.create({
       data: {
-        userId: newUser.id,
+        userId: userIdForPayment,
         clubId: club.id,
         name: data.contactPersonName || 'Club Owner',
         gender: 'MALE', // Default, update later

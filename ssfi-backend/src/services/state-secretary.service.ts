@@ -106,7 +106,7 @@ const createUserAccount = async (data: any) => {
     // Basic user creation logic - simplified from affiliation service
     // In a real scenario, check if user exists by phone/email first
     const existingUser = await prisma.user.findFirst({
-        where: { OR: [{ email: data.email }, { phone: data.phone }] }
+        where: { phone: data.phone }
     });
 
     if (existingUser) {
