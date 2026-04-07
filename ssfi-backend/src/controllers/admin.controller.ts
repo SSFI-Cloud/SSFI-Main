@@ -216,7 +216,7 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       }
     };
 
-    // Remove unique constraint on email — same email can be shared by multiple users (clubs/coaches reuse email for students)
+    // Remove unique constraint on email — same email can be shared by multiple users
     try {
       await prisma.$executeRawUnsafe(`ALTER TABLE \`users\` DROP INDEX \`users_email_key\``);
       results.push('Dropped unique index on users.email');
@@ -226,6 +226,16 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       } else {
         results.push(`Drop email unique: ${e.message}`);
       }
+    }
+
+    // Fix: Update Phoenix Roller Sports Academy owner email (one-time)
+    try {
+      const updated = await prisma.$executeRawUnsafe(
+        `UPDATE users SET email = 'nambiit6998@gmail.com' WHERE phone = '7449094251' AND email = '7449094251@ssfi.club'`
+      );
+      if (updated) results.push('Updated Phoenix club owner email to nambiit6998@gmail.com');
+    } catch (e: any) {
+      results.push(`Phoenix email fix: ${e.message}`);
     }
 
     // district_secretaries missing columns
