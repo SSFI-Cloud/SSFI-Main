@@ -316,9 +316,15 @@ class BeginnerCertService {
       const reg = await prisma.beginnerCertRegistration.update({
         where: { id: Number(regId) },
         data: { paymentStatus: 'PAID', status: 'REGISTERED' },
-        include: { program: { select: { title: true, category: true, price: true, venue: true, city: true, state: true, startDate: true, endDate: true } } },
+        include: { program: { select: { id: true, title: true, category: true, price: true, venue: true, city: true, state: true, startDate: true, endDate: true } } },
       });
       registrationNumber = reg.registrationNumber;
+
+      // Increment filled seats on successful payment
+      await prisma.beginnerCertProgram.update({
+        where: { id: reg.program.id },
+        data: { filledSeats: { increment: 1 } },
+      });
 
       // Send confirmation email now that payment is confirmed
       if ((reg as any).email) {

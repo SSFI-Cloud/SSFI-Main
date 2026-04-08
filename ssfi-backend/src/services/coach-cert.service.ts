@@ -235,9 +235,15 @@ class CoachCertService {
       const reg = await prisma.coachCertRegistration.update({
         where: { id: Number(regId) },
         data: { paymentStatus: 'PAID', status: 'REGISTERED' },
-        include: { program: { select: { title: true, level: true, price: true, startDate: true, endDate: true } } },
+        include: { program: { select: { id: true, title: true, level: true, price: true, startDate: true, endDate: true } } },
       });
       registrationNumber = reg.registrationNumber;
+
+      // Increment filled seats on successful payment
+      await prisma.coachCertProgram.update({
+        where: { id: reg.program.id },
+        data: { filledSeats: { increment: 1 } },
+      });
 
       // Send confirmation email now that payment is confirmed
       if ((reg as any).email) {

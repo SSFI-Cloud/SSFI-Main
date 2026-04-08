@@ -228,14 +228,25 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       }
     }
 
-    // Fix: Update Phoenix Roller Sports Academy owner email (one-time)
+    // Fix: Sync filledSeats for coach & beginner cert programs based on actual paid registrations
     try {
-      const updated = await prisma.$executeRawUnsafe(
-        `UPDATE users SET email = 'nambiit6998@gmail.com' WHERE phone = '7449094251' AND email = '7449094251@ssfi.club'`
-      );
-      if (updated) results.push('Updated Phoenix club owner email to nambiit6998@gmail.com');
+      await prisma.$executeRawUnsafe(`
+        UPDATE coach_cert_programs p
+        SET filledSeats = (
+          SELECT COUNT(*) FROM coach_cert_registrations r
+          WHERE r.programId = p.id AND r.paymentStatus = 'PAID'
+        )
+      `);
+      await prisma.$executeRawUnsafe(`
+        UPDATE beginner_cert_programs p
+        SET filledSeats = (
+          SELECT COUNT(*) FROM beginner_cert_registrations r
+          WHERE r.programId = p.id AND r.paymentStatus = 'PAID'
+        )
+      `);
+      results.push('Synced filledSeats for coach & beginner cert programs');
     } catch (e: any) {
-      results.push(`Phoenix email fix: ${e.message}`);
+      results.push(`filledSeats sync: ${e.message}`);
     }
 
     // district_secretaries missing columns
