@@ -228,6 +228,42 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       }
     }
 
+    // Fix: Approve user accounts for already-approved clubs
+    try {
+      const approvedClubs = await prisma.club.findMany({
+        where: { status: 'APPROVED' },
+        select: { id: true, phone: true, email: true, contactPerson: true },
+      });
+      let clubUsersFixed = 0;
+      for (const club of approvedClubs) {
+        const user = await prisma.user.findFirst({ where: { phone: club.phone } });
+        if (user && (!user.isApproved || user.approvalStatus !== 'APPROVED')) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              isApproved: true,
+              approvalStatus: 'APPROVED',
+              isActive: true,
+              role: 'CLUB_OWNER',
+              email: club.email || user.email,
+              expiryDate: user.expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+            },
+          });
+          // Ensure clubOwner record exists
+          const co = await prisma.clubOwner.findFirst({ where: { userId: user.id, clubId: club.id } });
+          if (!co) {
+            await prisma.clubOwner.create({
+              data: { userId: user.id, clubId: club.id, name: club.contactPerson || 'Club Owner', gender: 'MALE' },
+            });
+          }
+          clubUsersFixed++;
+        }
+      }
+      if (clubUsersFixed > 0) results.push(`Approved ${clubUsersFixed} club owner user accounts`);
+    } catch (e: any) {
+      results.push(`Club user approval fix: ${e.message}`);
+    }
+
     // Fix: Sync filledSeats for coach & beginner cert programs based on actual paid registrations
     try {
       await prisma.$executeRawUnsafe(`

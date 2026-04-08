@@ -39,6 +39,7 @@ interface Club {
     logo_path: string;
     created_at: string;
     status: string;
+    request_status: string;
 }
 
 interface Meta {
@@ -48,11 +49,14 @@ interface Meta {
     totalPages: number;
 }
 
+const STATUS_FILTERS = ['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as const;
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ClubApprovalsPage() {
     const [clubs, setClubs]                       = useState<Club[]>([]);
     const [meta, setMeta]                         = useState<Meta>({ total: 0, page: 1, limit: 10, totalPages: 1 });
+    const [filter, setFilter]                     = useState<string>('PENDING');
     const [searchInput, setSearchInput]           = useState('');
     const [searchQuery, setSearchQuery]           = useState('');
     const [currentPage, setCurrentPage]           = useState(1);
@@ -73,10 +77,10 @@ export default function ClubApprovalsPage() {
         setError(null);
         try {
             const params: Record<string, any> = {
-                status: 'PENDING',
                 page: currentPage,
                 limit: LIMIT,
             };
+            if (filter !== 'ALL') params.status = filter;
             if (searchQuery) params.search = searchQuery;
 
             const res = await api.get('/clubs', { params });
@@ -87,12 +91,12 @@ export default function ClubApprovalsPage() {
             if (err.response?.status === 404) {
                 setClubs([]);
             } else {
-                setError(err.response?.data?.message ?? 'Failed to load pending clubs');
+                setError(err.response?.data?.message ?? 'Failed to load clubs');
             }
         } finally {
             setIsLoading(false);
         }
-    }, [currentPage, searchQuery]);
+    }, [currentPage, searchQuery, filter]);
 
     useEffect(() => {
         fetchClubs();
@@ -158,13 +162,14 @@ export default function ClubApprovalsPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Club Approvals</h1>
-                    <p className="text-gray-500 mt-1">Review and approve pending club registrations</p>
+                    <p className="text-gray-500 mt-1">Manage club registrations</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="px-4 py-2 bg-amber-100 text-amber-600 rounded-lg flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        <span className="font-medium">{meta.total} Pending</span>
-                    </div>
+                    {filter === 'PENDING' && (
+                        <div className="px-4 py-2 bg-amber-100 text-amber-600 rounded-lg flex items-center gap-2 text-sm font-medium">
+                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Clock className="w-4 h-4" /><span>{meta.total} Pending</span></>}
+                        </div>
+                    )}
                     <button
                         onClick={fetchClubs}
                         className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 rounded-lg transition-colors"
@@ -173,6 +178,23 @@ export default function ClubApprovalsPage() {
                         <RefreshCw className="w-4 h-4" />
                     </button>
                 </div>
+            </div>
+
+            {/* Status Filter Tabs */}
+            <div className="flex gap-2 flex-wrap">
+                {STATUS_FILTERS.map(l => (
+                    <button
+                        key={l}
+                        onClick={() => { setFilter(l); setCurrentPage(1); }}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            filter === l
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                    >
+                        {l === 'ALL' ? 'All' : l.charAt(0) + l.slice(1).toLowerCase()}
+                    </button>
+                ))}
             </div>
 
             {/* Error */}
@@ -206,7 +228,7 @@ export default function ClubApprovalsPage() {
                 ) : clubs.length === 0 ? (
                     <div className="col-span-full py-16 text-center text-gray-500">
                         <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-600 opacity-50" />
-                        <p>No pending club approvals</p>
+                        <p>No {filter === 'ALL' ? '' : filter.toLowerCase() + ' '}club{filter === 'PENDING' ? ' approvals' : 's found'}</p>
                     </div>
                 ) : (
                     clubs.map((club, index) => (
@@ -248,21 +270,35 @@ export default function ClubApprovalsPage() {
                                 >
                                     <Eye className="w-4 h-4" /> View
                                 </button>
-                                <button
-                                    onClick={() => handleApprove(club)}
-                                    disabled={processingId === club.id}
-                                    className="flex-1 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-50 transition-colors"
-                                >
-                                    {processingId === club.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                                    Approve
-                                </button>
-                                <button
-                                    onClick={() => openRejectModal(club)}
-                                    className="py-2 px-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 text-sm font-medium transition-colors"
-                                    title="Reject"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
+                                {club.request_status === 'PENDING' && (
+                                    <>
+                                        <button
+                                            onClick={() => handleApprove(club)}
+                                            disabled={processingId === club.id}
+                                            className="flex-1 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-50 transition-colors"
+                                        >
+                                            {processingId === club.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                            Approve
+                                        </button>
+                                        <button
+                                            onClick={() => openRejectModal(club)}
+                                            className="py-2 px-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 text-sm font-medium transition-colors"
+                                            title="Reject"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </>
+                                )}
+                                {club.request_status === 'APPROVED' && (
+                                    <span className="flex-1 py-2 bg-green-100 text-green-600 rounded-lg text-sm font-medium flex items-center justify-center gap-1">
+                                        <CheckCircle className="w-4 h-4" /> Approved
+                                    </span>
+                                )}
+                                {club.request_status === 'REJECTED' && (
+                                    <span className="flex-1 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-medium flex items-center justify-center gap-1">
+                                        <XCircle className="w-4 h-4" /> Rejected
+                                    </span>
+                                )}
                             </div>
                         </motion.div>
                     ))
@@ -337,21 +373,32 @@ export default function ClubApprovalsPage() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="flex gap-3 pt-4 border-t border-gray-200">
-                                    <button
-                                        onClick={() => handleApprove(viewingClub)}
-                                        disabled={processingId === viewingClub.id}
-                                        className="flex-1 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
-                                    >
-                                        {processingId === viewingClub.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Check className="w-5 h-5" /> Approve</>}
-                                    </button>
-                                    <button
-                                        onClick={() => openRejectModal(viewingClub)}
-                                        className="flex-1 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-medium flex items-center justify-center gap-2 transition-colors"
-                                    >
-                                        <X className="w-5 h-5" /> Reject
-                                    </button>
-                                </div>
+                                {viewingClub.request_status === 'PENDING' && (
+                                    <div className="flex gap-3 pt-4 border-t border-gray-200">
+                                        <button
+                                            onClick={() => handleApprove(viewingClub)}
+                                            disabled={processingId === viewingClub.id}
+                                            className="flex-1 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+                                        >
+                                            {processingId === viewingClub.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Check className="w-5 h-5" /> Approve</>}
+                                        </button>
+                                        <button
+                                            onClick={() => openRejectModal(viewingClub)}
+                                            className="flex-1 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-medium flex items-center justify-center gap-2 transition-colors"
+                                        >
+                                            <X className="w-5 h-5" /> Reject
+                                        </button>
+                                    </div>
+                                )}
+                                {viewingClub.request_status !== 'PENDING' && (
+                                    <div className="pt-4 border-t border-gray-200 text-center">
+                                        <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
+                                            viewingClub.request_status === 'APPROVED' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                                        }`}>
+                                            {viewingClub.request_status === 'APPROVED' ? <><CheckCircle className="w-4 h-4" /> Approved</> : <><XCircle className="w-4 h-4" /> Rejected</>}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     </motion.div>

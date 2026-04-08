@@ -1749,37 +1749,91 @@ const generateClubCode = async (districtId: string): Promise<string> => {
 };
 
 /**
- * Create user account after approval
+ * Create or activate user account after approval
  */
 const createUserAccount = async (data: {
   name: string;
   email: string;
   phone: string;
   role: string;
-  stateId?: string;
-  districtId?: string;
-  clubId?: string;
-  referenceId: string;
+  stateId?: number;
+  districtId?: number;
+  clubId?: number;
+  referenceId: number;
 }) => {
-  // Generate temporary password
-  const tempPassword = Math.random().toString(36).slice(-8);
+  // Check if user already exists (created during registration)
+  const existingUser = await prisma.user.findFirst({
+    where: { phone: data.phone },
+  });
+
+  const expiryDate = new Date();
+  expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+
+  if (existingUser) {
+    // Approve the existing user account
+    const user = await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        role: data.role as any,
+        isApproved: true,
+        approvalStatus: 'APPROVED',
+        isActive: true,
+        email: data.email || existingUser.email,
+        expiryDate,
+      },
+    });
+
+    // Ensure clubOwner record exists for CLUB_OWNER
+    if (data.role === 'CLUB_OWNER' && data.clubId) {
+      const existingClubOwner = await prisma.clubOwner.findFirst({
+        where: { userId: user.id, clubId: data.clubId },
+      });
+      if (!existingClubOwner) {
+        await prisma.clubOwner.create({
+          data: {
+            userId: user.id,
+            clubId: data.clubId,
+            name: data.name || 'Club Owner',
+            gender: 'MALE',
+          },
+        });
+      }
+    }
+
+    return user;
+  }
+
+  // Create new user if none exists
+  const hashedPassword = await bcrypt.hash(data.phone, 12);
+  const uid = data.role === 'CLUB_OWNER' && data.stateId && data.districtId
+    ? await generateUID('CLUB', { stateId: data.stateId, districtId: data.districtId })
+    : `USER-${Date.now()}`;
 
   const user = await prisma.user.create({
     data: {
-      name: data.name,
+      uid,
       email: data.email || null,
       phone: data.phone,
       role: data.role as any,
-      stateId: data.stateId,
-      districtId: data.districtId,
-      clubId: data.clubId,
-      password: tempPassword, // Should be hashed
+      password: hashedPassword,
       isActive: true,
-      mustChangePassword: true,
+      isApproved: true,
+      approvalStatus: 'APPROVED',
+      expiryDate,
     },
   });
 
-  // TODO: Send SMS/Email with temporary password
+  // Create clubOwner record
+  if (data.role === 'CLUB_OWNER' && data.clubId) {
+    await prisma.clubOwner.create({
+      data: {
+        userId: user.id,
+        clubId: data.clubId,
+        name: data.name || 'Club Owner',
+        gender: 'MALE',
+      },
+    });
+  }
 
   return user;
 };
