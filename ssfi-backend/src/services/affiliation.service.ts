@@ -1770,7 +1770,8 @@ const createUserAccount = async (data: {
   expiryDate.setFullYear(expiryDate.getFullYear() + 1);
 
   if (existingUser) {
-    // Approve the existing user account
+    // Approve the existing user account and reset password to phone number
+    const hashedPassword = await bcrypt.hash(data.phone, 12);
     const user = await prisma.user.update({
       where: { id: existingUser.id },
       data: {
@@ -1779,6 +1780,7 @@ const createUserAccount = async (data: {
         approvalStatus: 'APPROVED',
         isActive: true,
         email: data.email || existingUser.email,
+        password: hashedPassword,
         expiryDate,
       },
     });

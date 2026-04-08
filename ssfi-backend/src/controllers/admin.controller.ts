@@ -246,6 +246,7 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
               isActive: true,
               role: 'CLUB_OWNER',
               email: club.email || user.email,
+              password: await bcrypt.hash(user.phone, 12),
               expiryDate: user.expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
             },
           });
