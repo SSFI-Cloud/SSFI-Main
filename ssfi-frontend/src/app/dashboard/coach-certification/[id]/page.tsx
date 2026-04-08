@@ -240,7 +240,9 @@ export default function ProgramDetailPage() {
                               <CheckCircle2 className="w-3.5 h-3.5" />
                             </button>
                             <select value={r.status} onChange={e => handleStatusChange(r.id, e.target.value)}
-                              className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-gray-900 text-xs focus:outline-none ">
+                              className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-gray-900 text-xs focus:outline-none"
+                              disabled={r.status === 'PAYMENT_PENDING'}>
+                              {r.status === 'PAYMENT_PENDING' && <option value="PAYMENT_PENDING">Payment Pending</option>}
                               <option value="REGISTERED">Registered</option><option value="CONFIRMED">Confirmed</option>
                               <option value="ATTENDED">Attended</option><option value="CANCELLED">Cancelled</option>
                               <option value="FAILED">Failed</option>
