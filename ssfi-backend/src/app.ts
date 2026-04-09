@@ -228,16 +228,11 @@ app.use('/uploads', (req: Request, res: Response, next: NextFunction) => {
 
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
-  const assetDir = path.join(__dirname, 'assets', 'signatures');
-  const volDir = path.join(__dirname, '../uploads/signatures');
-  let assetFiles: string[] = [], volFiles: string[] = [];
-  try { assetFiles = fs.readdirSync(assetDir); } catch (e: any) { assetFiles = [e.message]; }
-  try { volFiles = fs.readdirSync(volDir); } catch (e: any) { volFiles = [e.message]; }
   res.status(200).json({
     status: 'OK',
+    timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    assetDir, assetFiles,
-    volDir, volFiles,
+    environment: process.env.NODE_ENV
   });
 });
 
