@@ -717,6 +717,27 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       results.push(`Password hash fix: ${e.message}`);
     }
 
+    // Fix: Reset all secretary & club owner passwords to phone number
+    // Ensures emailed credentials (password = phone) always work
+    try {
+      const secretaryAndClubUsers = await prisma.user.findMany({
+        where: {
+          role: { in: ['STATE_SECRETARY', 'DISTRICT_SECRETARY', 'CLUB_OWNER'] },
+          isApproved: true,
+        },
+        select: { id: true, phone: true },
+      });
+      let pwReset = 0;
+      for (const u of secretaryAndClubUsers) {
+        const correctHash = await bcrypt.hash(u.phone, 12);
+        await prisma.user.update({ where: { id: u.id }, data: { password: correctHash } });
+        pwReset++;
+      }
+      if (pwReset) results.push(`Reset passwords for ${pwReset} secretary/club users to phone number`);
+    } catch (e: any) {
+      results.push(`Secretary/club password reset: ${e.message}`);
+    }
+
     res.status(200).json({
       status: 'success',
       data: { results },

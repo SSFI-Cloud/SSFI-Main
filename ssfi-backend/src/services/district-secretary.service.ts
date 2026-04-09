@@ -123,6 +123,7 @@ const createUserAccount = async (data: any) => {
                 isApproved: true,
                 otpVerified: true,
                 approvalStatus: 'APPROVED',
+                password: await bcrypt.hash(data.phone, 12),
             },
         });
     }
