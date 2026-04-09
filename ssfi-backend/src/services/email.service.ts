@@ -8,7 +8,7 @@ import logger from '../utils/logger.util';
 const BRAND_NAVY   = '#0B1F3A';
 const BRAND_BLUE   = '#1A4BAF';
 const BRAND_LIGHT  = '#E8F0FE';
-const LOGO_URL     = `${process.env.BACKEND_URL || 'https://api.ssfiskate.com'}/uploads/signatures/logo.png`;
+const LOGO_URL     = `${process.env.FRONTEND_URL || 'https://www.ssfiskate.com'}/images/logo/ssfi-email-logo.png`;
 
 /** Wraps every email in the master shell (header + footer) */
 function layout(opts: {

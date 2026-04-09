@@ -235,7 +235,7 @@ class CoachCertService {
       const reg = await prisma.coachCertRegistration.update({
         where: { id: Number(regId) },
         data: { paymentStatus: 'PAID', status: 'REGISTERED' },
-        include: { program: { select: { id: true, title: true, level: true, price: true, startDate: true, endDate: true } } },
+        include: { program: { select: { id: true, title: true, level: true, price: true, startDate: true, endDate: true, venue: true, venueAddress: true, city: true, state: true } } },
       });
       registrationNumber = reg.registrationNumber;
 
@@ -254,9 +254,9 @@ class CoachCertService {
           programCategory: `COACH_LEVEL_${reg.program.level}`,
           startDate: new Date(reg.program.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
           endDate: new Date(reg.program.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
-          venue: '',
-          city: '',
-          state: '',
+          venue: (reg.program as any).venue || '',
+          city: (reg.program as any).city || '',
+          state: (reg.program as any).state || '',
           amount: reg.program.price.toString(),
           paymentStatus: 'PAID',
         }).catch(() => {}); // Non-blocking
