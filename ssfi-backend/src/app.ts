@@ -172,6 +172,26 @@ if (process.env.NODE_ENV === 'development') {
   }));
 }
 
+// Sync static assets to upload volume (Railway persistent volume overrides git files)
+import fs from 'fs';
+const assetSignatures = path.join(__dirname, 'assets', 'signatures');
+const volumeSignatures = path.join(__dirname, '../uploads/signatures');
+try {
+  if (fs.existsSync(assetSignatures)) {
+    fs.mkdirSync(volumeSignatures, { recursive: true });
+    for (const file of fs.readdirSync(assetSignatures)) {
+      const src = path.join(assetSignatures, file);
+      const dest = path.join(volumeSignatures, file);
+      if (!fs.existsSync(dest)) {
+        fs.copyFileSync(src, dest);
+        console.log(`[assets] Copied ${file} to uploads/signatures/`);
+      }
+    }
+  }
+} catch (e) {
+  console.warn('[assets] Failed to sync signatures:', e);
+}
+
 // Protected document access — requires authentication (Aadhaar, identity proofs, etc.)
 app.use('/uploads/documents', authenticate, (req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -195,27 +215,11 @@ app.use('/uploads', (req: Request, res: Response, next: NextFunction) => {
 
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
-  const fs = require('fs');
-  const uploadsPath = path.join(__dirname, '../uploads');
-  const uploadsPathAlt = path.resolve(process.cwd(), 'uploads');
-  let uploadsDirContents: string[] = [];
-  let uploadsAltContents: string[] = [];
-  let signaturesContents: string[] = [];
-  try { uploadsDirContents = fs.readdirSync(uploadsPath); } catch (e: any) { uploadsDirContents = [`ERROR: ${e.message}`]; }
-  try { uploadsAltContents = fs.readdirSync(uploadsPathAlt); } catch (e: any) { uploadsAltContents = [`ERROR: ${e.message}`]; }
-  try { signaturesContents = fs.readdirSync(path.join(uploadsPath, 'signatures')); } catch (e: any) { signaturesContents = [`ERROR: ${e.message}`]; }
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV,
-    __dirname,
-    cwd: process.cwd(),
-    uploadsPath,
-    uploadsPathAlt,
-    uploadsDirContents,
-    uploadsAltContents,
-    signaturesContents,
+    environment: process.env.NODE_ENV
   });
 });
 

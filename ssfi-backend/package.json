@@ -5,7 +5,7 @@
   "main": "dist/app.js",
   "scripts": {
     "dev": "nodemon src/app.ts",
-    "build": "prisma generate && tsc",
+    "build": "prisma generate && tsc && cp -r src/assets dist/assets 2>/dev/null || xcopy src\\assets dist\\assets /E /I /Y >nul 2>&1 || true",
     "start": "PRISMA_CLIENT_ENGINE_TYPE=binary UV_THREADPOOL_SIZE=4 VIPS_CONCURRENCY=1 node dist/app.js",
     "start:pm2": "pm2 start ecosystem.config.js",
     "stop:pm2": "pm2 stop ecosystem.config.js",
