@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { AppError } from '../utils/errors';
 import { generateUID } from './uid.service';
 
@@ -266,7 +267,58 @@ export const updateClubStatus = async (id: number, status: string, remarks?: str
     const club = await prisma.club.update({
         where: { id },
         data: { status: status as any },
+        select: { id: true, uid: true, name: true, phone: true, email: true, contactPerson: true, status: true, stateId: true, districtId: true },
     });
+
+    // When club is APPROVED, ensure the user account is approved with correct password
+    if (status === 'APPROVED' && club.phone) {
+        const existingUser = await prisma.user.findFirst({ where: { phone: club.phone } });
+        const hashedPassword = await bcrypt.hash(club.phone, 12);
+        const expiryDate = new Date();
+        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+
+        if (existingUser) {
+            await prisma.user.update({
+                where: { id: existingUser.id },
+                data: {
+                    role: 'CLUB_OWNER',
+                    isApproved: true,
+                    approvalStatus: 'APPROVED',
+                    isActive: true,
+                    email: club.email || existingUser.email,
+                    password: hashedPassword,
+                    expiryDate: existingUser.expiryDate || expiryDate,
+                },
+            });
+            // Ensure clubOwner record exists
+            const co = await prisma.clubOwner.findFirst({ where: { userId: existingUser.id, clubId: club.id } });
+            if (!co) {
+                await prisma.clubOwner.create({
+                    data: { userId: existingUser.id, clubId: club.id, name: club.contactPerson || 'Club Owner', gender: 'MALE' },
+                });
+            }
+        } else {
+            // Create user if doesn't exist
+            const uid = club.uid || `CLUB-${Date.now()}`;
+            const newUser = await prisma.user.create({
+                data: {
+                    uid,
+                    phone: club.phone,
+                    email: club.email || null,
+                    password: hashedPassword,
+                    role: 'CLUB_OWNER',
+                    isApproved: true,
+                    approvalStatus: 'APPROVED',
+                    isActive: true,
+                    expiryDate,
+                },
+            });
+            await prisma.clubOwner.create({
+                data: { userId: newUser.id, clubId: club.id, name: club.contactPerson || 'Club Owner', gender: 'MALE' },
+            });
+        }
+    }
+
     return club;
 };
 
