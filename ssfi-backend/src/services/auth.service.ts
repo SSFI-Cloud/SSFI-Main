@@ -504,7 +504,7 @@ class AuthService {
   async resetPassword(phone: string, otp: string, newPassword: string): Promise<void> {
     const user = await prisma.user.findUnique({
       where: { phone },
-      select: { id: true }
+      select: { id: true, approvalStatus: true, isApproved: true }
     });
 
     if (!user) {
@@ -518,14 +518,26 @@ class AuthService {
     const hashedPassword = await this.hashPassword(newPassword);
 
     // Update password and clear OTP
+    // Also fix isApproved if approvalStatus is already APPROVED (catches stale data)
+    const updateData: any = {
+      password: hashedPassword,
+      otp: null,
+      otpExpiry: null
+    };
+
+    if (user.approvalStatus === 'APPROVED' && !user.isApproved) {
+      updateData.isApproved = true;
+      updateData.isActive = true;
+    }
+
     await prisma.user.update({
       where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        otp: null,
-        otpExpiry: null
-      }
+      data: updateData
     });
+
+    // Clear any login lockout for this user
+    const loginKey = phone.toLowerCase();
+    loginAttemptTracker.delete(loginKey);
   }
   /**
    * Get full profile (user + role-specific fields)

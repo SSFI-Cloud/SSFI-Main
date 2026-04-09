@@ -103,12 +103,8 @@ export default function ForgotPasswordPage() {
 
         if (!newPassword) {
             errs.newPassword = 'Password is required';
-        } else {
-            if (newPassword.length < 8)           errs.newPassword = 'At least 8 characters';
-            else if (!/[A-Z]/.test(newPassword))  errs.newPassword = 'Include at least one uppercase letter';
-            else if (!/[a-z]/.test(newPassword))  errs.newPassword = 'Include at least one lowercase letter';
-            else if (!/[0-9]/.test(newPassword))  errs.newPassword = 'Include at least one number';
-            else if (!/[^A-Za-z0-9]/.test(newPassword)) errs.newPassword = 'Include at least one special character';
+        } else if (newPassword.length < 6) {
+            errs.newPassword = 'Password must be at least 6 characters';
         }
         if (!confirmPassword) errs.confirmPassword = 'Please confirm your password';
         else if (newPassword !== confirmPassword) errs.confirmPassword = 'Passwords do not match';

@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma, UserRole, Gender, AcademicBoard } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { AppError } from '../utils/errors';
 
 import prisma from '../config/prisma';
@@ -139,13 +140,30 @@ export const getStudentById = async (id: number) => {
 export const updateStudentStatus = async (id: number, status: string, remarks?: string) => {
   const student = await prisma.student.findUnique({
     where: { id },
-    include: { user: { select: { email: true, uid: true, phone: true } } }
+    include: { user: { select: { id: true, email: true, uid: true, phone: true, expiryDate: true } } }
   });
   if (!student) throw new Error('Student not found');
 
+  // Build update data based on status
+  const updateData: any = { approvalStatus: status as any };
+
+  if (status === 'APPROVED') {
+    // Set user as approved with hashed password and expiry date
+    const hashedPassword = await bcrypt.hash(student.user!.phone, 12);
+    const expiryDate = new Date();
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+
+    updateData.isApproved = true;
+    updateData.isActive = true;
+    updateData.password = hashedPassword;
+    updateData.expiryDate = student.user!.expiryDate || expiryDate;
+  } else if (status === 'REJECTED') {
+    updateData.isApproved = false;
+  }
+
   const user = await prisma.user.update({
     where: { id: student.userId },
-    data: { approvalStatus: status as any }
+    data: updateData
   });
 
   // Send email notification
@@ -189,12 +207,13 @@ export const createStudent = async (data: any) => {
 
     const email = data.email && data.email.trim() !== '' ? data.email : null;
 
+    const hashedPassword = await bcrypt.hash(data.phone, 12);
     const user = await tx.user.create({
       data: {
         uid,
         email,
         phone: data.phone,
-        password: data.phone, // Default password
+        password: hashedPassword, // Default password = phone number, hashed
         role: UserRole.STUDENT,
         approvalStatus: 'PENDING',
         isActive: true

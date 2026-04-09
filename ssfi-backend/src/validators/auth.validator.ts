@@ -96,12 +96,12 @@ export const forgotPasswordSchema = z.object({
 });
 
 /**
- * Reset password schema
+ * Reset password schema — uses relaxed password rules since default password is phone number
  */
 export const resetPasswordSchema = z.object({
   phone: phoneSchema,
   otp: otpSchema,
-  newPassword: passwordSchema
+  newPassword: z.string().min(6, 'Password must be at least 6 characters long')
 });
 
 export default {

@@ -738,6 +738,39 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       results.push(`Secretary/club password reset: ${e.message}`);
     }
 
+    // Fix: Approve student user accounts that have approvalStatus='APPROVED' but isApproved=false
+    // Also fix students with plain-text passwords and missing expiry dates
+    try {
+      const studentsToFix = await prisma.user.findMany({
+        where: {
+          role: 'STUDENT',
+          approvalStatus: 'APPROVED',
+          OR: [
+            { isApproved: false },
+            { NOT: { password: { startsWith: '$2' } } },
+          ],
+        },
+        select: { id: true, phone: true, expiryDate: true },
+      });
+      let studentFixed = 0;
+      for (const u of studentsToFix) {
+        const expiryDate = u.expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        await prisma.user.update({
+          where: { id: u.id },
+          data: {
+            isApproved: true,
+            isActive: true,
+            password: await bcrypt.hash(u.phone, 12),
+            expiryDate,
+          },
+        });
+        studentFixed++;
+      }
+      if (studentFixed) results.push(`Fixed ${studentFixed} approved student accounts (isApproved + password)`);
+    } catch (e: any) {
+      results.push(`Student approval fix: ${e.message}`);
+    }
+
     res.status(200).json({
       status: 'success',
       data: { results },
