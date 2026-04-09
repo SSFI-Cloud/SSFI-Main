@@ -143,7 +143,7 @@ export default function DistrictViewModal({ district, isLoading, onClose }: Dist
                                             <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                 {district.secretary.profilePhoto ? (
                                                     <img
-                                                        src={`https://api.ssfiskate.com${district.secretary.profilePhoto}`}
+                                                        src={`https://api.ssfiskate.com/${district.secretary.profilePhoto}`}
                                                         alt={district.secretary.name}
                                                         className="object-cover w-full h-full"
                                                     />

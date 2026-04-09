@@ -142,7 +142,7 @@ export default function StateViewModal({ state, isLoading, onClose }: StateViewM
                                             <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                 {state.secretary.profilePhoto ? (
                                                     <img
-                                                        src={`https://api.ssfiskate.com${state.secretary.profilePhoto}`}
+                                                        src={`https://api.ssfiskate.com/${state.secretary.profilePhoto}`}
                                                         alt={state.secretary.name}
                                                         className="object-cover w-full h-full"
                                                     />

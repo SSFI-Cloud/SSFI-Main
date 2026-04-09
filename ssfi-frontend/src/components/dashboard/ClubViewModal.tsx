@@ -151,7 +151,7 @@ export default function ClubViewModal({ club, isLoading, onClose }: ClubViewModa
                                         <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
                                             <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                 {club.owner.profilePhoto
-                                                    ? <img src={`https://api.ssfiskate.com${club.owner.profilePhoto}`} alt="Club Owner" className="object-cover w-full h-full" />
+                                                    ? <img src={`https://api.ssfiskate.com/${club.owner.profilePhoto}`} alt="Club Owner" className="object-cover w-full h-full" />
                                                     : <User className="w-7 h-7 text-gray-600" />}
                                             </div>
                                             <div className="flex-1 min-w-0">
