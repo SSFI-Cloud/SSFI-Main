@@ -1145,81 +1145,94 @@ export const initiateClubRegistration = async (
     throw new AppError(message, 400);
   }
 
-  // Check for duplicate registration number (but allow retry if payment was pending)
+  // Check for existing PAYMENT_PENDING club (retry scenario)
+  // Match by registration number, phone, or name+district
+  const existingPendingClub = await prisma.club.findFirst({
+    where: {
+      status: 'PAYMENT_PENDING',
+      OR: [
+        ...(data.registrationNumber ? [{ registrationNumber: data.registrationNumber }] : []),
+        { phone: data.phone },
+        { name: data.clubName, districtId: data.districtId },
+      ],
+    },
+  });
+
+  if (existingPendingClub) {
+    // Retry Payment — reuse the existing PAYMENT_PENDING club
+    const window = await prisma.registrationWindow.findUnique({ where: { id: Number(windowId) } });
+    if (!window) throw new AppError('Registration window not found', 404);
+
+    const updatedClub = await prisma.club.update({
+      where: { id: existingPendingClub.id },
+      data: {
+        name: data.clubName,
+        contactPerson: data.contactPersonName,
+        phone: data.phone,
+        email: data.email || null,
+        address: data.address,
+        logo: data.clubLogo || null,
+        registrationNumber: data.registrationNumber || existingPendingClub.registrationNumber,
+        registrationWindowId: String(windowId),
+      }
+    });
+
+    // Ensure user exists for payment
+    let userId = 1;
+    const existingUser = await prisma.user.findFirst({
+      where: { phone: data.phone }
+    });
+    if (existingUser) userId = existingUser.id;
+
+    const { order, keyId } = await paymentService.createOrder({
+      amount: window.baseFee * 100,
+      currency: 'INR',
+      payment_type: 'AFFILIATION_FEE',
+      entity_id: updatedClub.id,
+      entity_type: 'CLUB',
+      user_id: userId,
+      notes: {
+        club_uid: updatedClub.uid,
+        name: data.clubName,
+        district_id: String(data.districtId),
+        type: 'CLUB'
+      }
+    });
+
+    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+
+    return {
+      razorpayOrderId: order.id,
+      amount: window.baseFee * 100,
+      currency: 'INR',
+      key: useMockPayment ? 'rzp_test_mock' : keyId,
+      userDetails: {
+        name: data.contactPersonName,
+        email: data.email || '',
+        phone: data.phone,
+      }
+    };
+  }
+
+  // Check for duplicate registration number (already paid/approved)
   if (data.registrationNumber) {
     const existingRegNumber = await prisma.club.findFirst({
       where: { registrationNumber: data.registrationNumber },
     });
-
-    if (existingRegNumber && existingRegNumber.status !== 'PAYMENT_PENDING') {
+    if (existingRegNumber) {
       throw new AppError('A club with this registration number already exists', 409);
     }
   }
 
-  // Check for duplicate name in same district
+  // Check for duplicate name in same district (already paid/approved)
   const existingName = await prisma.club.findFirst({
     where: {
       name: data.clubName,
       districtId: data.districtId,
-      status: { in: ['PENDING', 'APPROVED', 'PAYMENT_PENDING'] },
+      status: { in: ['PENDING', 'APPROVED'] },
     },
   });
-
   if (existingName) {
-    if (existingName.status === 'PAYMENT_PENDING') {
-      // Retry Payment
-      const window = await prisma.registrationWindow.findUnique({ where: { id: Number(windowId) } });
-      if (!window) throw new AppError('Registration window not found', 404);
-
-      const updatedClub = await prisma.club.update({
-        where: { id: existingName.id },
-        data: {
-          // Update mutable fields
-          contactPerson: data.contactPersonName,
-          phone: data.phone,
-          email: data.email || null,
-          address: data.address,
-          logo: data.clubLogo || null,
-          registrationWindowId: String(windowId),
-        }
-      });
-
-      // Get User for Payment (match by phone only — email is not unique)
-      let userId = 1;
-      const existingUser = await prisma.user.findFirst({
-        where: { phone: data.phone }
-      });
-      if (existingUser) userId = existingUser.id;
-
-      const { order, keyId } = await paymentService.createOrder({
-        amount: window.baseFee * 100,
-        currency: 'INR',
-        payment_type: 'AFFILIATION_FEE',
-        entity_id: updatedClub.id,
-        entity_type: 'CLUB',
-        user_id: userId,
-        notes: {
-          club_uid: updatedClub.uid,
-          name: data.clubName,
-          district_id: String(data.districtId),
-          type: 'CLUB'
-        }
-      });
-
-      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
-
-      return {
-        razorpayOrderId: order.id,
-        amount: window.baseFee * 100,
-        currency: 'INR',
-        key: useMockPayment ? 'rzp_test_mock' : keyId,
-        userDetails: {
-          name: data.contactPersonName,
-          email: data.email || '',
-          phone: data.phone,
-        }
-      };
-    }
     throw new AppError('A club with this name already exists in this district', 409);
   }
 
