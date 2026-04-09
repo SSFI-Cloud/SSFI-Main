@@ -176,15 +176,28 @@ if (process.env.NODE_ENV === 'development') {
 import fs from 'fs';
 const assetSignatures = path.join(__dirname, 'assets', 'signatures');
 const volumeSignatures = path.join(__dirname, '../uploads/signatures');
+console.log(`[assets] Source: ${assetSignatures} exists=${fs.existsSync(assetSignatures)}`);
+console.log(`[assets] Target: ${volumeSignatures} exists=${fs.existsSync(volumeSignatures)}`);
 try {
   if (fs.existsSync(assetSignatures)) {
     fs.mkdirSync(volumeSignatures, { recursive: true });
-    for (const file of fs.readdirSync(assetSignatures)) {
+    const files = fs.readdirSync(assetSignatures);
+    console.log(`[assets] Found ${files.length} files to sync: ${files.join(', ')}`);
+    for (const file of files) {
       const src = path.join(assetSignatures, file);
       const dest = path.join(volumeSignatures, file);
-      if (!fs.existsSync(dest)) {
-        fs.copyFileSync(src, dest);
-        console.log(`[assets] Copied ${file} to uploads/signatures/`);
+      fs.copyFileSync(src, dest);
+      console.log(`[assets] Copied ${file} to uploads/signatures/`);
+    }
+  } else {
+    // Fallback: try copying from src/assets (dev mode or if build didn't copy)
+    const srcAssets = path.resolve(process.cwd(), 'src', 'assets', 'signatures');
+    console.log(`[assets] Fallback source: ${srcAssets} exists=${fs.existsSync(srcAssets)}`);
+    if (fs.existsSync(srcAssets)) {
+      fs.mkdirSync(volumeSignatures, { recursive: true });
+      for (const file of fs.readdirSync(srcAssets)) {
+        fs.copyFileSync(path.join(srcAssets, file), path.join(volumeSignatures, file));
+        console.log(`[assets] Fallback copied ${file}`);
       }
     }
   }
