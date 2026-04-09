@@ -331,7 +331,7 @@ export const initiateStateSecretaryRegistration = async (
       });
 
       // Check if mock payment is enabled and return appropriate key
-      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
       return {
         razorpayOrderId: order.id,
@@ -500,7 +500,7 @@ export const initiateStateSecretaryRegistration = async (
     }
   });
 
-  const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+  const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
   logger.info(`State Secretary application initiated: ${secretary.uid}`, { stateId: data.stateId });
 
@@ -725,7 +725,7 @@ export const initiateDistrictSecretaryRegistration = async (
         },
       });
 
-      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
       return {
         razorpayOrderId: order.id,
@@ -787,7 +787,7 @@ export const initiateDistrictSecretaryRegistration = async (
         },
       });
 
-      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
       return {
         razorpayOrderId: order.id,
@@ -848,7 +848,7 @@ export const initiateDistrictSecretaryRegistration = async (
         },
       });
 
-      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
       return {
         razorpayOrderId: order.id,
@@ -1199,7 +1199,7 @@ export const initiateClubRegistration = async (
       }
     });
 
-    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
     return {
       razorpayOrderId: order.id,
@@ -1341,7 +1341,7 @@ export const initiateClubRegistration = async (
     }
   });
 
-  const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+  const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
   logger.info(`Club registration initiated: ${club.uid}`, { districtId: data.districtId });
 
@@ -2015,7 +2015,7 @@ export const initiateStudentRegistration = async (
     },
   });
 
-  const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+  const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
   return {
     uid: student.uid,
@@ -2257,7 +2257,7 @@ export const initiateRenewal = async (
     },
   });
 
-  const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+  const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
   return {
     razorpayOrderId: order.id,

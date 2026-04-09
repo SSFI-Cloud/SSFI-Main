@@ -53,7 +53,7 @@ class CoachCertService {
 
   async listPrograms(query: { level?: string; status?: string; isActive?: string; page?: string; limit?: string }) {
     const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '20');
+    const limit = Math.min(parseInt(query.limit || '20'), 100);
     const where: any = {};
     if (query.level) where.level = parseInt(query.level);
     if (query.status) where.status = query.status;
@@ -185,7 +185,7 @@ class CoachCertService {
       paymentKeyId = result.keyId;
     }
 
-    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
     return {
       registration,
@@ -272,7 +272,7 @@ class CoachCertService {
 
   async getRegistrationsByProgram(programId: number, query: any) {
     const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '50');
+    const limit = Math.min(parseInt(query.limit || '50'), 100);
     const where: any = { programId };
     if (query.status) where.status = query.status;
     if (query.paymentStatus) where.paymentStatus = query.paymentStatus;
@@ -359,7 +359,7 @@ class CoachCertService {
 
   async getCertifiedCoaches(query: { state?: string; level?: string; page?: string; limit?: string; search?: string }) {
     const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '12');
+    const limit = Math.min(parseInt(query.limit || '12'), 100);
 
     const where: any = { isCompleted: true, status: 'COMPLETED' };
     if (query.state) where.state = query.state;

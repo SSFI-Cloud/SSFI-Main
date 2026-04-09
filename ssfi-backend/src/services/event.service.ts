@@ -139,8 +139,8 @@ export const updateEvent = async (id: number, data: any, userId: number, userRol
 
 export const getAllEvents = async (query: any, user?: any) => {
   const { page = 1, limit = 10, search, category, status, type, level, stateId, sortField = 'eventDate', sortOrder = 'desc' } = query;
-  const skip = (Number(page) - 1) * Number(limit);
-  const take = Number(limit);
+  const take = Math.min(Number(limit) || 10, 100);
+  const skip = (Number(page) - 1) * take;
 
   const where: Prisma.EventWhereInput = {
     ...(search && {
@@ -336,8 +336,8 @@ export const getAllEvents = async (query: any, user?: any) => {
     events: formattedEvents,
     total,
     page: Number(page),
-    limit: Number(limit),
-    totalPages: Math.ceil(total / Number(limit)),
+    limit: take,
+    totalPages: Math.ceil(total / take),
   };
 };
 
@@ -486,8 +486,8 @@ export const bulkDeleteOldEvents = async () => {
 
 export const getUserEvents = async (userId: number, query: any) => {
   const { page = 1, limit = 10, search, status } = query;
-  const skip = (Number(page) - 1) * Number(limit);
-  const take = Number(limit);
+  const take = Math.min(Number(limit) || 10, 100);
+  const skip = (Number(page) - 1) * take;
 
   const where: Prisma.EventRegistrationWhereInput = {
     // userId: userId, // REMOVED: userId is not on EventRegistration, we use studentId below
@@ -552,8 +552,8 @@ export const getUserEvents = async (userId: number, query: any) => {
     meta: {
       total,
       page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / Number(limit))
+      limit: take,
+      totalPages: Math.ceil(total / take)
     }
   };
 };

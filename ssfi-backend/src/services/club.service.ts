@@ -5,8 +5,8 @@ import { generateUID } from './uid.service';
 import prisma from '../config/prisma';
 export const getAllClubs = async (query: any) => {
     const { page = 1, limit = 10, search, stateId, districtId, status, sortField = 'clubName', sortOrder = 'asc' } = query;
-    const skip = (Number(page) - 1) * Number(limit);
-    const take = Number(limit);
+    const take = Math.min(Number(limit) || 10, 100);
+    const skip = (Number(page) - 1) * take;
 
     const where: Prisma.ClubWhereInput = {
         isActive: true,
@@ -111,8 +111,8 @@ export const getAllClubs = async (query: any) => {
         meta: {
             total,
             page: Number(page),
-            limit: Number(limit),
-            totalPages: Math.ceil(total / Number(limit)),
+            limit: take,
+            totalPages: Math.ceil(total / take),
         },
         stats: {
             total: totalCount,

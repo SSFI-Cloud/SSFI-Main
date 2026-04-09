@@ -1,15 +1,20 @@
+import crypto from 'crypto';
 import { AppError } from '../utils/errors';
 import { emailService } from './email.service';
 
 import prisma from '../config/prisma';
+
+// Track failed OTP verification attempts per phone number (in-memory, single instance)
+const otpAttemptTracker = new Map<string, number>();
+
 class OTPService {
   /**
-   * Generate random numeric OTP
+   * Generate cryptographically secure random numeric OTP
    */
   generateOTP(length: number = parseInt(process.env.OTP_LENGTH || '6')): string {
     let otp = '';
     for (let i = 0; i < length; i++) {
-      otp += Math.floor(Math.random() * 10).toString();
+      otp += crypto.randomInt(0, 10).toString();
     }
     return otp;
   }
@@ -29,6 +34,9 @@ class OTPService {
    * Looks up the user by phone to get their email address
    */
   async sendOTP(phone: string): Promise<string> {
+    // Reset brute force counter when a new OTP is requested
+    otpAttemptTracker.delete(phone);
+
     const otp = this.generateOTP();
     const otpExpiry = this.getOTPExpiry();
     const expiryMinutes = process.env.OTP_EXPIRY_MINUTES || '10';
@@ -61,9 +69,25 @@ class OTPService {
   }
 
   /**
-   * Verify OTP
+   * Reset OTP attempt counter for a phone number
+   */
+  resetAttempts(phone: string): void {
+    otpAttemptTracker.delete(phone);
+  }
+
+  /**
+   * Verify OTP (with brute force protection)
    */
   async verifyOTP(phone: string, otp: string): Promise<boolean> {
+    // Check brute force attempts before anything else
+    const attempts = otpAttemptTracker.get(phone) || 0;
+    if (attempts >= 5) {
+      // Invalidate the OTP and force re-request
+      await prisma.user.update({ where: { phone }, data: { otp: null, otpExpiry: null } }).catch(() => {});
+      otpAttemptTracker.delete(phone);
+      throw new AppError('Too many failed attempts. Please request a new OTP.', 429);
+    }
+
     const user = await prisma.user.findUnique({
       where: { phone },
       select: { otp: true, otpExpiry: true },
@@ -82,9 +106,12 @@ class OTPService {
     }
 
     if (user.otp !== otp) {
+      otpAttemptTracker.set(phone, attempts + 1);
       throw new AppError('Invalid OTP', 400);
     }
 
+    // Success — reset attempts
+    otpAttemptTracker.delete(phone);
     return true;
   }
 

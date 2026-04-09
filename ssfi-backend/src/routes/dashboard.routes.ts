@@ -61,10 +61,11 @@ router.get(
 /**
  * @route   GET /api/v1/dashboard/student/:studentId
  * @desc    Get Student dashboard
- * @access  Private (All roles with appropriate access)
+ * @access  Private (Admin, State/District/Club hierarchy, or own student)
  */
 router.get(
   '/student/:studentId',
+  requireRole('GLOBAL_ADMIN', 'STATE_SECRETARY', 'DISTRICT_SECRETARY', 'CLUB_OWNER', 'STUDENT'),
   dashboardController.getStudentDashboardById
 );
 

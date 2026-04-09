@@ -71,7 +71,8 @@ export class PaymentService {
         };
 
         // Check if Razorpay is configured or Mock Mode is enabled
-        const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+        // SECURITY: Never allow mock payments in production
+        const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
         if (useMockPayment || (!secretaryConfig && (!isRazorpayConfigured() || !razorpayInstance))) {
             // Return mock order for development
@@ -135,8 +136,12 @@ export class PaymentService {
     async verifyPaymentSignature(params: VerifyPaymentRequest): Promise<boolean> {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = params;
 
-        // Skip verification for mock orders
+        // Skip verification for mock orders — ONLY in non-production environments
         if (razorpay_order_id.startsWith('order_mock_')) {
+            if (process.env.NODE_ENV === 'production') {
+                console.error('SECURITY: Mock order verification attempted in production — rejecting');
+                return false;
+            }
             return true;
         }
 
@@ -574,8 +579,8 @@ export class PaymentService {
      */
     async listPayments(userId: number, query: any) {
         const { page = 1, limit = 10, search, status } = query;
-        const skip = (Number(page) - 1) * Number(limit);
-        const take = Number(limit);
+        const take = Math.min(Number(limit) || 10, 100);
+        const skip = (Number(page) - 1) * take;
 
         const where: Prisma.PaymentWhereInput = {
             userId,
@@ -611,8 +616,8 @@ export class PaymentService {
             meta: {
                 total,
                 page: Number(page),
-                limit: Number(limit),
-                totalPages: Math.ceil(total / Number(limit))
+                limit: take,
+                totalPages: Math.ceil(total / take)
             }
         };
     }

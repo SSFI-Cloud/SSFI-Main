@@ -6,6 +6,10 @@ import otpService from './otp.service';
 import uidService from './uid.service';
 
 import prisma from '../config/prisma';
+
+// Track failed login attempts per identifier (phone or UID)
+const loginAttemptTracker = new Map<string, { count: number; lockedUntil?: Date }>();
+
 interface RegisterData {
   phone: string;
   email?: string;
@@ -41,23 +45,31 @@ interface LoginResponse {
 
 class AuthService {
   /**
+   * Mask Aadhaar number to show only last 4 digits
+   */
+  private maskAadhaar(aadhaar: string | null | undefined): string | null {
+    if (!aadhaar || aadhaar.length < 4) return aadhaar || null;
+    return 'XXXX-XXXX-' + aadhaar.slice(-4);
+  }
+
+  /**
    * Generate JWT Access Token
+   * Note: phone and email intentionally excluded from JWT payload for security.
+   * Only id, uid, role, and scope IDs are included.
    */
   generateAccessToken(
     userId: number,
     uid: string,
     role: UserRole,
-    phone: string,
-    email?: string,
     stateId?: number,
     districtId?: number,
     clubId?: number,
     studentId?: number
   ): string {
     return jwt.sign(
-      { id: userId, uid, role, phone, email, stateId, districtId, clubId, studentId },
+      { id: userId, uid, role, stateId, districtId, clubId, studentId },
       process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_EXPIRE || '24h' } as jwt.SignOptions
+      { expiresIn: process.env.JWT_EXPIRE || '2h' } as jwt.SignOptions
     );
   }
 
@@ -222,6 +234,18 @@ class AuthService {
       throw new AppError('Invalid credentials', 401);
     }
 
+    // Check if account is temporarily locked due to too many failed attempts
+    const loginKey = identifier.toLowerCase();
+    const loginRecord = loginAttemptTracker.get(loginKey);
+    if (loginRecord?.lockedUntil) {
+      if (new Date() < loginRecord.lockedUntil) {
+        const minutesLeft = Math.ceil((loginRecord.lockedUntil.getTime() - Date.now()) / 60000);
+        throw new AppError(`Account temporarily locked due to too many failed attempts. Try again in ${minutesLeft} minute(s).`, 429);
+      }
+      // Lock period expired — clear tracker
+      loginAttemptTracker.delete(loginKey);
+    }
+
     // Check if account is active
     if (!user.isActive) {
       throw new AppError('Account is deactivated', 403);
@@ -233,8 +257,17 @@ class AuthService {
     // Verify password
     const isPasswordValid = await this.comparePassword(password, user.password);
     if (!isPasswordValid) {
+      const current = loginAttemptTracker.get(loginKey) || { count: 0 };
+      current.count += 1;
+      if (current.count >= 10) {
+        current.lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // Lock for 15 minutes
+      }
+      loginAttemptTracker.set(loginKey, current);
       throw new AppError('Invalid credentials', 401);
     }
+
+    // Successful login — clear any failed attempt tracking
+    loginAttemptTracker.delete(loginKey);
 
     // Check if account is approved (except Global Admin)
     if (!user.isApproved && user.role !== UserRole.GLOBAL_ADMIN) {
@@ -269,8 +302,6 @@ class AuthService {
       user.id,
       user.uid,
       user.role,
-      user.phone,
-      user.email || undefined,
       stateId,
       districtId,
       clubId,
@@ -307,15 +338,13 @@ class AuthService {
   }
 
   /**
-   * Verify OTP
+   * Verify OTP (delegates brute force check to otpService)
    */
   async verifyOTP(phone: string, otp: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
       where: { phone },
       select: {
         id: true,
-        otp: true,
-        otpExpiry: true,
         otpVerified: true
       }
     });
@@ -328,17 +357,8 @@ class AuthService {
       throw new AppError('Phone number already verified', 400);
     }
 
-    if (!user.otp || !user.otpExpiry) {
-      throw new AppError('No OTP found. Please request a new one.', 400);
-    }
-
-    if (new Date() > user.otpExpiry) {
-      throw new AppError('OTP has expired. Please request a new one.', 400);
-    }
-
-    if (user.otp !== otp) {
-      throw new AppError('Invalid OTP', 400);
-    }
+    // Delegates OTP check + brute force protection to otpService
+    await otpService.verifyOTP(phone, otp);
 
     // Mark as verified
     await prisma.user.update({
@@ -410,9 +430,7 @@ class AuthService {
       const accessToken = this.generateAccessToken(
         user.id,
         user.uid,
-        user.role,
-        user.phone,
-        user.email || undefined
+        user.role
       );
 
       return { accessToken };
@@ -481,33 +499,20 @@ class AuthService {
   }
 
   /**
-   * Reset password with OTP
+   * Reset password with OTP (delegates brute force check to otpService)
    */
   async resetPassword(phone: string, otp: string, newPassword: string): Promise<void> {
     const user = await prisma.user.findUnique({
       where: { phone },
-      select: {
-        id: true,
-        otp: true,
-        otpExpiry: true
-      }
+      select: { id: true }
     });
 
     if (!user) {
       throw new AppError('User not found', 404);
     }
 
-    if (!user.otp || !user.otpExpiry) {
-      throw new AppError('No OTP found. Please request password reset again.', 400);
-    }
-
-    if (new Date() > user.otpExpiry) {
-      throw new AppError('OTP has expired. Please request a new one.', 400);
-    }
-
-    if (user.otp !== otp) {
-      throw new AppError('Invalid OTP', 400);
-    }
+    // Delegates OTP check + brute force protection to otpService
+    await otpService.verifyOTP(phone, otp);
 
     // Hash new password
     const hashedPassword = await this.hashPassword(newPassword);
@@ -611,6 +616,12 @@ class AuthService {
 
     // Flatten role-specific profile into a clean object
     const profile = user.statePerson || user.districtPerson || user.clubOwner || user.student;
+
+    // Mask Aadhaar number in the response (never expose full Aadhaar via API)
+    if (profile && 'aadhaarNumber' in profile) {
+      (profile as any).aadhaarNumber = this.maskAadhaar((profile as any).aadhaarNumber);
+    }
+
     return {
       id: user.id,
       uid: user.uid,

@@ -55,7 +55,7 @@ export async function createDonation(input: CreateDonationInput) {
         },
     });
 
-    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
     return {
         donation,

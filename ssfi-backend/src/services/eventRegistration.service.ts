@@ -411,8 +411,8 @@ export const getEventRegistrations = async (eventId: number | string, query: any
     await hasAccess(id, userId, userRole);
 
     const { page = 1, limit = 20, search, status, paymentStatus, category, sort = 'createdAt', order = 'desc' } = query;
-    const skip = (Number(page) - 1) * Number(limit);
-    const take = Number(limit);
+    const take = Math.min(Number(limit) || 20, 100);
+    const skip = (Number(page) - 1) * take;
 
     const where: any = { eventId: id };
 
@@ -458,8 +458,8 @@ export const getEventRegistrations = async (eventId: number | string, query: any
         meta: {
             total,
             page: Number(page),
-            limit: Number(limit),
-            totalPages: Math.ceil(total / Number(limit))
+            limit: take,
+            totalPages: Math.ceil(total / take)
         }
     };
 };

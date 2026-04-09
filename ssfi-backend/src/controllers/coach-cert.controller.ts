@@ -131,6 +131,9 @@ export const exportRegistrations = asyncHandler(async (req: AuthRequest, res: Re
     { header: 'Certificate No', key: 'certificateNumber', width: 25 },
   ];
 
+  // Mask Aadhaar numbers — even admin exports should not contain full Aadhaar
+  const maskAadhaar = (v: string | null) => v && v.length >= 4 ? 'XXXX-XXXX-' + v.slice(-4) : v;
+
   registrations.forEach(r => {
     sheet.addRow({
       ...r,
@@ -138,6 +141,7 @@ export const exportRegistrations = asyncHandler(async (req: AuthRequest, res: Re
       amount: Number(r.amount),
       rating: r.rating ? Number(r.rating) : '',
       isCompleted: r.isCompleted ? 'Yes' : 'No',
+      aadhaarNumber: maskAadhaar(r.aadhaarNumber),
     });
   });
 

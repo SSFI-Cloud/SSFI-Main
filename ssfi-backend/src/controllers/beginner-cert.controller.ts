@@ -147,12 +147,16 @@ export const exportRegistrations = asyncHandler(async (req: AuthRequest, res: Re
     { header: 'Certificate No', key: 'certificateNumber', width: 28 },
   ];
 
+  // Mask Aadhaar numbers — even admin exports should not contain full Aadhaar
+  const maskAadhaar = (v: string | null) => v && v.length >= 4 ? 'XXXX-XXXX-' + v.slice(-4) : v;
+
   registrations.forEach(r => {
     sheet.addRow({
       ...r,
       dateOfBirth: r.dateOfBirth ? new Date(r.dateOfBirth).toLocaleDateString('en-IN') : '',
       amount: Number(r.amount),
       rating: r.rating ? Number(r.rating) : '',
+      aadhaarNumber: maskAadhaar(r.aadhaarNumber),
     });
   });
 

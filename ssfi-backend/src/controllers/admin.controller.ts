@@ -728,15 +728,12 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
         select: { id: true, uid: true, phone: true, email: true, role: true, isActive: true, createdAt: true },
       });
       let pwReset = 0;
-      const userList: any[] = [];
       for (const u of secretaryAndClubUsers) {
         const correctHash = await bcrypt.hash(u.phone, 12);
         await prisma.user.update({ where: { id: u.id }, data: { password: correctHash } });
         pwReset++;
-        userList.push({ id: u.id, uid: u.uid, phone: u.phone, email: u.email, role: u.role, isActive: u.isActive, createdAt: u.createdAt });
       }
       if (pwReset) results.push(`Reset passwords for ${pwReset} secretary/club users to phone number`);
-      if (userList.length) results.push({ secretaryClubUserList: userList } as any);
     } catch (e: any) {
       results.push(`Secretary/club password reset: ${e.message}`);
     }

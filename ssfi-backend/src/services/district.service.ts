@@ -6,8 +6,8 @@ import { generateUID } from './uid.service';
 import prisma from '../config/prisma';
 export const getAllDistricts = async (query: any) => {
     const { page = 1, limit = 10, search, stateId, sortField = 'name', sortOrder = 'asc', registeredOnly } = query;
-    const skip = (Number(page) - 1) * Number(limit);
-    const take = Number(limit);
+    const take = Math.min(Number(limit) || 10, 100);
+    const skip = (Number(page) - 1) * take;
 
     // Determine if this is a public request (controller passes publicOnly flag)
     const isPublic = query.publicOnly === 'true';
@@ -133,8 +133,8 @@ export const getAllDistricts = async (query: any) => {
         meta: {
             total,
             page: Number(page),
-            limit: Number(limit),
-            totalPages: Math.ceil(total / Number(limit)),
+            limit: take,
+            totalPages: Math.ceil(total / take),
         },
         stats: {
             totalDistricts: total,

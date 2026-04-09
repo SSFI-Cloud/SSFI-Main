@@ -4,6 +4,7 @@ import { paymentService, PaymentService } from '../services/payment.service';
 import { razorpayConfig } from '../config/razorpay.config';
 import { razorpayConfigService } from '../services/razorpayConfig.service';
 import type { CreateOrderRequest, VerifyPaymentRequest, PaymentType } from '../types/payment.types';
+import prisma from '../config/prisma';
 
 class PaymentController {
 
@@ -31,19 +32,31 @@ class PaymentController {
             }
 
             // Validate payment type
-            if (!razorpayConfig.paymentTypes[payment_type as PaymentType]) {
+            const paymentTypeConfig = razorpayConfig.paymentTypes[payment_type as PaymentType];
+            if (!paymentTypeConfig) {
                 return res.status(400).json({
                     status: 'error',
                     message: 'Invalid payment type',
                 });
             }
 
+            // SECURITY: Server-side amount validation — prevent client from manipulating payment amount
+            const clientAmountPaise = Math.round(amount * 100);
+            const expectedAmount = await this.resolveExpectedAmount(payment_type, entity_id, entity_type, paymentTypeConfig);
+            if (expectedAmount !== null && clientAmountPaise !== expectedAmount) {
+                console.error(`[Payment] Amount mismatch: client sent ${clientAmountPaise} paise, expected ${expectedAmount} paise (type=${payment_type}, entity=${entity_id})`);
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Payment amount does not match expected fee',
+                });
+            }
+
             // Generate receipt ID
             const receipt = PaymentService.generateReceiptId(payment_type);
 
-            // Create order request
+            // Create order request — use server-validated amount when available
             const orderRequest: CreateOrderRequest = {
-                amount: amount * 100, // Convert to paise
+                amount: expectedAmount !== null ? expectedAmount : Math.round(amount * 100), // paise, prefer server-side amount
                 receipt,
                 payment_type,
                 entity_id,
@@ -489,6 +502,68 @@ class PaymentController {
         } catch (error: any) {
             console.error('Webhook error:', error);
             return res.status(500).json({ status: 'error', message: 'Webhook processing failed' });
+        }
+    }
+
+    /**
+     * Resolve the expected payment amount (in paise) for a given payment type and entity.
+     * Returns null if the amount cannot be determined server-side (allows pass-through for
+     * payment types where server-side lookup is not yet implemented).
+     */
+    private async resolveExpectedAmount(
+        paymentType: string,
+        entityId: number | string,
+        entityType: string,
+        paymentTypeConfig: { baseAmount: number }
+    ): Promise<number | null> {
+        try {
+            // Fixed-amount types: use config baseAmount directly
+            if (paymentTypeConfig.baseAmount > 0) {
+                return paymentTypeConfig.baseAmount; // already in paise
+            }
+
+            // Variable-amount types: look up from entity records
+            switch (paymentType) {
+                case 'EVENT_REGISTRATION': {
+                    const eventReg = await prisma.eventRegistration.findUnique({
+                        where: { id: Number(entityId) },
+                        select: { totalFee: true },
+                    });
+                    if (eventReg?.totalFee != null) return Math.round(Number(eventReg.totalFee) * 100);
+                    return null;
+                }
+                case 'COACH_CERTIFICATION': {
+                    const coachReg = await prisma.coachCertRegistration.findUnique({
+                        where: { id: Number(entityId) },
+                        select: { amount: true },
+                    });
+                    if (coachReg?.amount != null) return Math.round(Number(coachReg.amount) * 100);
+                    return null;
+                }
+                case 'BEGINNER_CERTIFICATION': {
+                    const beginnerReg = await prisma.beginnerCertRegistration.findUnique({
+                        where: { id: Number(entityId) },
+                        select: { amount: true },
+                    });
+                    if (beginnerReg?.amount != null) return Math.round(Number(beginnerReg.amount) * 100);
+                    return null;
+                }
+                case 'DONATION': {
+                    const donation = await prisma.donation.findUnique({
+                        where: { id: Number(entityId) },
+                        select: { amount: true },
+                    });
+                    if (donation?.amount != null) return Math.round(Number(donation.amount) * 100);
+                    return null;
+                }
+                default:
+                    // For other types, cannot validate — return null to allow pass-through
+                    return null;
+            }
+        } catch (error) {
+            console.error(`[Payment] Error resolving expected amount for ${paymentType}/${entityId}:`, error);
+            // On error, allow pass-through rather than blocking payments
+            return null;
         }
     }
 }

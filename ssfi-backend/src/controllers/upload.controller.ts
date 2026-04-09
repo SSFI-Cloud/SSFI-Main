@@ -131,7 +131,12 @@ export const deleteImage = asyncHandler(async (req: Request, res: Response) => {
     throw new AppError('Cannot delete files outside of managed upload directories', 403);
   }
 
-  const filePath = path.join(process.cwd(), url);
+  // Path traversal protection: resolve and verify path stays within uploads dir
+  const uploadsDir = path.resolve(process.cwd(), 'uploads');
+  const filePath = path.resolve(process.cwd(), url);
+  if (!filePath.startsWith(uploadsDir)) {
+    throw new AppError('Access denied', 403);
+  }
 
   if (!fs.existsSync(filePath)) {
     // Already gone — treat as success

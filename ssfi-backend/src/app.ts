@@ -71,6 +71,7 @@ import { errorHandler } from './middleware/error.middleware';
 import { notFound } from './middleware/error.middleware';
 import { requestTimer, requestTimeout, httpCacheHeaders } from './middleware/performance.middleware';
 import { cacheMiddleware } from './utils/cache.util';
+import { authenticate } from './middleware/auth.middleware';
 
 // Import utils
 import logger from './utils/logger.util';
@@ -107,7 +108,7 @@ for (const origin of rawOrigins) {
 // Allow Vercel preview/production deployments
 const corsOptions = {
   origin: (origin: string | undefined, callback: Function) => {
-    if (!origin || allowedOrigins.has(origin) || origin.endsWith('.vercel.app')) {
+    if (!origin || allowedOrigins.has(origin) || (origin.includes('ssfi') && origin.endsWith('.vercel.app'))) {
       callback(null, true);
     } else {
       logger.warn(`CORS blocked origin: ${origin}`);
@@ -149,6 +150,8 @@ app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/register', authLimiter);
 app.use('/api/v1/auth/forgot-password', authLimiter);
 app.use('/api/v1/auth/verify-otp', authLimiter);
+app.use('/api/v1/auth/resend-otp', authLimiter);
+app.use('/api/v1/auth/reset-password', authLimiter);
 
 // Body Parser Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -169,7 +172,17 @@ if (process.env.NODE_ENV === 'development') {
   }));
 }
 
-// Static Files — with long cache + ETag + CORS headers
+// Protected document access — requires authentication (Aadhaar, identity proofs, etc.)
+app.use('/uploads/documents', authenticate, (req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, '../uploads/documents'), {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true,
+}));
+
+// Static Files — with long cache + ETag + CORS headers (public: images, logos, photos)
 app.use('/uploads', (req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');

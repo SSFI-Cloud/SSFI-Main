@@ -53,7 +53,7 @@ class BeginnerCertService {
 
   async listPrograms(query: { category?: string; status?: string; isActive?: string; page?: string; limit?: string }) {
     const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '20');
+    const limit = Math.min(parseInt(query.limit || '20'), 100);
     const where: any = {};
     if (query.category) where.category = query.category;
     if (query.status) where.status = query.status;
@@ -266,7 +266,7 @@ class BeginnerCertService {
       paymentKeyId = result.keyId;
     }
 
-    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true';
+    const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
 
     return {
       registration,
@@ -353,7 +353,7 @@ class BeginnerCertService {
 
   async getRegistrationsByProgram(programId: number, query: any) {
     const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '50');
+    const limit = Math.min(parseInt(query.limit || '50'), 100);
     const where: any = { programId };
     if (query.status) where.status = query.status;
     if (query.paymentStatus) where.paymentStatus = query.paymentStatus;
