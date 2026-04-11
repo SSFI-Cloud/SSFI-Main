@@ -185,8 +185,18 @@ export class PaymentService {
         }
 
         try {
+            // Check if already processed (deduplication for webhook + frontend verify race)
+            const existingPayment = await prisma.payment.findFirst({
+                where: { razorpayOrderId: razorpay_order_id },
+            });
+
+            if (existingPayment?.status === 'COMPLETED') {
+                console.log(`[Payment] Order ${razorpay_order_id} already COMPLETED — skipping duplicate`);
+                return existingPayment as unknown as PaymentRecord;
+            }
+
             // Update payment record in database
-            const updatedPayment = await prisma.payment.updateMany({
+            await prisma.payment.updateMany({
                 where: { razorpayOrderId: razorpay_order_id },
                 data: {
                     razorpayPaymentId: razorpay_payment_id,
@@ -195,18 +205,12 @@ export class PaymentService {
                 },
             });
 
-            // Fetch payment details from Razorpay if configured
-            if (isRazorpayConfigured() && razorpayInstance && !razorpay_order_id.startsWith('order_mock_')) {
-                const payment = await razorpayInstance.payments.fetch(razorpay_payment_id) as RazorpayPaymentEntity;
-                // Could store additional details like method, bank, etc.
-            }
-
-            // Fetch and return updated record
+            // Fetch updated record
             const paymentRecord = await prisma.payment.findFirst({
                 where: { razorpayOrderId: razorpay_order_id },
             });
 
-            // Process post-payment actions
+            // Process post-payment actions (entity status updates)
             if (paymentRecord) {
                 await this.processPostPaymentActions(paymentRecord);
             }
@@ -318,11 +322,24 @@ export class PaymentService {
                 case 'COACH_CERTIFICATION': {
                     const coachRegId = payment.coachCertRegistrationId || this.extractEntityId(payment.description);
                     if (coachRegId) {
-                        await prisma.coachCertRegistration.update({
+                        const coachReg = await prisma.coachCertRegistration.findUnique({
                             where: { id: coachRegId },
-                            data: { paymentStatus: 'PAID' },
+                            select: { paymentStatus: true, programId: true },
                         });
-                        console.log(`[PostPayment] CoachCertRegistration #${coachRegId} → PAID`);
+                        if (coachReg && coachReg.paymentStatus !== 'PAID') {
+                            await prisma.coachCertRegistration.update({
+                                where: { id: coachRegId },
+                                data: { paymentStatus: 'PAID', status: 'REGISTERED' },
+                            });
+                            // Increment filledSeats
+                            if (coachReg.programId) {
+                                await prisma.coachCertProgram.update({
+                                    where: { id: coachReg.programId },
+                                    data: { filledSeats: { increment: 1 } },
+                                }).catch(() => {});
+                            }
+                            console.log(`[PostPayment] CoachCertRegistration #${coachRegId} → PAID + REGISTERED`);
+                        }
                     }
                     break;
                 }
@@ -330,11 +347,24 @@ export class PaymentService {
                 case 'BEGINNER_CERTIFICATION': {
                     const beginnerRegId = payment.beginnerCertRegistrationId || this.extractEntityId(payment.description);
                     if (beginnerRegId) {
-                        await prisma.beginnerCertRegistration.update({
+                        const beginnerReg = await prisma.beginnerCertRegistration.findUnique({
                             where: { id: beginnerRegId },
-                            data: { paymentStatus: 'PAID' },
+                            select: { paymentStatus: true, programId: true },
                         });
-                        console.log(`[PostPayment] BeginnerCertRegistration #${beginnerRegId} → PAID`);
+                        if (beginnerReg && beginnerReg.paymentStatus !== 'PAID') {
+                            await prisma.beginnerCertRegistration.update({
+                                where: { id: beginnerRegId },
+                                data: { paymentStatus: 'PAID', status: 'REGISTERED' },
+                            });
+                            // Increment filledSeats
+                            if (beginnerReg.programId) {
+                                await prisma.beginnerCertProgram.update({
+                                    where: { id: beginnerReg.programId },
+                                    data: { filledSeats: { increment: 1 } },
+                                }).catch(() => {});
+                            }
+                            console.log(`[PostPayment] BeginnerCertRegistration #${beginnerRegId} → PAID + REGISTERED`);
+                        }
                     }
                     break;
                 }
@@ -351,8 +381,28 @@ export class PaymentService {
                 }
 
                 case 'MEMBERSHIP_RENEWAL': {
-                    const renewalEntityId = this.extractEntityId(payment.description);
-                    console.log(`[PostPayment] Membership renewal captured for entity #${renewalEntityId}`);
+                    // Extend user's membership expiry by 1 year
+                    if (payment.userId) {
+                        const user = await prisma.user.findUnique({
+                            where: { id: payment.userId },
+                            select: { id: true, expiryDate: true, accountStatus: true },
+                        });
+                        if (user) {
+                            const baseDate = user.expiryDate && new Date(user.expiryDate) > new Date()
+                                ? new Date(user.expiryDate)
+                                : new Date();
+                            baseDate.setFullYear(baseDate.getFullYear() + 1);
+                            await prisma.user.update({
+                                where: { id: user.id },
+                                data: {
+                                    expiryDate: baseDate,
+                                    accountStatus: 'ACTIVE',
+                                    lastRenewalDate: new Date(),
+                                },
+                            });
+                            console.log(`[PostPayment] Membership renewed for user #${user.id} → expires ${baseDate.toISOString()}`);
+                        }
+                    }
                     break;
                 }
 
