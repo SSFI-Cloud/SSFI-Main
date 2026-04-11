@@ -1145,11 +1145,9 @@ export const initiateClubRegistration = async (
     throw new AppError(message, 400);
   }
 
-  // Check for existing PAYMENT_PENDING club (retry scenario)
-  // Match by registration number, phone, or name+district
-  const existingPendingClub = await prisma.club.findFirst({
+  // Check for ANY existing club matching by phone, registration number, or name+district
+  const existingClub = await prisma.club.findFirst({
     where: {
-      status: 'PAYMENT_PENDING',
       OR: [
         ...(data.registrationNumber ? [{ registrationNumber: data.registrationNumber }] : []),
         { phone: data.phone },
@@ -1158,13 +1156,28 @@ export const initiateClubRegistration = async (
     },
   });
 
-  if (existingPendingClub) {
-    // Retry Payment — reuse the existing PAYMENT_PENDING club
+  if (existingClub) {
+    // Handle based on current status
+    if (existingClub.status === 'APPROVED') {
+      throw new AppError(
+        `This club is already registered and approved (${existingClub.uid}). Please login with your registered phone number.`,
+        409
+      );
+    }
+
+    if (existingClub.status === 'PENDING') {
+      throw new AppError(
+        `This club registration is already submitted and awaiting approval (${existingClub.uid}). Please wait for admin review.`,
+        409
+      );
+    }
+
+    // PAYMENT_PENDING or REJECTED — allow retry by reusing the existing club record
     const window = await prisma.registrationWindow.findUnique({ where: { id: Number(windowId) } });
     if (!window) throw new AppError('Registration window not found', 404);
 
     const updatedClub = await prisma.club.update({
-      where: { id: existingPendingClub.id },
+      where: { id: existingClub.id },
       data: {
         name: data.clubName,
         contactPerson: data.contactPersonName,
@@ -1172,8 +1185,9 @@ export const initiateClubRegistration = async (
         email: data.email || null,
         address: data.address,
         logo: data.clubLogo || null,
-        registrationNumber: data.registrationNumber || existingPendingClub.registrationNumber,
+        registrationNumber: data.registrationNumber || existingClub.registrationNumber,
         registrationWindowId: String(windowId),
+        status: 'PAYMENT_PENDING', // Reset to PAYMENT_PENDING for rejected clubs
       }
     });
 
@@ -1214,29 +1228,7 @@ export const initiateClubRegistration = async (
     };
   }
 
-  // Check for duplicate registration number (already paid/approved)
-  if (data.registrationNumber) {
-    const existingRegNumber = await prisma.club.findFirst({
-      where: { registrationNumber: data.registrationNumber },
-    });
-    if (existingRegNumber) {
-      throw new AppError('A club with this registration number already exists', 409);
-    }
-  }
-
-  // Check for duplicate name in same district (already paid/approved)
-  const existingName = await prisma.club.findFirst({
-    where: {
-      name: data.clubName,
-      districtId: data.districtId,
-      status: { in: ['PENDING', 'APPROVED'] },
-    },
-  });
-  if (existingName) {
-    throw new AppError('A club with this name already exists in this district', 409);
-  }
-
-  // Check for existing user with same phone (email is not unique — multiple users can share email)
+  // No existing club — check for existing CLUB_OWNER user with same phone
   const existingUser = await prisma.user.findFirst({
     where: { phone: data.phone },
   });
@@ -1265,28 +1257,39 @@ export const initiateClubRegistration = async (
   const window = await prisma.registrationWindow.findUnique({ where: { id: Number(windowId) } });
   if (!window) throw new AppError('Registration window not found', 404);
 
-  const club = await prisma.club.create({
-    data: {
-      uid,
-      code: clubCode,
-      name: data.clubName,
-      registrationNumber: data.registrationNumber,
-      establishedYear: data.establishedYear,
-      contactPerson: data.contactPersonName,
-      phone: data.phone,
-      email: data.email || null,
-      stateId: data.stateId,
-      districtId: data.districtId,
-      address: data.address,
-      logo: data.clubLogo || null,
-      registrationWindowId: windowId,
-      status: 'PAYMENT_PENDING',
-    },
-    include: {
-      state: { select: { id: true, name: true, code: true } },
-      district: { select: { id: true, name: true, code: true } },
-    },
-  });
+  let club;
+  try {
+    club = await prisma.club.create({
+      data: {
+        uid,
+        code: clubCode,
+        name: data.clubName,
+        registrationNumber: data.registrationNumber || null,
+        establishedYear: data.establishedYear,
+        contactPerson: data.contactPersonName,
+        phone: data.phone,
+        email: data.email || null,
+        stateId: data.stateId,
+        districtId: data.districtId,
+        address: data.address,
+        logo: data.clubLogo || null,
+        registrationWindowId: windowId,
+        status: 'PAYMENT_PENDING',
+      },
+      include: {
+        state: { select: { id: true, name: true, code: true } },
+        district: { select: { id: true, name: true, code: true } },
+      },
+    });
+  } catch (err: any) {
+    if (err.code === 'P2002') {
+      throw new AppError(
+        'A club with these details already exists. If you previously started registration, please try again — your previous entry will be resumed automatically.',
+        409
+      );
+    }
+    throw err;
+  }
 
   let userIdForPayment = 1;
   if (existingUser) {
