@@ -268,16 +268,23 @@ export const initiateStateSecretaryRegistration = async (
     throw new AppError(message, 400);
   }
 
-  // Check if state already has a secretary
+  // Check if state already has a secretary (any status)
   const existingSecretary = await prisma.stateSecretary.findFirst({
     where: {
       stateId: data.stateId,
-      status: { in: ['PENDING', 'APPROVED', 'PAYMENT_PENDING'] },
+      status: { in: ['PENDING', 'APPROVED', 'PAYMENT_PENDING', 'REJECTED'] },
     },
   });
 
   if (existingSecretary) {
-    if (existingSecretary.status === 'PAYMENT_PENDING') {
+    if (existingSecretary.status === 'APPROVED') {
+      throw new AppError('This state already has an approved secretary. Please login with your registered phone number.', 409);
+    }
+    if (existingSecretary.status === 'PENDING') {
+      throw new AppError('This state already has a secretary application awaiting approval. Please wait for admin review.', 409);
+    }
+    // PAYMENT_PENDING or REJECTED — allow retry
+    if (existingSecretary.status === 'PAYMENT_PENDING' || existingSecretary.status === 'REJECTED') {
       // Find existing window to get fee
       const window = await prisma.registrationWindow.findUnique({ where: { id: Number(windowId) } });
       if (!window) throw new AppError('Registration window not found', 404);
@@ -292,6 +299,7 @@ export const initiateStateSecretaryRegistration = async (
           identityProof: data.identityProof,
           profilePhoto: data.profilePhoto,
           registrationWindowId: String(windowId),
+          status: 'PAYMENT_PENDING', // Reset for rejected retries
         },
       });
 
@@ -345,7 +353,6 @@ export const initiateStateSecretaryRegistration = async (
         }
       };
     }
-    throw new AppError('This state already has a secretary application pending or approved', 409);
   }
 
   // Check for existing user with same phone (email is not unique)
@@ -674,16 +681,23 @@ export const initiateDistrictSecretaryRegistration = async (
     throw new AppError(message, 400);
   }
 
-  // Check if district already has a secretary
+  // Check if district already has a secretary (any status)
   const existingSecretary = await prisma.districtSecretary.findFirst({
     where: {
       districtId: data.districtId,
-      status: { in: ['PENDING', 'APPROVED', 'PAYMENT_PENDING'] },
+      status: { in: ['PENDING', 'APPROVED', 'PAYMENT_PENDING', 'REJECTED'] },
     },
   });
 
   if (existingSecretary) {
-    if (existingSecretary.status === 'PAYMENT_PENDING') {
+    if (existingSecretary.status === 'APPROVED') {
+      throw new AppError('This district already has an approved secretary. Please login with your registered phone number.', 409);
+    }
+    if (existingSecretary.status === 'PENDING') {
+      throw new AppError('This district already has a secretary application awaiting approval. Please wait for admin review.', 409);
+    }
+    // PAYMENT_PENDING or REJECTED — allow retry
+    if (existingSecretary.status === 'PAYMENT_PENDING' || existingSecretary.status === 'REJECTED') {
       // Allow retry — update details and create new payment order
       const window = await prisma.registrationWindow.findUnique({ where: { id: windowId } });
       if (!window) throw new AppError('Registration window not found', 404);
@@ -702,6 +716,7 @@ export const initiateDistrictSecretaryRegistration = async (
           logo: data.logo || null,
           associationRegistrationCopy: data.associationRegistrationCopy || null,
           registrationWindowId: String(windowId),
+          status: 'PAYMENT_PENDING', // Reset for rejected retries
         },
       });
 
@@ -739,7 +754,6 @@ export const initiateDistrictSecretaryRegistration = async (
         },
       };
     }
-    throw new AppError('This district already has a secretary application pending or approved', 409);
   }
 
   // Check for existing user with same phone (email is not unique)
@@ -1993,19 +2007,141 @@ export const initiateStudentRegistration = async (
   data: StudentRegistration,
   windowId: number
 ) => {
-  // 1. Create student using existing logic
+  // Check for existing student who hasn't completed payment (retry scenario)
+  const existingUser = await prisma.user.findFirst({
+    where: { phone: data.phone, role: 'STUDENT' },
+  });
+
+  if (existingUser) {
+    // Check if they already have a completed payment
+    const completedPayment = await prisma.payment.findFirst({
+      where: {
+        userId: existingUser.id,
+        paymentType: 'STUDENT_REGISTRATION',
+        status: 'COMPLETED',
+      },
+    });
+
+    if (completedPayment) {
+      throw new AppError(
+        `A student account already exists with this phone number (${existingUser.uid}). Please login or use renewal.`,
+        409
+      );
+    }
+
+    // No completed payment — allow retry with new payment order
+    const existingStudent = await prisma.student.findFirst({
+      where: { userId: existingUser.id },
+    });
+
+    if (existingStudent) {
+      const window = await prisma.registrationWindow.findUnique({ where: { id: windowId } });
+      if (!window) throw new AppError('Registration window not found', 404);
+
+      const { order, keyId } = await paymentService.createOrder({
+        amount: Number(window.baseFee) * 100,
+        currency: 'INR',
+        payment_type: 'STUDENT_REGISTRATION',
+        entity_id: existingStudent.id,
+        entity_type: 'student',
+        user_id: existingUser.id,
+        notes: {
+          student_uid: existingStudent.membershipId || existingUser.uid,
+          name: existingStudent.name,
+          type: 'STUDENT_REGISTRATION',
+        },
+      });
+
+      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
+
+      return {
+        uid: existingUser.uid,
+        name: existingStudent.name,
+        razorpayOrderId: order.id,
+        amount: Number(window.baseFee) * 100,
+        currency: 'INR',
+        key: useMockPayment ? 'rzp_test_mock' : keyId,
+        userDetails: {
+          name: existingStudent.name,
+          email: data.email || '',
+          phone: data.phone,
+        },
+      };
+    }
+  }
+
+  // Also check by Aadhaar for retry
+  if (data.aadhaarNumber) {
+    const existingStudentByAadhaar = await prisma.student.findUnique({
+      where: { aadhaarNumber: data.aadhaarNumber },
+      include: { user: true },
+    });
+
+    if (existingStudentByAadhaar) {
+      const completedPayment = await prisma.payment.findFirst({
+        where: {
+          userId: existingStudentByAadhaar.userId,
+          paymentType: 'STUDENT_REGISTRATION',
+          status: 'COMPLETED',
+        },
+      });
+
+      if (completedPayment) {
+        throw new AppError(
+          `A student with this Aadhaar number already exists (${existingStudentByAadhaar.user?.uid || ''}). Please login or use renewal.`,
+          409
+        );
+      }
+
+      // Retry — create new payment order
+      const window = await prisma.registrationWindow.findUnique({ where: { id: windowId } });
+      if (!window) throw new AppError('Registration window not found', 404);
+
+      const { order, keyId } = await paymentService.createOrder({
+        amount: Number(window.baseFee) * 100,
+        currency: 'INR',
+        payment_type: 'STUDENT_REGISTRATION',
+        entity_id: existingStudentByAadhaar.id,
+        entity_type: 'student',
+        user_id: existingStudentByAadhaar.userId,
+        notes: {
+          student_uid: existingStudentByAadhaar.membershipId || existingStudentByAadhaar.user?.uid,
+          name: existingStudentByAadhaar.name,
+          type: 'STUDENT_REGISTRATION',
+        },
+      });
+
+      const useMockPayment = process.env.USE_MOCK_PAYMENT === 'true' && process.env.NODE_ENV !== 'production';
+
+      return {
+        uid: existingStudentByAadhaar.user?.uid || existingStudentByAadhaar.membershipId,
+        name: existingStudentByAadhaar.name,
+        razorpayOrderId: order.id,
+        amount: Number(window.baseFee) * 100,
+        currency: 'INR',
+        key: useMockPayment ? 'rzp_test_mock' : keyId,
+        userDetails: {
+          name: existingStudentByAadhaar.name,
+          email: data.email || '',
+          phone: data.phone,
+        },
+      };
+    }
+  }
+
+  // No existing student — create fresh
   const student = await registerStudent(data, windowId);
 
-  // 2. Get registration window for fee
+  // Get registration window for fee
   const window = await prisma.registrationWindow.findUnique({ where: { id: windowId } });
   if (!window) throw new AppError('Registration window not found', 404);
 
-  // 3. Find user created for this student
+  // Find user created for this student
   const user = await prisma.user.findFirst({ where: { uid: student.uid } });
 
-  // 4. Create Razorpay order
+  // Create Razorpay order
   const { order, keyId } = await paymentService.createOrder({
-    amount: Number(window.baseFee) * 100, // convert rupees to paise
+    amount: Number(window.baseFee) * 100,
     currency: 'INR',
     payment_type: 'STUDENT_REGISTRATION',
     entity_id: student.id,
