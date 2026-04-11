@@ -797,11 +797,9 @@ export const reconcilePayment = async (req: Request, res: Response, next: NextFu
       return res.status(404).json({ status: 'error', message: 'Payment not found' });
     }
 
-    if (payment.status === 'COMPLETED') {
-      return res.status(200).json({ status: 'success', message: 'Payment already completed', data: payment });
-    }
+    const alreadyCompleted = payment.status === 'COMPLETED';
 
-    const updated = await prisma.payment.update({
+    const updated = alreadyCompleted ? payment : await prisma.payment.update({
       where: { id: payment.id },
       data: {
         status: 'COMPLETED',
@@ -809,16 +807,19 @@ export const reconcilePayment = async (req: Request, res: Response, next: NextFu
       },
     });
 
-    // Trigger post-payment actions (activate club, confirm registration, etc.)
+    // Always trigger post-payment actions (even if already completed, to fix missed entity updates)
     const { paymentService } = await import('../services/payment.service');
     try {
       await (paymentService as any).processPostPaymentActions(updated);
     } catch (e) {
-      // Log but don't fail — payment is marked completed
       console.error('[reconcile] Post-payment action error:', e);
     }
 
-    res.status(200).json({ status: 'success', message: 'Payment reconciled', data: updated });
+    res.status(200).json({
+      status: 'success',
+      message: alreadyCompleted ? 'Payment already completed — re-triggered post-payment actions' : 'Payment reconciled',
+      data: updated,
+    });
   } catch (error) {
     next(error);
   }
