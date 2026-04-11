@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { AppError } from '../utils/errors';
 import logger from '../utils/logger.util';
 import { generateUID } from './uid.service';
+import { emailService } from './email.service';
 
 import prisma from '../config/prisma';
 export const listDistrictSecretaries = async (query: any) => {
@@ -103,6 +104,26 @@ export const updateDistrictSecretaryStatus = async (
                 });
             }
         }
+
+        // Send approval email
+        if (updated.email) {
+            emailService.sendApprovalNotification(updated.email, {
+                type: 'DISTRICT_SECRETARY',
+                name: updated.name,
+                uid: updated.uid,
+                loginPassword: updated.phone,
+                stateName: updated.state?.name,
+                districtName: updated.district?.name,
+                expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            });
+        }
+    } else if (status === 'REJECTED' && updated.email) {
+        emailService.sendRejectionNotification(updated.email, {
+            type: 'DISTRICT_SECRETARY',
+            name: updated.name,
+            uid: updated.uid,
+            reason: remarks,
+        });
     }
 
     return updated;

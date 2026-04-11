@@ -2,6 +2,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { AppError } from '../utils/errors';
 import { generateUID } from './uid.service';
+import { emailService } from './email.service';
 
 import prisma from '../config/prisma';
 export const getAllClubs = async (query: any) => {
@@ -315,6 +316,27 @@ export const updateClubStatus = async (id: number, status: string, remarks?: str
             });
             await prisma.clubOwner.create({
                 data: { userId: newUser.id, clubId: club.id, name: club.contactPerson || 'Club Owner', gender: 'MALE' },
+            });
+        }
+    }
+
+    // Send approval/rejection email notification
+    if (club.email) {
+        if (status === 'APPROVED') {
+            emailService.sendApprovalNotification(club.email, {
+                type: 'CLUB',
+                name: club.contactPerson || club.name,
+                uid: club.uid || '',
+                loginPassword: club.phone,
+                clubName: club.name,
+                expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            });
+        } else if (status === 'REJECTED') {
+            emailService.sendRejectionNotification(club.email, {
+                type: 'CLUB',
+                name: club.contactPerson || club.name,
+                uid: club.uid || '',
+                reason: remarks,
             });
         }
     }
