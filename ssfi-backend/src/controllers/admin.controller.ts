@@ -780,6 +780,50 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
   }
 };
 
+/**
+ * Reconcile a stuck payment — manually mark as COMPLETED when Razorpay captured it
+ * POST /api/v1/admin/reconcile-payment
+ * Body: { razorpayOrderId, razorpayPaymentId }
+ */
+export const reconcilePayment = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { razorpayOrderId, razorpayPaymentId } = req.body;
+    if (!razorpayOrderId) {
+      return res.status(400).json({ status: 'error', message: 'razorpayOrderId required' });
+    }
+
+    const payment = await prisma.payment.findFirst({ where: { razorpayOrderId } });
+    if (!payment) {
+      return res.status(404).json({ status: 'error', message: 'Payment not found' });
+    }
+
+    if (payment.status === 'COMPLETED') {
+      return res.status(200).json({ status: 'success', message: 'Payment already completed', data: payment });
+    }
+
+    const updated = await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: 'COMPLETED',
+        razorpayPaymentId: razorpayPaymentId || payment.razorpayPaymentId,
+      },
+    });
+
+    // Trigger post-payment actions (activate club, confirm registration, etc.)
+    const { paymentService } = await import('../services/payment.service');
+    try {
+      await (paymentService as any).processPostPaymentActions(updated);
+    } catch (e) {
+      // Log but don't fail — payment is marked completed
+      console.error('[reconcile] Post-payment action error:', e);
+    }
+
+    res.status(200).json({ status: 'success', message: 'Payment reconciled', data: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const cleanupTestData = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const deleted: string[] = [];

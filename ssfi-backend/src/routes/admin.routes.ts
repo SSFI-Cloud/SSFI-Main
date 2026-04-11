@@ -20,5 +20,6 @@ router.post('/sync-schema', adminController.syncSchema);
 router.post('/cleanup-test-data', adminController.cleanupTestData);
 router.post('/extend-membership', adminController.extendMembership);
 router.post('/resend-credentials', adminController.resendCredentials);
+router.post('/reconcile-payment', adminController.reconcilePayment);
 
 export default router;

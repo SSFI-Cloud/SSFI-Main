@@ -155,10 +155,12 @@ export const updateStudentStatus = async (id: number, status: string, remarks?: 
 
     updateData.isApproved = true;
     updateData.isActive = true;
+    updateData.approvalStatus = 'APPROVED';
     updateData.password = hashedPassword;
     updateData.expiryDate = student.user!.expiryDate || expiryDate;
   } else if (status === 'REJECTED') {
     updateData.isApproved = false;
+    updateData.approvalStatus = 'REJECTED';
   }
 
   const user = await prisma.user.update({

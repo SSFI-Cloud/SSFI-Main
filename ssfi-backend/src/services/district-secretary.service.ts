@@ -113,6 +113,9 @@ const createUserAccount = async (data: any) => {
         where: { phone: data.phone }
     });
 
+    const expiryDate = new Date();
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+
     if (existingUser) {
         logger.warn(`User already exists for Approved Secretary: ${data.email} — updating role and approval status`);
         return prisma.user.update({
@@ -124,6 +127,7 @@ const createUserAccount = async (data: any) => {
                 otpVerified: true,
                 approvalStatus: 'APPROVED',
                 password: await bcrypt.hash(data.phone, 12),
+                expiryDate: existingUser.expiryDate || expiryDate,
             },
         });
     }
@@ -136,13 +140,14 @@ const createUserAccount = async (data: any) => {
         data: {
             email: data.email,
             phone: data.phone,
-            password: await bcrypt.hash(data.phone, 12), // Default password = phone, hashed
+            password: await bcrypt.hash(data.phone, 12),
             role: data.role,
             uid,
             isActive: true,
             isApproved: true,
             otpVerified: true,
-            approvalStatus: 'APPROVED'
+            approvalStatus: 'APPROVED',
+            expiryDate,
         }
     });
 };
