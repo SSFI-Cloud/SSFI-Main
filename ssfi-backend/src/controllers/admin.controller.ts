@@ -228,10 +228,10 @@ export const syncSchema = async (req: Request, res: Response, next: NextFunction
       }
     }
 
-    // Fix: Approve user accounts for already-approved clubs
+    // Fix: Approve user accounts for already-approved OR verified clubs
     try {
       const approvedClubs = await prisma.club.findMany({
-        where: { status: 'APPROVED' },
+        where: { OR: [{ status: 'APPROVED' }, { verified: 1 }] },
         select: { id: true, phone: true, email: true, contactPerson: true },
       });
       let clubUsersFixed = 0;

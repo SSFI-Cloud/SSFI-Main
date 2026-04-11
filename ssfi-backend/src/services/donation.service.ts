@@ -74,7 +74,7 @@ export async function verifyDonationPayment(data: {
     razorpay_payment_id: string;
     razorpay_signature: string;
 }) {
-    const isValid = paymentService.verifyPaymentSignature(data);
+    const isValid = await paymentService.verifyPaymentSignature(data);
     if (!isValid) throw new AppError('Invalid payment signature', 400);
 
     const payment = await prisma.payment.findFirst({

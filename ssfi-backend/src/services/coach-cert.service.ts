@@ -206,7 +206,7 @@ class CoachCertService {
     razorpay_payment_id: string;
     razorpay_signature: string;
   }) {
-    const isValid = paymentService.verifyPaymentSignature(data);
+    const isValid = await paymentService.verifyPaymentSignature(data);
     if (!isValid) throw new Error('Invalid payment signature');
 
     const payment = await prisma.payment.findFirst({

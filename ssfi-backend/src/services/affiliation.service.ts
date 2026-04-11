@@ -526,7 +526,7 @@ export const verifyStateSecretaryPayment = async (data: {
   razorpay_signature: string;
 }) => {
   // Verify signature
-  const isValid = paymentService.verifyPaymentSignature({
+  const isValid = await paymentService.verifyPaymentSignature({
     razorpay_order_id: data.razorpay_order_id,
     razorpay_payment_id: data.razorpay_payment_id,
     razorpay_signature: data.razorpay_signature
@@ -997,7 +997,7 @@ export const verifyDistrictSecretaryPayment = async (
   razorpaySignature: string
 ) => {
   // 1. Verify Signature
-  const isValid = paymentService.verifyPaymentSignature({
+  const isValid = await paymentService.verifyPaymentSignature({
     razorpay_order_id: razorpayOrderId,
     razorpay_payment_id: razorpayPaymentId,
     razorpay_signature: razorpaySignature,
@@ -1368,7 +1368,7 @@ export const verifyClubPayment = async (data: {
   razorpay_signature: string;
 }) => {
   // Verify signature
-  const isValid = paymentService.verifyPaymentSignature({
+  const isValid = await paymentService.verifyPaymentSignature({
     razorpay_order_id: data.razorpay_order_id,
     razorpay_payment_id: data.razorpay_payment_id,
     razorpay_signature: data.razorpay_signature
@@ -2040,7 +2040,7 @@ export const verifyStudentPayment = async (data: {
   razorpay_payment_id: string;
   razorpay_signature: string;
 }) => {
-  const isValid = paymentService.verifyPaymentSignature(data);
+  const isValid = await paymentService.verifyPaymentSignature(data);
   if (!isValid) throw new AppError('Invalid payment signature', 400);
 
   const payment = await prisma.payment.findFirst({
@@ -2281,7 +2281,7 @@ export const verifyRenewal = async (data: {
   razorpay_payment_id: string;
   razorpay_signature: string;
 }) => {
-  const isValid = paymentService.verifyPaymentSignature({
+  const isValid = await paymentService.verifyPaymentSignature({
     razorpay_order_id: data.razorpay_order_id,
     razorpay_payment_id: data.razorpay_payment_id,
     razorpay_signature: data.razorpay_signature,
