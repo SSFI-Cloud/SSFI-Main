@@ -197,7 +197,7 @@ export default function SettingsPage() {
                 oldPassword: passwordData.oldPassword,
                 newPassword: passwordData.newPassword,
             });
-            setMessage({ type: 'success', text: 'Password changed successfully' });
+            setMessage({ type: 'success', text: 'Password changed successfully. For better security, ensure your password includes uppercase, lowercase, numbers & special characters.' });
             setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
         } catch (error: any) {
             setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to change password' });
@@ -607,7 +607,10 @@ export default function SettingsPage() {
 
                                 <div className="space-y-4 max-w-md">
                                     <InputField label="Current Password" value={passwordData.oldPassword} onChange={(e: any) => setPasswordData({ ...passwordData, oldPassword: e.target.value })} type="password" placeholder="••••••••" required icon={Lock} />
-                                    <InputField label="New Password" value={passwordData.newPassword} onChange={(e: any) => setPasswordData({ ...passwordData, newPassword: e.target.value })} type="password" placeholder="••••••••" required icon={Lock} />
+                                    <div>
+                                        <InputField label="New Password" value={passwordData.newPassword} onChange={(e: any) => setPasswordData({ ...passwordData, newPassword: e.target.value })} type="password" placeholder="••••••••" required icon={Lock} />
+                                        <p className="text-xs text-amber-600 mt-1">Tip: Use at least 8 characters with uppercase, lowercase, numbers & special characters for a stronger password.</p>
+                                    </div>
                                     <InputField label="Confirm New Password" value={passwordData.confirmPassword} onChange={(e: any) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} type="password" placeholder="••••••••" required icon={Lock} />
                                 </div>
 

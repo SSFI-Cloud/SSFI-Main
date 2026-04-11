@@ -79,7 +79,7 @@ export const resendOTPSchema = z.object({
  */
 export const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, 'Current password is required'),
-  newPassword: passwordSchema
+  newPassword: z.string().min(6, 'Password must be at least 6 characters long')
 }).refine(
   (data) => data.oldPassword !== data.newPassword,
   {
