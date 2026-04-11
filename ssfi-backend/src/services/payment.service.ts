@@ -295,9 +295,9 @@ export class PaymentService {
                     } else if (entityType === 'CLUB') {
                         await prisma.club.update({
                             where: { id: Number(entityIdStr) },
-                            data: { isActive: true },
+                            data: { isActive: true, status: 'PENDING' },
                         });
-                        console.log(`[PostPayment] Club #${entityIdStr} activated`);
+                        console.log(`[PostPayment] Club #${entityIdStr} → PENDING (paid)`);
                     }
                     break;
                 }
